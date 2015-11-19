@@ -26,35 +26,26 @@
 //#define alpha 0.1
 
 
-double judge1, judge2, judge3, judge4, judgeY1, judgeY2, judgeY3, judgeY4;
-double a2,a1, a3, mu11, mu21, mu31, sigma11, sigma21, sigma31, mu12, mu22 , mu32,sigma12, sigma22, sigma32;
-
 void print_state (size_t iter, gsl_multifit_fdfsolver * s);
 void init_values(double lambda, double beta2, double alpha, double *sigma_x, double *sigma_y, double *rho_xy);
 
 int main (int argc, char *argv[])
 {
-	const gsl_multifit_fdfsolver_type *T;
-	gsl_multifit_fdfsolver *s;
-	int status, ret1, ret2, line;
-	size_t i, iter = 0;
+	// カウント変数
+	size_t i;
 
 	const size_t n = N;
 	const size_t p = P;
-	gsl_matrix *covar = gsl_matrix_alloc (p, p);
-	double y[N], dG[6];
 
-	double lambda, beta2, alpha, mu1_width, mu2_width, var_y1, mo4_y1, var_y2, mo4_y2, d1, d2, d3, d4;
-	double sigma_x, sigma_y, rho_xy;
 	char *ends;
+	double lambda = strtod(argv[1], &ends);
+	double beta2  = strtod(argv[2], &ends);
+	double alpha  = strtod(argv[3], &ends);
 
-	lambda = strtod(argv[1], &ends);
-	beta2  = strtod(argv[2], &ends);
-	alpha  = strtod(argv[3], &ends);
+	double mu1_width = strtod(argv[4], &ends);
+//	double mu1_width = 0.489;
 
-	mu1_width = strtod(argv[4], &ends);
-//	mu1_width = 0.489;
-
+	double dG[6];
 	dG[0] = 0;
 	dG[1] = alpha*S0+lambda*pow(sqrt(1-alpha),2.)*beta2;
 	dG[2] = 0;
@@ -64,16 +55,15 @@ int main (int argc, char *argv[])
 	
 	struct data d = {n, y, zeta, epi, dG};
 	
-	gsl_multifit_function_fdf f;
-	
-	const gsl_rng_type * type;
+	// 乱数生成器
 	gsl_rng * r;
 	gsl_vector_view x;
 	gsl_rng_env_setup();
-	// 乱数生成器
+	const gsl_rng_type * type;
 	type = gsl_rng_default;
 	r = gsl_rng_alloc (type);
 
+	gsl_multifit_function_fdf f;
 	f.f	 = &expb_f;
 	f.df	 = &expb_df;
 	f.fdf	 = &expb_fdf;
@@ -81,51 +71,56 @@ int main (int argc, char *argv[])
 	f.p	 = p;
 	f.params = &d;
 	
+	const gsl_multifit_fdfsolver_type *T;
+	gsl_multifit_fdfsolver *s;
 	T = gsl_multifit_fdfsolver_lmsder;
 	s = gsl_multifit_fdfsolver_alloc(T, n, p);
 	
 	/* 近似対象となる観測データを生成 */
+	double y[N];
 	for (i=0;i<N;i++) y[i] = 0.;
 
+	double sigma_x, sigma_y, rho_xy;
 	init_values (lambda, beta2, alpha, &sigma_x, &sigma_y, &rho_xy);
 
 	/*  初期値         {a,   μ1,               μ2,               σ11,    σ12,    σ21,    σ22,    k1,                     k2, k3}*/
-	double x_init[P] = {0.5, sigma_x+mu1_width, sigma_y+mu1_width+mu2_width, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0.};
+	double x_init[P] = {0.5, sigma_x+mu1_width, sigma_y+mu1_width, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0.};
 
 	//**********************************************************************/
 	x = gsl_vector_view_array (x_init, p);
-
 	gsl_multifit_fdfsolver_set(s, &f, &x.vector);
-	iter = 0;
-	do{
+	size_t iter = 0;
+	int status;
+	do {
 		iter++;
 		status = gsl_multifit_fdfsolver_iterate(s);
 		if (status) break;
 		status = gsl_multifit_test_delta(s->dx, s->x, 1e-10, 1e-10);
-	}while (status == GSL_CONTINUE && iter < 10000);
-		
+	} while(status == GSL_CONTINUE && iter < 10000);
+
+	gsl_matrix *covar = gsl_matrix_alloc (p, p);
 	gsl_multifit_covar(s->J, 0.0, covar);
 	
 	// 重み
-	a2 =  gsl_vector_get(s->x,0) ;
-	a1 = (1.0-a2)/2.0;
-	a3 = a1;
+	double a2 =  gsl_vector_get(s->x,0) ;
+	double a1 = (1.0-a2)/2.0;
+	double a3 = a1;
 
-	//変位
-	mu11 = gsl_vector_get(s->x,1);
-	mu21 = 0.;
-	mu31 = -1.*mu11;
-	sigma11 = gsl_vector_get(s->x,3);
-	sigma21 = gsl_vector_get(s->x,5);
-	sigma31 = sigma11;
+	// 変位に関するパラメータ
+	double mu11 = gsl_vector_get(s->x,1);
+	double mu21 = 0.;
+	double mu31 = -1.*mu11;
+	double sigma11 = gsl_vector_get(s->x,3);
+	double sigma21 = gsl_vector_get(s->x,5);
+	double sigma31 = sigma11;
 
-	// 速度
-	mu12 = gsl_vector_get(s->x,2);
-	mu22 = 0.;
-	mu32 = -1.*mu12;
-	sigma12 = gsl_vector_get(s->x,4);
-	sigma22 = gsl_vector_get(s->x,6);
-	sigma32 = sigma12;
+	// 速度に関するパラメータ
+	double mu12 = gsl_vector_get(s->x,2);
+	double mu22 = 0.;
+	double mu32 = -1.*mu12;
+	double sigma12 = gsl_vector_get(s->x,4);
+	double sigma22 = gsl_vector_get(s->x,6);
+	double sigma32 = sigma12;
 	
 	#define FIT(i) gsl_vector_get(s->x, i)
 	#define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
@@ -148,13 +143,12 @@ int main (int argc, char *argv[])
 	printf("/**************************************************/\n");
 	printf("status = %s\n", gsl_strerror (status));
 
-
 	// 重み
 	a2 = FIT(0);
 	a1 = (1.-a2)/2.;
 	a3 = a1;
-	
-	//変位
+
+	// 変位に関するパラメータ
 	mu11 = FIT(1);
 	mu21 = 0.;
 	mu31 = -1.*mu11;
@@ -162,7 +156,7 @@ int main (int argc, char *argv[])
 	sigma21 = FIT(5);
 	sigma31 = sigma11;
 
-	// 速度
+	// 速度に関するパラメータ
 	mu12 = FIT(2);
 	mu22 = 0.;
 	mu32 = -1.*mu12;
@@ -174,7 +168,7 @@ int main (int argc, char *argv[])
 	#define gsa_xmin -6
 	#define gsa_ymin -15
 	if (strcmp(gsl_strerror (status), "success") == 0) {
-/********** 変位応答のpdfをプロット **********/
+/********** 変位応答のpdfを生成 **********/
 		FILE *gsax1pdf;
 		gsax1pdf=fopen("gsay1pdf.dat","w");
 		double integration=0.;
@@ -194,15 +188,17 @@ int main (int argc, char *argv[])
 		y1_var  = fopen("anl_y1_var.dat", "w");
 		gsax1pdf = fopen("gsay1pdf.dat", "r");
 		
-		var_y1 = 0.;
-		mo4_y1 = 0.;
-		line = 0;
-		while((ret1 = fscanf(gsax1pdf, "%lf %lf", &d1, &d2)) != EOF)
+		double var_y1 = 0.;
+		double mo4_y1 = 0.;
+		int line = 0;
+		int ret1;
+		double row1, row2;
+		while((ret1 = fscanf(gsax1pdf, "%lf %lf", &row1, &row2)) != EOF)
 		{
 			if((line%10) == 0)
 			{
-				var_y1 += pow(d1,2)*d2;
-				mo4_y1 += pow(d1,4)*d2;
+				var_y1 += pow(row1,2)*row2;
+				mo4_y1 += pow(row1,4)*row2;
 			}
 			line++;
 		}
@@ -211,7 +207,7 @@ int main (int argc, char *argv[])
 	
 		fclose(gsax1pdf);
 		fclose(y1_var);
-/********** 速度応答のpdfをプロット **********/
+/********** 速度応答のpdfを生成 **********/
 		FILE *gsax2pdf;
 		gsax2pdf=fopen("gsay2pdf.dat","w");
 		integration = 0.;
