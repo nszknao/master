@@ -8,27 +8,27 @@
 #include <gsl/gsl_statistics.h>
 
 
-/********** ç³»ã®ä¿‚æ•°ãƒ»å…¥åŠ›æ¡ä»¶ï¼ˆä¸å¤‰ï¼‰**********/
-#define S0 (1./(2.*M_PI))	// whitenoiseã®ãƒ‘ãƒ¯ãƒ¼ã‚¹ãƒšã‚¯ãƒˆãƒ«
-#define epsilon 0.3			// éç·šå½¢æ€§ã®å¼·ã•
-#define zeta 0.05			// æ¸›è¡°å®šæ•°
+/********** Œn‚ÌŒW”E“ü—ÍğŒi•s•Ïj**********/
+#define S0 (1./(2.*M_PI))	// whitenoise‚Ìƒpƒ[ƒXƒyƒNƒgƒ‹
+#define epsilon 0.3			// ”ñüŒ`«‚Ì‹­‚³
+#define zeta 0.05			// Œ¸Š’è”
 
-/********** è¨ˆç®—æ¡ä»¶ **********/
+/********** ŒvZğŒ **********/
 #define N 131072	// 131072,65536
-#define dt 0.01		// æ™‚é–“åˆ»ã¿å¹…
-#define dx 0.1		// pdfã®æ¨ªè»¸ã®åˆ»ã¿å¹…
-#define SET 100		// å…¥åŠ›ã®æ¨™æœ¬æ•°
+#define dt 0.01		// ŠÔ‚İ•
+#define dx 0.1		// pdf‚Ì‰¡²‚Ì‚İ•
+#define SET 100		// “ü—Í‚Ì•W–{”
 
 double force[N];
 
-// ãƒ«ãƒ³ã‚²ã‚¯ãƒƒã‚¿ã§ä½¿ã†
+// ƒ‹ƒ“ƒQƒNƒbƒ^‚Åg‚¤
 double f1(double force, double y1, double y2);
 double f2(double force, double y1, double y2);
 
 
 int main (int argc, char *argv[]) {
 
-	// å…¥åŠ›ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+	// “ü—Íƒpƒ‰ƒ[ƒ^
 	char *ends;
 	double lambda	= strtod(argv[1], &ends);
 	double beta2	= strtod(argv[2], &ends);
@@ -44,7 +44,7 @@ int main (int argc, char *argv[]) {
 
 	t_force = fopen("t_force.dat", "w");
 	t_x1 = fopen("t_x1.dat", "w");
-	//	x_Gpdf	= fopen("y2_Gpdf.dat","w");		//ã‚¬ã‚¦ã‚¹åˆ†å¸ƒ(å¤‰ä½å¿œç­”ã®pdfã¨æ¯”è¼ƒã™ã‚‹ã€‚)
+	//	x_Gpdf	= fopen("y2_Gpdf.dat","w");		//ƒKƒEƒX•ª•z(•ÏˆÊ‰“š‚Ìpdf‚Æ”äŠr‚·‚éB)
 
 	r = gsl_rng_alloc(gsl_rng_default);
 	rp = gsl_rng_alloc(gsl_rng_default);
@@ -52,11 +52,11 @@ int main (int argc, char *argv[]) {
 	printf("The syatem is beta^2 = %lf , lambda = %lf  \n\n", beta2, lambda);
 	printf("Creating a file of the pdf(.dat) ! \n\n");
 	
-	// å…¥åŠ›å¼·åº¦
+	// “ü—Í‹­“x
 	double wSt = sqrt(alpha);
 	double pSt = sqrt(1 - alpha);
 
-	// ãƒ«ãƒ³ã‚²ã‚¯ãƒƒã‚¿ã§ä½¿ã†
+	// ƒ‹ƒ“ƒQƒNƒbƒ^‚Åg‚¤
 	double DY1[4], DY2[4];
 	double y1_buffer[N][SET], y2_buffer[N][SET];
 	double y1min = 0., y1max = 0., y2max = 0., y2min = 0.;
@@ -66,7 +66,7 @@ int main (int argc, char *argv[]) {
 		gsl_rng_set(r, time(NULL) + clock());
 		gsl_rng_set(rp, time(NULL) + clock() + 1);
 
-		/********** å…¥åŠ›ã‚’ç”Ÿæˆï¼ˆãƒ›ãƒ¯ã‚¤ãƒˆãƒã‚¤ã‚ºï¼‹ä¸è¦å‰‡ãƒ‘ãƒ«ã‚¹ï¼‰ **********/
+		/********** “ü—Í‚ğ¶¬iƒzƒƒCƒgƒmƒCƒY{•s‹K‘¥ƒpƒ‹ƒXj **********/
 		for (int sample_length = 0; sample_length < N; sample_length++)
 		{
 			// force[sample_length] = (gsl_ran_gaussian(r, sigma) + gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)))/dt;
@@ -75,15 +75,15 @@ int main (int argc, char *argv[]) {
 			// force[sample_length] = gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2))/dt;
 
 			if (sample_num == 0)
-				fprintf(t_force, "%lf %lf\n", sample_length*dt, force[sample_length]); //åŠ±æŒ¯ã®è¨˜éŒ²
+				fprintf(t_force, "%lf %lf\n", sample_length*dt, force[sample_length]); //—ãU‚Ì‹L˜^
 		}
 
 		/*********************** Runge-Kutta **********************************/
-		// åˆæœŸå€¤
+		// ‰Šú’l
 		int y1 = 0.;
 		int y2 = 0.;
 
-		////////////////////////// å¾Œã§ã‚«ã‚¦ãƒ³ãƒˆå¤‰æ•°ã‚’å¤‰ãˆã‚‹å¿…è¦ã‚ã‚Š ////////////////////////////////
+		////////////////////////// Œã‚ÅƒJƒEƒ“ƒg•Ï”‚ğ•Ï‚¦‚é•K—v‚ ‚è ////////////////////////////////
 		for (int i = 0; i<N; i++)
 		{
 			DY1[0] = dt*f1(force[i], y1, y2);
@@ -101,7 +101,7 @@ int main (int argc, char *argv[]) {
 			y1 = y1 + (DY1[0] + 2.*DY1[1] + 2.*DY1[2] + DY1[3]) / 6.0;
 			y2 = y2 + (DY2[0] + 2.*DY2[1] + 2.*DY2[2] + DY2[3]) / 6.0;
 
-			// å¤‰ä½ã¨é€Ÿåº¦ã®æœ€å°å€¤ãƒ»æœ€å¤§å€¤ã‚’æ±ºå®š
+			// •ÏˆÊ‚Æ‘¬“x‚ÌÅ¬’lEÅ‘å’l‚ğŒˆ’è
 			if (y1>y1max) y1max = y1;
 			if (y1<y1min) y1min = y1;
 			if (y2>y2max) y2max = y2;
@@ -109,28 +109,28 @@ int main (int argc, char *argv[]) {
 
 			if (i == 0)
 			{
-				// å„å…¥åŠ›ã«ãŠã‘ã‚‹å¤‰ä½ã®å¿œç­”ã‚’æ ¼ç´
+				// Še“ü—Í‚É‚¨‚¯‚é•ÏˆÊ‚Ì‰“š‚ğŠi”[
 				y1_buffer[i][sample_num] = 0.;
-				// å„å…¥åŠ›ã«ãŠã‘ã‚‹é€Ÿåº¦ã®å¿œç­”ã‚’æ ¼ç´
+				// Še“ü—Í‚É‚¨‚¯‚é‘¬“x‚Ì‰“š‚ğŠi”[
 				y2_buffer[i][sample_num] = 0.;
 			}
 			else
 			{
-				// å„å…¥åŠ›ã«ãŠã‘ã‚‹å¤‰ä½ã®å¿œç­”ã‚’æ ¼ç´
+				// Še“ü—Í‚É‚¨‚¯‚é•ÏˆÊ‚Ì‰“š‚ğŠi”[
 				y1_buffer[i][sample_num] = y1;
-				// å„å…¥åŠ›ã«ãŠã‘ã‚‹é€Ÿåº¦ã®å¿œç­”ã‚’æ ¼ç´
+				// Še“ü—Í‚É‚¨‚¯‚é‘¬“x‚Ì‰“š‚ğŠi”[
 				y2_buffer[i][sample_num] = y2;
 			}
 
 			if (sample_num == 0)
 			{
-				// å¿œç­”å¤‰ä½ã®è¨˜éŒ²
+				// ‰“š•ÏˆÊ‚Ì‹L˜^
 				fprintf(t_x1, "%lf %lf\n", i*dt, y1);
 			}
 		}
 	}
 
-	/************************* å¤‰ä½ã®pdfã‚’è¨ˆç®—ã™ã‚‹ ***********************************/
+	/************************* •ÏˆÊ‚Ìpdf‚ğŒvZ‚·‚é ***********************************/
 	int n_dx, pdf_y1, integral_y1 = 0;
 	double y1_pdf_buffer[3000][100];
 	FILE *y1_pdf;
@@ -140,13 +140,13 @@ int main (int argc, char *argv[]) {
 	{
 		for (int j = 0; (y1min + j*dx) <= y1max; j++)
 		{
-			// å¹…dxã«å«ã¾ã‚Œã‚‹å›æ•°
+			// •dx‚ÉŠÜ‚Ü‚ê‚é‰ñ”
 			n_dx = 0;
 			for (int i = 0; i<N; i++)
 			{
 				if ((y1_buffer[i][k] < (y1min + (j + 1)*dx)) && (y1_buffer[i][k] >= (y1min + j*dx))) n_dx++;
 			}
-			//			printf("n_dxã®ä¸­èº«:%lf\n",n_dx);		
+			//			printf("n_dx‚Ì’†g:%lf\n",n_dx);		
 			y1_pdf_buffer[j][k] = (double)n_dx / N / dx;
 		}
 	}
@@ -159,20 +159,20 @@ int main (int argc, char *argv[]) {
 		for (int k = 0; k<SET; k++)
 		{
 			pdf_y1 += y1_pdf_buffer[i][k];
-			// printf("y1_pdf_bufferã®ä¸­èº«:%lf\n",y1_pdf_buffer);
+			// printf("y1_pdf_buffer‚Ì’†g:%lf\n",y1_pdf_buffer);
 		}
 		pdf_y1 = (double)pdf_y1 / SET;
 		integral_y1 += pdf_y1*dx;
-		// å¿œç­”ã®ç¢ºç‡å¯†åº¦é–¢æ•°ã®è¨˜éŒ²
+		// ‰“š‚ÌŠm—¦–§“xŠÖ”‚Ì‹L˜^
 		fprintf(y1_pdf, "%lf %lf\n", (y1min + i*dx), pdf_y1);
 	}
 
-	// pdfã®å…¨ç©åˆ†å€¤
+	// pdf‚Ì‘SÏ•ª’l
 	printf("integral of pdf_y1 = %lf\n", integral_y1);
 
 	fclose(y1_pdf);
 
-	/************************* é€Ÿåº¦ã®pdfã‚’è¨ˆç®—ã™ã‚‹ ***********************************/
+	/************************* ‘¬“x‚Ìpdf‚ğŒvZ‚·‚é ***********************************/
 	//	int n_dx, pdf_y2, integral_y2 = 0;
 	//	double y2_pdf_buffer[3000][100];
 	//	FILE *y2_pdf;
@@ -182,7 +182,7 @@ int main (int argc, char *argv[]) {
 	//	{
 	//		for(int j=0; (y2min+j*dx) <= y2max; j++ )
 	//		{
-	//			// å¹…dxã«å«ã¾ã‚Œã‚‹å›æ•°
+	//			// •dx‚ÉŠÜ‚Ü‚ê‚é‰ñ”
 	//			n_dx = 0;
 	//			for(i=0; i<N ; i++ )
 	//			{
@@ -201,15 +201,15 @@ int main (int argc, char *argv[]) {
 	//		}
 	//		pdf_y2 = (double)pdf_y2/SET;
 	//		integral_y2 += pdf_y2*dx;
-	//		// å¿œç­”ã®ç¢ºç‡å¯†åº¦é–¢æ•°ã®è¨˜éŒ²
+	//		// ‰“š‚ÌŠm—¦–§“xŠÖ”‚Ì‹L˜^
 	//		fprintf(y2_pdf, "%lf %lf\n", (y2min+i*dx), pdf_y2);
 	//	}
 	//
-	//	// pdfã®å…¨ç©åˆ†å€¤
+	//	// pdf‚Ì‘SÏ•ª’l
 	//	printf("integral of pdf_y2 = %lf\n",integral_y2);
 	//
 	//	fclose(y2_pdf);
-	/************************** ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³çµæœã®å¤‰ä½åˆ†æ•£ã‚’è¨ˆç®— *******************************/
+	/************************** ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“Œ‹‰Ê‚Ì•ÏˆÊ•ªU‚ğŒvZ *******************************/
 	//	int scan_file, var_y1, mo4_y1, first_row, second_row;
 	//	FILE *y1_var;
 	//	y1_var  = fopen("sim_y1_var.dat", "w");
@@ -227,7 +227,7 @@ int main (int argc, char *argv[]) {
 	//
 	//	fclose(y1_pdf);
 	//	fclose(y1_var);
-	/************************** ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³çµæœã®é€Ÿåº¦åˆ†æ•£ã‚’è¨ˆç®— *******************************/
+	/************************** ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“Œ‹‰Ê‚Ì‘¬“x•ªU‚ğŒvZ *******************************/
 	//	int scan_file, var_y2, first_row, second_row;
 	//	int var_y2;
 	//	FILE *y2_var;
