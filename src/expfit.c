@@ -1,28 +1,28 @@
 /*
- * Å¬‚Æ‚·‚éŠÖ”f‚ğ’è””{‚µ‚½
+ * æœ€å°ã¨ã™ã‚‹é–¢æ•°fã‚’å®šæ•°å€ã—ãŸ
  *
  *
  */
 struct data {
-	size_t n;  //•û’ö®‚Ì”
+	size_t n;  //æ–¹ç¨‹å¼ã®æ•°
 	double *y;
 	
-	//Œn‚Ìƒpƒ‰ƒ[ƒ^
+	//ç³»ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	double zeta;
 	double epi;
 	
-	//“ü—Í‚Ìƒ‚[ƒƒ“ƒg4Ÿ‚Ü‚ÅB
+	//å…¥åŠ›ã®ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ4æ¬¡ã¾ã§ã€‚
 	double *dG;
 
 	/*
-	 * ‚à‚¤ˆê‚Â‚Ìƒtƒ@ƒCƒ‹‚Å’l‚ğ‘ã“ü‚·‚é•Ï”‚Íƒ|ƒCƒ“ƒ^‚ÅéŒ¾‚·‚é
+	 * ã‚‚ã†ä¸€ã¤ã®ãƒ•ã‚¡ã‚¤ãƒ«ã§å€¤ã‚’ä»£å…¥ã™ã‚‹å¤‰æ•°ã¯ãƒã‚¤ãƒ³ã‚¿ã§å®£è¨€ã™ã‚‹
 	*/ 
 	};
 
 double keisu621, keisu622, keisu623, keisu641, keisu642, keisu643, keisu644, keisu645;
 double keisu661, keisu662, keisu663, keisu664, keisu665, keisu666, keisu667;
 
-/* ŠÖ”‚ğ’è‹` */
+/* é–¢æ•°ã‚’å®šç¾© */
 int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 {
 //	printf("expb_f_check1\n\n");
@@ -31,7 +31,7 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	double zeta   = ((struct data *)data)->zeta;
 	double epi    = ((struct data *)data)->epi;
 	double *dG    = ((struct data *)data)->dG;
-	double bufA[] =						//ƒ‚[ƒƒ“ƒg•û’ö® ŒW”s—ñ 15x21     //ok
+	double bufA[] =						//ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ ä¿‚æ•°è¡Œåˆ— 15x21     //ok
 	       {
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		-1,-2*zeta,1,-1*epi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -55,28 +55,28 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	
 	size_t i;
 	
-	/* ƒpƒ‰ƒ[ƒ^ */
-	double parameter[10];	// (a, ƒÊ1, ƒÊ2, ƒĞ11, ƒĞ12, ƒĞ21, ƒĞ22, k1, k2, k3)
+	/* ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ */
+	double parameter[10];	// (a, Î¼1, Î¼2, Ïƒ11, Ïƒ12, Ïƒ21, Ïƒ22, k1, k2, k3)
 	
 	for(i=0; i<10; i++)
 	{
 	  parameter[i] = gsl_vector_get(x, i);
 	}
 	
-	/* ŠÖ”‚ğ’è‹` */
+	/* é–¢æ•°ã‚’å®šç¾© */
 	double Eg[21],mem[3];
 	
-	/*********** ‚ä‚Æ‚èìíƒpƒ‰ƒ[ƒ^ ***********/
+	/*********** ã‚†ã¨ã‚Šä½œæˆ¦ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ ***********/
 	double pa0 = parameter[0], pa1 = parameter[1], pa2 = parameter[2], pa3 = parameter[3], pa4 = parameter[4], pa5 = parameter[5], pa6 = parameter[6];
 	double pa7 = parameter[7], pa8 = parameter[8], pa9 = parameter[9];
 
-	/******************** ƒ‚[ƒƒ“ƒgiŠJnj ********************/
-	// ‚QŸƒ‚[ƒƒ“ƒg
+	/******************** ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆï¼ˆé–‹å§‹ï¼‰ ********************/
+	// ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 	Eg[0] = (1 - pa0)*(pow(pa3,2) + pow(pa1,2)) + pa0*pow(pa5,2);														// y_1^2
 	Eg[1] = (1 - pa0)/2*((pa7 + pa1*pa2) + (pa9 + pa1*pa2)) + pa0*pa8;													// y_1*y_2
 	Eg[2] = (1 - pa0)*(pow(pa4,2) + pow(pa2,2)) + pa0*pow(pa6,2);														// y_2^2
 	
-	// ‚SŸƒ‚[ƒƒ“ƒg
+	// ï¼”æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 	Eg[3] = (1 - pa0)*(3*pow(pa3,4) + 6*pow(pa1,2)*pow(pa3,2) + pow(pa1,4)) + 3*pa0*pow(pa5,4);										// y_1^4
 	Eg[4] = (1 - pa0)/2*((3*pow(pa3,2)*(pa7 + pa1*pa2) + pow(pa1,2)*(3*pa7 + pa1*pa2))
 		+ (3*pow(pa3,2)*(pa9 + pa1*pa2) + pow(pa1,2)*(3*pa9 + pa1*pa2)))
@@ -89,7 +89,7 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 		+ 3*pa0*pow(pa6,2)*pa8;																		// y_1*y_2^3
 	Eg[7] = (1 - pa0)*(3*pow(pa4,4) + 6*pow(pa2,2)*pow(pa4,2) + pow(pa2,4)) + 3*pa0*pow(pa6,4);										// y_2^4
 	
-	// ‚UŸƒ‚[ƒƒ“ƒg
+	// ï¼–æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 	Eg[8] = (1 - pa0)*(15*pow(pa3,6) + 45*pow(pa3,4)*pow(pa1,2) + 15*pow(pa3,2)*pow(pa1,4) + pow(pa1,6)) + 15*pa0*pow(pa5,6);						// y_1^6
 	Eg[9] = (1 - pa0)/2*((15*pow(pa3,4)*(pa7 + pa1*pa2) + pow(pa1,5)*pa2 + 5*pow(pa1,4)*pa7 + 10*pow(pa1,3)*pa2*pow(pa3,2) + 30*pa7*pow(pa1,2)*pow(pa3,2))
 		+ (15*pow(pa3,4)*(pa9 + pa1*pa2) + pow(pa1,5)*pa2 + 5*pow(pa1,4)*pa9 + 10*pow(pa1,3)*pa2*pow(pa3,2) + 30*pa9*pow(pa1,2)*pow(pa3,2)))
@@ -115,7 +115,7 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	Eg[14] = (1 - pa0)*(15*pow(pa4,6) + 45*pow(pa4,4)*pow(pa2,2) + 15*pow(pa4,2)*pow(pa2,4) + pow(pa2,6))
 		+ 15*pa0*pow(pa6,6);																		// y_2^6
 	
-	//8Ÿƒ‚[ƒƒ“ƒg
+	//8æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 	Eg[15] = (1 - pa0)*(pow(pa1,8) + 28*pow(pa3,2)*pow(pa1,6) + 210*pow(pa3*pa1,4) + 420*pow(pa3,6)*pow(pa1,2) + 105*pow(pa3,8))
 		+ 105*pa0*pow(pa5,8);																		// y_1^8
 
@@ -162,29 +162,29 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 		+ 60*pow(pa9,2)*pow(pa2,3)*pa1 + 45*pa1*pa2*pow(pa4*pa4*pa3,2) + 180*pow(pa9,2)*pa1*pa2*pow(pa4,2) + 15*pa9*pow(pa2*pa2*pa3,2)
 		+ 90*pa9*pow(pa2*pa3*pa4,2) + 60*pow(pa9,3)*pow(pa2,2) + 45*pa9*pow(pa4*pa4*pa3,2) + 60*pow(pa9,3)*pow(pa4,2)))
 		+ pa0*(45*pa8*pow(pa6*pa6*pa5,2) + 60*pow(pa8,3)*pow(pa6,2));													// y_1^3*y_w^5
-	/******************** ƒ‚[ƒƒ“ƒgiI—¹j ********************/
+	/******************** ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆï¼ˆçµ‚äº†ï¼‰ ********************/
 
 	double bfunction[15];
 
 	for(i=0; i<15; i++)
 	{
-		bfunction[i] = 0.0;	// ƒ‚[ƒƒ“ƒg•û’ö®‚Ì‰E•Ó‚É“–‚½‚és—ñ‚ğì‚é‚½‚ß‚Ì‰Šú‰»
+		bfunction[i] = 0.0;	// ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã®å³è¾ºã«å½“ãŸã‚‹è¡Œåˆ—ã‚’ä½œã‚‹ãŸã‚ã®åˆæœŸåŒ–
 	}
 
-	// ƒ‚[ƒƒ“ƒg•û’ö®‚ÌŒW”s—ñ‚ğì¬
+	// ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã®ä¿‚æ•°è¡Œåˆ—ã‚’ä½œæˆ
 	gsl_matrix_view A           = gsl_matrix_view_array(bufA, 15, 21);
-	// ƒ‚[ƒƒ“ƒg‚Ìs—ñ
+	// ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã®è¡Œåˆ—
 	gsl_matrix_view gsl_Eg      = gsl_matrix_view_array(Eg, 21, 1);
-	// ƒ‚[ƒƒ“ƒg•û’ö®‚Ì‰E•Ó‚É“–‚½‚és—ñ
+	// ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã®å³è¾ºã«å½“ãŸã‚‹è¡Œåˆ—
 	gsl_matrix_view gsl_function = gsl_matrix_view_array(bfunction, 15, 1);
-	// s—ñŒvZ
+	// è¡Œåˆ—è¨ˆç®—
 	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &A.matrix, &gsl_Eg.matrix, 0.0, &gsl_function.matrix);
 
 	double function[15];
 
 	for(i=0; i<15; i++)
 	{
-		function[i] = gsl_matrix_get(&gsl_function.matrix, i, 0);	// æ‚Ìs—ñŒvZ‚Ì“š‚¦‚ğ”z—ñ‚É‚·‚é
+		function[i] = gsl_matrix_get(&gsl_function.matrix, i, 0);	// å…ˆã®è¡Œåˆ—è¨ˆç®—ã®ç­”ãˆã‚’é…åˆ—ã«ã™ã‚‹
 	}
 
 	function[2]  += dG[1];
@@ -208,7 +208,7 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	keisu667 = 24./216;
 	for (i=0; i<n; i++)
 	{
-		// ¡‰ñƒ‚[ƒƒ“ƒg•û’ö®‚Ì¶•Ó‚Í‘S‚Ä‚O‚È‚Ì‚Å y[i] = 0 ‚É‚È‚é
+		// ä»Šå›ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã®å·¦è¾ºã¯å…¨ã¦ï¼ãªã®ã§ y[i] = 0 ã«ãªã‚‹
 		if (i==0) gsl_vector_set(f, i, keisu621*function[i]-y[i]);
 		else if (i==1) gsl_vector_set(f, i, keisu622*function[i]-y[i]);
 		else if (i==2) gsl_vector_set(f, i, keisu623*function[i]-y[i]);
@@ -229,7 +229,7 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	return GSL_SUCCESS;
 }
 
-/* ƒ„ƒRƒrs—ñ‚ğ’è‹` */
+/* ãƒ¤ã‚³ãƒ“è¡Œåˆ—ã‚’å®šç¾© */
 int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 {
 //	printf("expb_df_check1\n\n");
@@ -238,7 +238,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	double zeta   = ((struct data *)data)->zeta;
 	double epi    = ((struct data *)data)->epi;
 	double *dG    = ((struct data *)data)->dG;
-	double bufA[] =						//ƒ‚[ƒƒ“ƒg•û’ö® ŒW”s—ñ 15x21     //ok
+	double bufA[] =						//ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ ä¿‚æ•°è¡Œåˆ— 15x21     //ok
 	       {
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		-1,-2*zeta,1,-1*epi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -269,11 +269,11 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	  parameter[i] = gsl_vector_get(x, i);
 	}
 
-	/*********** ‚ä‚Æ‚èìíƒpƒ‰ƒ[ƒ^ ***********/
+	/*********** ã‚†ã¨ã‚Šä½œæˆ¦ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ ***********/
 	double pa0 = parameter[0], pa1 = parameter[1], pa2 = parameter[2], pa3 = parameter[3], pa4 = parameter[4], pa5 = parameter[5], pa6 = parameter[6];
 	double pa7 = parameter[7], pa8 = parameter[8], pa9 = parameter[9];
 
-	// ‚QŸƒ‚[ƒƒ“ƒg‚Ìƒ„ƒRƒr
+	// ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã®ãƒ¤ã‚³ãƒ“
 	jacoby[0][0] = -(pow(pa3,2) + pow(pa1,2)) + pow(pa5,2);
 	jacoby[0][1] = 2*(1 - pa0)*pa1;
 	jacoby[0][2] = 0;
@@ -307,7 +307,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	jacoby[2][8] = 0;
 	jacoby[2][9] = 0;
 
-	// ‚SŸƒ‚[ƒƒ“ƒg‚Ìƒ„ƒRƒr
+	// ï¼”æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã®ãƒ¤ã‚³ãƒ“
 	jacoby[3][0] = -(3*pow(pa3,4) + 6*pow(pa1,2)*pow(pa3,2) + pow(pa1,4)) + 3*pow(pa5,4);
 	jacoby[3][1] = (1 - pa0)/2*(12*pa1*pow(pa3,2) + 4*pow(pa1,3));
 	jacoby[3][2] = 0;
@@ -364,7 +364,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	jacoby[7][7] = 0;
 	jacoby[7][8] = 0;
 
-	// ‚UŸƒ‚[ƒƒ“ƒg‚Ìƒ„ƒRƒr
+	// ï¼–æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã®ãƒ¤ã‚³ãƒ“
 	jacoby[8][0] = -(15*pow(pa3,6) + 45*pow(pa3,4)*pow(pa1,2) + 15*pow(pa3,2)*pow(pa1,4) + pow(pa1,6)) + 15*pow(pa5,6);
 	jacoby[8][1] = (1 - pa0)*(90*pow(pa3,4)*pa1 + 60*pow(pa3,2)*pow(pa1,3) + 6*pow(pa1,5));
 	jacoby[8][2] = 0;
@@ -480,7 +480,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	jacoby[14][8] = 0;
 	jacoby[14][9] = 0;
 	
-	// ‚WŸƒ‚[ƒƒ“ƒg‚Ìƒ„ƒRƒr
+	// ï¼˜æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã®ãƒ¤ã‚³ãƒ“
 	jacoby[15][0] = -(pow(pa1,8) + 28*pow(pa3,2)*pow(pa1,6) + 210*pow(pa3*pa1,4) + 420*pow(pa3,6)*pow(pa1,2) + 105*pow(pa3,8))
 			+ 105*pow(pa5,8);
 	jacoby[15][1] = (1 - pa0)*(8*pow(pa1,7) + 168*pow(pa3,2)*pow(pa1,5) + 840*pow(pa3,4)*pow(pa1,3) + 840*pow(pa3,6)*pa1);
@@ -667,13 +667,13 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 			0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
 			0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
-	// ƒ‚[ƒƒ“ƒg•û’ö®‚Ìƒ„ƒRƒr‚ğŠi”[
+	// ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã®ãƒ¤ã‚³ãƒ“ã‚’æ ¼ç´
 	gsl_matrix_view buf1J = gsl_matrix_view_array(bufJ, 15, 10);
-	// ƒ‚[ƒƒ“ƒg•û’ö®‚ÌŒW”
+	// ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã®ä¿‚æ•°
 	gsl_matrix_view A = gsl_matrix_view_array(bufA, 15, 21);
-	// ƒ‚[ƒƒ“ƒg‚Ì”÷•ª‚Ìs—ñ
+	// ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã®å¾®åˆ†ã®è¡Œåˆ—
 	gsl_matrix_view gsl_jacoby = gsl_matrix_view_array(bufjacoby, 21, 10);
-	// ƒ„ƒRƒrs—ñ‚ÌŒvZ
+	// ãƒ¤ã‚³ãƒ“è¡Œåˆ—ã®è¨ˆç®—
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, &A.matrix, &gsl_jacoby.matrix, 0.0, &buf1J.matrix);
 
 	for(i=0; i<n; i++)

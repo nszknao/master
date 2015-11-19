@@ -13,14 +13,14 @@
 #define N 15
 #define P 10
 #define PI M_PI
-#define iN 3	// ‰Šú’l‚ğ‹‚ß‚é‚Æ‚«‚Ì•û’ö®‚Ì”
+#define iN 3	// åˆæœŸå€¤ã‚’æ±‚ã‚ã‚‹ã¨ãã®æ–¹ç¨‹å¼ã®æ•°
 
-/************ Œn‚ÌŒW”E“ü—ÍğŒi•s•Ïj*******************/
+/************ ç³»ã®ä¿‚æ•°ãƒ»å…¥åŠ›æ¡ä»¶ï¼ˆä¸å¤‰ï¼‰*******************/
 #define S0 (1./(2.*PI))
 #define zeta 0.05
 #define epi 0.3
 
-/************ “ü—ÍğŒi•Ï‚¦‚éj *******************/
+/************ å…¥åŠ›æ¡ä»¶ï¼ˆå¤‰ãˆã‚‹ï¼‰ *******************/
 //#define beta2 10.0
 //#define lambda  0.05
 //#define alpha 0.1
@@ -70,7 +70,7 @@ int main (int argc, char *argv[])
 	gsl_rng * r;
 	gsl_vector_view x;
 	gsl_rng_env_setup();
-	// —”¶¬Ší
+	// ä¹±æ•°ç”Ÿæˆå™¨
 	type = gsl_rng_default;
 	r = gsl_rng_alloc (type);
 
@@ -84,12 +84,12 @@ int main (int argc, char *argv[])
 	T = gsl_multifit_fdfsolver_lmsder;
 	s = gsl_multifit_fdfsolver_alloc(T, n, p);
 	
-	/* ‹ß—‘ÎÛ‚Æ‚È‚éŠÏ‘ªƒf[ƒ^‚ğ¶¬ */
+	/* è¿‘ä¼¼å¯¾è±¡ã¨ãªã‚‹è¦³æ¸¬ãƒ‡ãƒ¼ã‚¿ã‚’ç”Ÿæˆ */
 	for (i=0;i<N;i++) y[i] = 0.;
 
 	init_values (lambda, beta2, alpha, &sigma_x, &sigma_y, &rho_xy);
 
-	/*  ‰Šú’l         {a,   ƒÊ1,               ƒÊ2,               ƒĞ11,    ƒĞ12,    ƒĞ21,    ƒĞ22,    k1,                     k2, k3}*/
+	/*  åˆæœŸå€¤         {a,   Î¼1,               Î¼2,               Ïƒ11,    Ïƒ12,    Ïƒ21,    Ïƒ22,    k1,                     k2, k3}*/
 	double x_init[P] = {0.5, sigma_x+mu1_width, sigma_y+mu1_width+mu2_width, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0.};
 
 	//**********************************************************************/
@@ -106,12 +106,12 @@ int main (int argc, char *argv[])
 		
 	gsl_multifit_covar(s->J, 0.0, covar);
 	
-	// d‚İ
+	// é‡ã¿
 	a2 =  gsl_vector_get(s->x,0) ;
 	a1 = (1.0-a2)/2.0;
 	a3 = a1;
 
-	//•ÏˆÊ
+	//å¤‰ä½
 	mu11 = gsl_vector_get(s->x,1);
 	mu21 = 0.;
 	mu31 = -1.*mu11;
@@ -119,7 +119,7 @@ int main (int argc, char *argv[])
 	sigma21 = gsl_vector_get(s->x,5);
 	sigma31 = sigma11;
 
-	// ‘¬“x
+	// é€Ÿåº¦
 	mu12 = gsl_vector_get(s->x,2);
 	mu22 = 0.;
 	mu32 = -1.*mu12;
@@ -149,12 +149,12 @@ int main (int argc, char *argv[])
 	printf("status = %s\n", gsl_strerror (status));
 
 
-	// d‚İ
+	// é‡ã¿
 	a2 = FIT(0);
 	a1 = (1.-a2)/2.;
 	a3 = a1;
 	
-	//•ÏˆÊ
+	//å¤‰ä½
 	mu11 = FIT(1);
 	mu21 = 0.;
 	mu31 = -1.*mu11;
@@ -162,7 +162,7 @@ int main (int argc, char *argv[])
 	sigma21 = FIT(5);
 	sigma31 = sigma11;
 
-	// ‘¬“x
+	// é€Ÿåº¦
 	mu12 = FIT(2);
 	mu22 = 0.;
 	mu32 = -1.*mu12;
@@ -174,7 +174,7 @@ int main (int argc, char *argv[])
 	#define gsa_xmin -6
 	#define gsa_ymin -15
 	if (strcmp(gsl_strerror (status), "success") == 0) {
-/********** •ÏˆÊ‰“š‚Ìpdf‚ğƒvƒƒbƒg **********/
+/********** å¤‰ä½å¿œç­”ã®pdfã‚’ãƒ—ãƒ­ãƒƒãƒˆ **********/
 		FILE *gsax1pdf;
 		gsax1pdf=fopen("gsay1pdf.dat","w");
 		double integration=0.;
@@ -189,7 +189,7 @@ int main (int argc, char *argv[])
 		}
 		fclose(gsax1pdf);
 //		printf("y1 integration = %lf \n",integration);
-/********** •ÏˆÊ•ªU‚ğŒvZ **********/
+/********** å¤‰ä½åˆ†æ•£ã‚’è¨ˆç®— **********/
 		FILE *y1_var;
 		y1_var  = fopen("anl_y1_var.dat", "w");
 		gsax1pdf = fopen("gsay1pdf.dat", "r");
@@ -211,7 +211,7 @@ int main (int argc, char *argv[])
 	
 		fclose(gsax1pdf);
 		fclose(y1_var);
-/********** ‘¬“x‰“š‚Ìpdf‚ğƒvƒƒbƒg **********/
+/********** é€Ÿåº¦å¿œç­”ã®pdfã‚’ãƒ—ãƒ­ãƒƒãƒˆ **********/
 		FILE *gsax2pdf;
 		gsax2pdf=fopen("gsay2pdf.dat","w");
 		integration = 0.;
@@ -240,35 +240,35 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 	gsl_blas_dnrm2 (s->f));
 }
 
-/******************** ‰Šú’l‚ğ‹‚ß‚éŠÖ” ********************/
+/******************** åˆæœŸå€¤ã‚’æ±‚ã‚ã‚‹é–¢æ•° ********************/
 void init_values(double lambda, double beta2, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
 {
 	int k, s;
 	
-	double a[iN*iN], b[iN];					// üŒ`˜A—§•û’ö®Ax=b‚ÌA‚ÆB
-	double Exxold, Exyold, Eyyold, A=0., B=0., C=0., err;	// ƒ‹[ƒvŒvZ‚Ì‰ğ‚Ì•Û‘¶—pCx:•ÏˆÊCy:‘¬“x
-	double ke;						// “™‰¿üŒ`ŒW”
+	double a[iN*iN], b[iN];					// ç·šå½¢é€£ç«‹æ–¹ç¨‹å¼Ax=bã®Aã¨B
+	double Exxold, Exyold, Eyyold, A=0., B=0., C=0., err;	// ãƒ«ãƒ¼ãƒ—è¨ˆç®—æ™‚ã®è§£ã®ä¿å­˜ç”¨ï¼Œx:å¤‰ä½ï¼Œy:é€Ÿåº¦
+	double ke;						// ç­‰ä¾¡ç·šå½¢ä¿‚æ•°
 
-	/******* ‰Šú’l *******
+	/******* åˆæœŸå€¤ *******
 	 * a_1 = 1, a_2 = a_3 = 0
-	 * mu_1 = mu_2 = 0F‘ÎÌ‚ÈƒKƒEƒX•ª•z‚ğ‰¼’è‚µ‚Ä‚¢‚é‚©‚çi‚½‚¾CŒã‚Å mu_1 = 1 ‚É‚·‚é‚©‚àj
-	 * sigma_1, sigma_2 ‚Í‚»‚Ì‚Ü‚Ü
-	 * kappa_1 = 0iro ‚ğ‚·‚×‚Ä‚O‚Å‰¼’è‚µC•½‹Ï‚àƒ[ƒ‚¾‚©‚çj
+	 * mu_1 = mu_2 = 0ï¼šå¯¾ç§°ãªã‚¬ã‚¦ã‚¹åˆ†å¸ƒã‚’ä»®å®šã—ã¦ã„ã‚‹ã‹ã‚‰ï¼ˆãŸã ï¼Œå¾Œã§ mu_1 = 1 ã«ã™ã‚‹ã‹ã‚‚ï¼‰
+	 * sigma_1, sigma_2 ã¯ãã®ã¾ã¾
+	 * kappa_1 = 0ï¼ˆro ã‚’ã™ã¹ã¦ï¼ã§ä»®å®šã—ï¼Œå¹³å‡ã‚‚ã‚¼ãƒ­ã ã‹ã‚‰ï¼‰
 	 */
 
-	/******* ‰“š‚ÌƒKƒEƒX«‚ğ‰¼’è‚µC“™‰¿üŒ`‰»–@‚É‚æ‚è2Ÿ’èíƒ‚[ƒƒ“ƒg‚ğ‹‚ß‚é *******/
+	/******* å¿œç­”ã®ã‚¬ã‚¦ã‚¹æ€§ã‚’ä»®å®šã—ï¼Œç­‰ä¾¡ç·šå½¢åŒ–æ³•ã«ã‚ˆã‚Š2æ¬¡å®šå¸¸ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã‚’æ±‚ã‚ã‚‹ *******/
 	do{
-		Exxold = A;		 // ‘Oƒ‹[ƒv‚Ì‰ğ‚ğ•Û‘¶
+		Exxold = A;		 // å‰ãƒ«ãƒ¼ãƒ—ã®è§£ã‚’ä¿å­˜
 		Exyold = B;
 		Eyyold = C;
 		
-		/*************** “™‰¿üŒ`ŒW” **************************************/
-		ke = 1.+3.*epi*A;	// “™‰¿üŒ`ŒW” ke = 1+3ƒÃE[X^2]
+		/*************** ç­‰ä¾¡ç·šå½¢ä¿‚æ•° **************************************/
+		ke = 1.+3.*epi*A;	// ç­‰ä¾¡ç·šå½¢ä¿‚æ•° ke = 1+3ÎµE[X^2]
 		
-		for(k=0; k<iN*iN; k++) a[k] = 0.;	// ‰Šú‰»
-		for(k=0; k<iN;   k++) b[k] = 0.;	// ‰Šú‰»
+		for(k=0; k<iN*iN; k++) a[k] = 0.;	// åˆæœŸåŒ–
+		for(k=0; k<iN;   k++) b[k] = 0.;	// åˆæœŸåŒ–
 		
-		/**************** ’èíƒ‚[ƒƒ“ƒg•û’ö®‚ÌŒW”‚ğA‚ÆB‚É‘ã“ü ********************/
+		/**************** å®šå¸¸ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã®ä¿‚æ•°ã‚’Aã¨Bã«ä»£å…¥ ********************/
 		// dXX
 		a[0*iN+1] = 2.;	b[0] = 0.;
 				
@@ -284,19 +284,19 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		gsl_vector *x = gsl_vector_alloc(iN);
 		gsl_permutation *px = gsl_permutation_alloc(iN);
 		
-		// LU•ª‰ğ‚Ì•û–@‚Åƒ‚[ƒƒ“ƒg•û’ö®‚ğ‰ğ‚­
+		// LUåˆ†è§£ã®æ–¹æ³•ã§ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆæ–¹ç¨‹å¼ã‚’è§£ã
 		gsl_linalg_LU_decomp(&m.matrix, px, &s);
 		gsl_linalg_LU_solve(&m.matrix, px, &c.vector, x);
 		
-		A = gsl_vector_get(x,0); // ‰ğ‚Ì•Û‘¶
+		A = gsl_vector_get(x,0); // è§£ã®ä¿å­˜
 		B = gsl_vector_get(x,1);
 		C = gsl_vector_get(x,2);
-		err = pow(A-Exxold,2.)+pow(B-Exyold,2.)+pow(C-Eyyold,2.);	// û‘©ğŒ‚Ég‚¤Œë·C‘Oƒ‹[ƒv‚Æ‚Ì·‚Ì“ñæ˜a
+		err = pow(A-Exxold,2.)+pow(B-Exyold,2.)+pow(C-Eyyold,2.);	// åæŸæ¡ä»¶ã«ä½¿ã†èª¤å·®ï¼Œå‰ãƒ«ãƒ¼ãƒ—ã¨ã®å·®ã®äºŒä¹—å’Œ
 		
 		gsl_permutation_free(px);
 		gsl_vector_free(x);
 		
-	}while(err>10e-6);			// û‘©”»’è
+	}while(err>10e-6);			// åæŸåˆ¤å®š
 	/************************************************************************************************************************/
 	*sigma_x = sqrt(A);
 	*sigma_y = sqrt(C);
