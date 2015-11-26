@@ -1,6 +1,6 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_vector.h>
@@ -20,11 +20,6 @@
 #define zeta 0.05
 #define epi 0.3
 
-/************ 入力条件（変える） *******************/
-//#define beta2 10.0
-//#define lambda  0.05
-//#define alpha 0.1
-
 
 void print_state (size_t iter, gsl_multifit_fdfsolver * s);
 void init_values(double lambda, double beta2, double alpha, double *sigma_x, double *sigma_y, double *rho_xy);
@@ -33,9 +28,6 @@ int main (int argc, char *argv[])
 {
 	// カウント変数
 	size_t i;
-
-	const size_t n = N;
-	const size_t p = P;
 
 	char *ends;
 	double lambda = strtod(argv[1], &ends);
@@ -53,6 +45,8 @@ int main (int argc, char *argv[])
 	dG[4] = 0;
 	dG[5] = 15*lambda*pow(sqrt(1-alpha),6.)*pow(beta2,3.);
 	
+	const size_t n = N;
+	const size_t p = P;
 	struct data d = {n, y, zeta, epi, dG};
 	
 	// 乱数生成器
@@ -275,10 +269,10 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		a[2*iN+1] = 2.*ke;	a[2*iN+2] = 4.*zeta;	b[2] = alpha*2.*PI*S0 + (1-alpha)*lambda*beta2;
 		/**************************************************************************/
 		
-		gsl_matrix_view m = gsl_matrix_view_array(a, iN, iN);
-		gsl_vector_view c = gsl_vector_view_array(b, iN);
-		gsl_vector *x = gsl_vector_alloc(iN);
-		gsl_permutation *px = gsl_permutation_alloc(iN);
+		gsl_matrix_view m	= gsl_matrix_view_array(a, iN, iN);
+		gsl_vector_view c	= gsl_vector_view_array(b, iN);
+		gsl_vector *x		= gsl_vector_alloc(iN);
+		gsl_permutation *px	= gsl_permutation_alloc(iN);
 		
 		// LU分解の方法でモーメント方程式を解く
 		gsl_linalg_LU_decomp(&m.matrix, px, &s);
@@ -289,14 +283,14 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		C = gsl_vector_get(x,2);
 		err = pow(A-Exxold,2.)+pow(B-Exyold,2.)+pow(C-Eyyold,2.);	// 収束条件に使う誤差，前ループとの差の二乗和
 		
-		gsl_permutation_free(px);
 		gsl_vector_free(x);
+		gsl_permutation_free(px);
 		
 	}while(err>10e-6);			// 収束判定
-	/************************************************************************************************************************/
+
 	*sigma_x = sqrt(A);
 	*sigma_y = sqrt(C);
 	*rho_xy  = B/sqrt(A*C);
 
-	printf("sigma_x=%lf sigma_y=%lf rho_xy=%lf\n", sqrt(A), sqrt(C), B/sqrt(A*C));
+	return printf("sigma_x=%lf sigma_y=%lf rho_xy=%lf\n", sqrt(A), sqrt(C), B/sqrt(A*C));
 }
