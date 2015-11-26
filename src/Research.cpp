@@ -83,20 +83,19 @@ int main (int argc, char *argv[]) {
 		int y1 = 0.;
 		int y2 = 0.;
 
-		////////////////////////// 後でカウント変数を変える必要あり ////////////////////////////////
-		for (int i = 0; i<N; i++)
+		for (sample_length = 0; sample<N; sample++)
 		{
-			DY1[0] = dt*f1(force[i], y1, y2);
-			DY2[0] = dt*f2(force[i], y1, y2);
+			DY1[0] = dt*f1(force[sample_length], y1, y2);
+			DY2[0] = dt*f2(force[sample_length], y1, y2);
 
-			DY1[1] = dt*f1(force[i], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
-			DY2[1] = dt*f2(force[i], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
+			DY1[1] = dt*f1(force[sample_length], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
+			DY2[1] = dt*f2(force[sample_length], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
 
-			DY1[2] = dt*f1(force[i], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
-			DY2[2] = dt*f2(force[i], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
+			DY1[2] = dt*f1(force[sample_length], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
+			DY2[2] = dt*f2(force[sample_length], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
 
-			DY1[3] = dt*f1(force[i], y1 + DY1[2], y2 + DY2[2]);
-			DY2[3] = dt*f2(force[i], y1 + DY1[2], y2 + DY2[2]);
+			DY1[3] = dt*f1(force[sample_length], y1 + DY1[2], y2 + DY2[2]);
+			DY2[3] = dt*f2(force[sample_length], y1 + DY1[2], y2 + DY2[2]);
 
 			y1 = y1 + (DY1[0] + 2.*DY1[1] + 2.*DY1[2] + DY1[3]) / 6.0;
 			y2 = y2 + (DY2[0] + 2.*DY2[1] + 2.*DY2[2] + DY2[3]) / 6.0;
@@ -107,25 +106,25 @@ int main (int argc, char *argv[]) {
 			if (y2>y2max) y2max = y2;
 			if (y2<y2min) y2min = y2;
 
-			if (i == 0)
+			if (sample_length == 0)
 			{
 				// 各入力における変位の応答を格納
-				y1_buffer[i][sample_num] = 0.;
+				y1_buffer[sample_length][sample_num] = 0.;
 				// 各入力における速度の応答を格納
-				y2_buffer[i][sample_num] = 0.;
+				y2_buffer[sample_length][sample_num] = 0.;
 			}
 			else
 			{
 				// 各入力における変位の応答を格納
-				y1_buffer[i][sample_num] = y1;
+				y1_buffer[sample_length][sample_num] = y1;
 				// 各入力における速度の応答を格納
-				y2_buffer[i][sample_num] = y2;
+				y2_buffer[sample_length][sample_num] = y2;
 			}
 
 			if (sample_num == 0)
 			{
 				// 応答変位の記録
-				fprintf(t_x1, "%lf %lf\n", i*dt, y1);
+				fprintf(t_x1, "%lf %lf\n", sample_length*dt, y1);
 			}
 		}
 	}
