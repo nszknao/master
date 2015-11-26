@@ -17,22 +17,22 @@ struct data
 	double *dG;
 };
 
-// モーメント方程式を解く際の補正項
-const double keisu621 = 5.;
-const double keisu622 = 24./5.;
-const double keisu623 = 24./6.;
-const double keisu641 = 24./16.;
-const double keisu642 = 24./19.;
-const double keisu643 = 1.;
-const double keisu644 = 24./32.;
-const double keisu645 = 24./36.;
-const double keisu661 = 24./64.;
-const double keisu662 = 24./79.;
-const double keisu663 = 24./98.;
-const double keisu664 = 24./117.;
-const double keisu665 = 24./144;
-const double keisu666 = 24./183.;
-const double keisu667 = 24./216;
+// モーメント方程式を解く際の補正係数
+const double keisu[0] = 5.;
+const double keisu[1] = 24./5.;
+const double keisu[2] = 24./6.;
+const double keisu[3] = 24./16.;
+const double keisu[4] = 24./19.;
+const double keisu[5] = 1.;
+const double keisu[6] = 24./32.;
+const double keisu[7] = 24./36.;
+const double keisu[8] = 24./64.;
+const double keisu[9] = 24./79.;
+const double keisu[10] = 24./98.;
+const double keisu[11] = 24./117.;
+const double keisu[12] = 24./144;
+const double keisu[13] = 24./183.;
+const double keisu[14] = 24./216;
 
 /* 関数を定義 */
 int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
@@ -65,7 +65,7 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	};
 	
 	// カウント変数
-	size_t tmp, tmp_param;
+	size_t tmp;
 	
 	double param[NUM_OF_PARAMETER];	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
 
@@ -172,49 +172,32 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 		+ pa0*(45*pa8*pow(pa6*pa6*pa5,2) + 60*pow(pa8,3)*pow(pa6,2));													// y_1^3*y_w^5
 
 
-	double bfunction[NUM_OF_MOMENT_EQUATION];
+	double v_result_moment_eq[NUM_OF_MOMENT_EQUATION];
 	for (tmp=0; tmp<NUM_OF_MOMENT_EQUATION; tmp++)
 	{
-		// モーメント方程式の右辺に当たる行列を作るための初期化
-		bfunction[tmp] = 0.0;
+		v_result_moment_eq[tmp] = 0.0;
 	}
 
-	// モーメント方程式の係数行列
-	gsl_matrix_view A           = gsl_matrix_view_array(cf_moment_eq, NUM_OF_MOMENT_EQUATION, 21);
-	// モーメントの行列
-	gsl_matrix_view gsl_Eg      = gsl_matrix_view_array(Eg, 21, 1);
-	// モーメント方程式の右辺に当たる行列
-	gsl_matrix_view gsl_function = gsl_matrix_view_array(bfunction, NUM_OF_MOMENT_EQUATION, 1);
-	// 行列計算
-	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &A.matrix, &gsl_Eg.matrix, 0.0, &gsl_function.matrix);
+	// モーメント方程式を解く
+	gsl_matrix_view m_cf_moment_eq		= gsl_matrix_view_array(cf_moment_eq, NUM_OF_MOMENT_EQUATION, 21);
+	gsl_matrix_view m_moment			= gsl_matrix_view_array(Eg, 21, 1);
+	gsl_matrix_view m_result_moment_eq	= gsl_matrix_view_array(v_result_moment_eq, NUM_OF_MOMENT_EQUATION, 1);
+	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &m_cf_moment_eq.matrix, &m_moment.matrix, 0.0, &m_result_moment_eq.matrix);
 
-	double function[NUM_OF_MOMENT_EQUATION];
+	// 計算結果を配列に保存
+	double array_result_moment_eq[NUM_OF_MOMENT_EQUATION];
 	for (tmp=0; tmp<NUM_OF_MOMENT_EQUATION; tmp++)
 	{
-		function[tmp] = gsl_matrix_get(&gsl_function.matrix, tmp, 0);	// 先の行列計算の答えを配列にする
+		array_result_moment_eq[tmp] = gsl_matrix_get(&m_result_moment_eq.matrix, tmp, 0);	// 先の行列計算の答えを配列にする
 	}
-	function[2]  += dG[1];
-	function[7]  += dG[3];
-	function[14] += dG[5];
+	array_result_moment_eq[2]  += dG[1];
+	array_result_moment_eq[7]  += dG[3];
+	array_result_moment_eq[14] += dG[5];
 	
-	for (i=0; i<n; i++)
+	// 補正係数を含めた結果をfに格納
+	for (tmp=0; tmp<n; tmp++)
 	{
-		// 今回モーメント方程式の左辺は全て０なので y[i] = 0 になる
-		if (i==0) gsl_vector_set(f, i, keisu621*function[i]-y[i]);
-		else if (i==1) gsl_vector_set(f, i, keisu622*function[i]-y[i]);
-		else if (i==2) gsl_vector_set(f, i, keisu623*function[i]-y[i]);
-		else if (i==3) gsl_vector_set(f, i, keisu641*function[i]-y[i]);
-		else if (i==4) gsl_vector_set(f, i, keisu642*function[i]-y[i]);
-		else if (i==5) gsl_vector_set(f, i, keisu643*function[i]-y[i]);
-		else if (i==6) gsl_vector_set(f, i, keisu644*function[i]-y[i]);
-		else if (i==7) gsl_vector_set(f, i, keisu645*function[i]-y[i]);
-		else if (i==8) gsl_vector_set(f, i, keisu661*function[i]-y[i]);
-		else if (i==9) gsl_vector_set(f, i, keisu662*function[i]-y[i]);
-		else if (i==10) gsl_vector_set(f, i, keisu663*function[i]-y[i]);
-		else if (i==11) gsl_vector_set(f, i, keisu664*function[i]-y[i]);
-		else if (i==12) gsl_vector_set(f, i, keisu665*function[i]-y[i]);
-		else if (i==13) gsl_vector_set(f, i, keisu666*function[i]-y[i]);
-		else gsl_vector_set(f, i, keisu667*function[i]-y[i]);
+		gsl_vector_set(f, tmp, keisu[tmp]*(array_result_moment_eq[tmp]-y[tmp]);
 	}
 
 	return GSL_SUCCESS;
@@ -659,30 +642,18 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 		0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
 	};
 
+	// モーメント方程式のヤコビアンを計算
 	gsl_matrix_view m_cf_jacoby_moment_eq	= gsl_matrix_view_array(cf_jacoby_moment_eq, NUM_OF_MOMENT_EQUATION, NUM_OF_PARAMETER);
 	gsl_matrix_view m_cf_moment_eq			= gsl_matrix_view_array(cf_moment_eq, NUM_OF_MOMENT_EQUATION, 21);
 	gsl_matrix_view m_jacoby_moment			= gsl_matrix_view_array(v_jacoby_moment, 21, NUM_OF_PARAMETER);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, &m_cf_moment_eq.matrix, &m_jacoby_moment.matrix, 0.0, &m_cf_jacoby_moment_eq.matrix);
 
-	for(i=0; i<n; i++)
+	// 計算結果をJに格納
+	for(tmp_moment=0; tmp_moment<NUM_OF_MOMENT_EQUATION; tmp_moment++)
 	{
-		for(tm=0; j<10; j++)
+		for(tmp_param=0; tmp_param<10; tmp_param++)
 		{
-			if (i==0) gsl_matrix_set(J, i, j, keisu621*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==1) gsl_matrix_set(J, i, j, keisu622*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==2) gsl_matrix_set(J, i, j, keisu623*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==3) gsl_matrix_set(J, i, j, keisu641*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==4) gsl_matrix_set(J, i, j, keisu642*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==5) gsl_matrix_set(J, i, j, keisu643*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==6) gsl_matrix_set(J, i, j, keisu644*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==7) gsl_matrix_set(J, i, j, keisu645*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==8) gsl_matrix_set(J, i, j, keisu661*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==9) gsl_matrix_set(J, i, j, keisu662*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==10) gsl_matrix_set(J, i, j, keisu663*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==11) gsl_matrix_set(J, i, j, keisu664*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==12) gsl_matrix_set(J, i, j, keisu665*gsl_matrix_get(&buf1J.matrix,i,j));
-			else if (i==13) gsl_matrix_set(J, i, j, keisu666*gsl_matrix_get(&buf1J.matrix,i,j));
-			else gsl_matrix_set(J, i, j, keisu667*gsl_matrix_get(&buf1J.matrix,i,j));
+			gsl_matrix_set(J, i, j, keisu[tmp_moment]*gsl_matrix_get(&m_cf_jacoby_moment_eq.matrix,tmp_moment,tmp_param));
 		}
 	}
 
