@@ -8,7 +8,7 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
-#include "expfit.c"
+#include "expfit.cpp"
 
 #define N 15
 #define P 10
@@ -45,9 +45,9 @@ int main (int argc, char *argv[])
 	dG[4] = 0;
 	dG[5] = 15*lambda*pow(sqrt(1-alpha),6.)*pow(beta2,3.);
 	
-	const size_t n = N;
-	const size_t p = P;
-	struct data d = {n, y, zeta, epi, dG};
+	const size_t n	= N;
+	const size_t p	= P;
+	struct data d = {n, p, y, zeta, epi, dG};
 	
 	// 乱数生成器
 	gsl_rng * r;
@@ -58,12 +58,12 @@ int main (int argc, char *argv[])
 	r = gsl_rng_alloc (type);
 
 	gsl_multifit_function_fdf f;
-	f.f	 = &expb_f;
-	f.df	 = &expb_df;
-	f.fdf	 = &expb_fdf;
-	f.n	 = n;
-	f.p	 = p;
-	f.params = &d;
+	f.f			= &expb_f;
+	f.df		= &expb_df;
+	f.fdf		= &expb_fdf;
+	f.n			= n;
+	f.p			= p;
+	f.params	= &d;
 	
 	const gsl_multifit_fdfsolver_type *T;
 	gsl_multifit_fdfsolver *s;
@@ -230,7 +230,6 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 	gsl_blas_dnrm2 (s->f));
 }
 
-/******************** 初期値を求める関数 ********************/
 void init_values(double lambda, double beta2, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
 {
 	int k, s;
