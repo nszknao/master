@@ -17,25 +17,6 @@ struct data
 	double *dG;
 };
 
-// モーメント方程式を解く際の補正係数
-double keisu[15];
-keisu[0] = 5.;
-keisu[1] = 24./5.;
-keisu[2] = 24./6.;
-keisu[3] = 24./16.;
-keisu[4] = 24./19.;
-keisu[5] = 1.;
-keisu[6] = 24./32.;
-keisu[7] = 24./36.;
-keisu[8] = 24./64.;
-keisu[9] = 24./79.;
-keisu[10] = 24./98.;
-keisu[11] = 24./117.;
-keisu[12] = 24./144;
-keisu[13] = 24./183.;
-keisu[14] = 24./216;
-
-/* 関数を定義 */
 int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 {
 	size_t NUM_OF_MOMENT_EQUATION	= ((struct data *)data)->n;
@@ -65,6 +46,24 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*zeta,0,0,0,0,0,-6*epi
 	};
 	
+	// モーメント方程式を解く際の補正係数
+	double keisu[15];
+	keisu[0] = 5.;
+	keisu[1] = 24./5.;
+	keisu[2] = 24./6.;
+	keisu[3] = 24./16.;
+	keisu[4] = 24./19.;
+	keisu[5] = 1.;
+	keisu[6] = 24./32.;
+	keisu[7] = 24./36.;
+	keisu[8] = 24./64.;
+	keisu[9] = 24./79.;
+	keisu[10] = 24./98.;
+	keisu[11] = 24./117.;
+	keisu[12] = 24./144;
+	keisu[13] = 24./183.;
+	keisu[14] = 24./216;
+
 	// カウント変数
 	size_t tmp;
 	
@@ -234,6 +233,24 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*zeta,0,0,0,0,0,-6*epi
 	};
 	
+	// モーメント方程式を解く際の補正係数
+	double keisu[15];
+	keisu[0] = 5.;
+	keisu[1] = 24./5.;
+	keisu[2] = 24./6.;
+	keisu[3] = 24./16.;
+	keisu[4] = 24./19.;
+	keisu[5] = 1.;
+	keisu[6] = 24./32.;
+	keisu[7] = 24./36.;
+	keisu[8] = 24./64.;
+	keisu[9] = 24./79.;
+	keisu[10] = 24./98.;
+	keisu[11] = 24./117.;
+	keisu[12] = 24./144;
+	keisu[13] = 24./183.;
+	keisu[14] = 24./216;
+
 	// カウント変数
 	size_t tmp, tmp_param, tmp_moment;
 
