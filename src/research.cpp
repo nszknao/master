@@ -19,8 +19,6 @@
 #define dt 0.01		// 時間刻み幅
 #define dx 0.1		// pdfの横軸の刻み幅
 
-double force[SAMPLE_LENGTH];
-
 // ルンゲクッタで使う
 double f1(double force, double y1, double y2);
 double f2(double force, double y1, double y2);
@@ -37,6 +35,8 @@ int main (int argc, char *argv[]) {
 
 	// カウント変数
 	size_t tmp, tmp_ndx, tmp_num, tmp_lng;
+	// 入力標本
+	double force[SAMPLE_LENGTH];
 
 	gsl_rng *r;
 	gsl_rng *rp;
@@ -47,7 +47,7 @@ int main (int argc, char *argv[]) {
 
 	t_force = fopen("t_force.dat", "w");
 	t_x1 = fopen("t_x1.dat", "w");
-	//	x_Gpdf	= fopen("y2_Gpdf.dat","w");		//ガウス分布(変位応答のpdfと比較する。)
+	//	x_Gpdf	= fopen("y2_Gpdf.dat","w");
 
 	r = gsl_rng_alloc(gsl_rng_default);
 	rp = gsl_rng_alloc(gsl_rng_default);
@@ -64,7 +64,7 @@ int main (int argc, char *argv[]) {
 	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = 0., y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = 0.;
 	double y1min = 0., y1max = 0., y2max = 0., y2min = 0.;
 
-	for (int tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
+	for (tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
 	{
 		gsl_rng_set(r, time(NULL) + clock());
 		gsl_rng_set(rp, time(NULL) + clock() + 1);
@@ -72,13 +72,12 @@ int main (int argc, char *argv[]) {
 		/********** 入力を生成（ホワイトノイズ＋不規則パルス） **********/
 		for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 		{
-			// force[tmp_lng] = (gsl_ran_gaussian(r, sigma) + gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)))/dt;
 			force[tmp_lng] = wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)) / dt;
 			// force[tmp_lng] = gsl_ran_gaussian(r, sigma);
 			// force[tmp_lng] = gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2))/dt;
 
-			if (tmp_num == 0)
-				fprintf(t_force, "%lf %lf\n", tmp_lng*dt, force[tmp_lng]); //励振の記録
+			// 入力の記録
+			if (tmp_num == 0) fprintf(t_force, "%lf %lf\n", tmp_lng*dt, force[tmp_lng]);
 		}
 
 		/*********************** Runge-Kutta **********************************/
@@ -136,12 +135,9 @@ int main (int argc, char *argv[]) {
 			{
 				if ((y1_buffer[tmp_lng][tmp_num] < (y1min + (tmp_ndx + 1)*dx)) && (y1_buffer[tmp_lng][tmp_num] >= (y1min + tmp_ndx*dx))) n_dx1++;
 			}
-			//			printf("n_dx1の中身:%lf\n",n_dx1);
 			y1_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx1 / SAMPLE_LENGTH / dx;
 		}
 	}
-
-	//	printf("Inside of the y1min:%lf, y1max:%lf\n",y1min, y1max);		
 
 	for (tmp_ndx = 0; (y1min + tmp_ndx*dx) <= y1max; tmp_ndx++)
 	{
@@ -157,7 +153,6 @@ int main (int argc, char *argv[]) {
 		fprintf(y1_pdf, "%lf %lf\n", (y1min + tmp_ndx*dx), pdf_y1);
 	}
 
-	// pdfの全積分値
 	printf("integral of pdf_y1 = %lf\n", integral_y1);
 
 	fclose(y1_pdf);
