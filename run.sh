@@ -4,11 +4,8 @@
 # ----------
 
 ############ Compile-force #############################################
-gcc -lstdc++ -Wl,--heap,900000000,--stack,536870912 research.c -o research.exe -lm -lgsl -lgslcblas
-gcc -lstdc++ -Wl,--heap,900000000,--stack,536870912 lsm.c -o lsm.exe -lm -lgsl -lgslcblas
-
-plot="plot.plt"
-results="results"
+g++ -lstdc++ -Wl,--heap,900000000,--stack,536870912 research.cpp -o research.exe -lm -lgsl -lgslcblas
+g++ -lstdc++ -Wl,--heap,900000000,--stack,536870912 lsm.cpp -o lsm.exe -lm -lgsl -lgslcblas
 
 ############ Reading init_value.txt ####################################
 initfile=init_value_disp.txt
@@ -26,6 +23,8 @@ params="l=${lambda},b2=${beta2}"
 echo "lambda = " $lambda "beta2 = " $beta2
 
 ##### Handling if "results" exists. #############
+results="results"
+
 if [ ! -e ./${results}/ ]
 then
 mkdir ./${results}/
@@ -39,7 +38,7 @@ if [[ $XX -eq 1 ]]
 then
 if [ -e ./${results}/${params}/ ]
 then
-rm -R -f ./${results}/${params}/*
+rm -Rf ./${results}/${params}/
 else
 mkdir ./${results}/${params}/
 fi
@@ -48,6 +47,7 @@ fi
 ############ Plot ######################################################
 ##### Handlings if a directry "dat" exists. #####
 dat="dat_a=${alpha}"
+
 if [ ! -e ${dat} ]
 then
 mkdir ${dat}
@@ -55,6 +55,7 @@ fi
 
 ##### Handlings if a directry "eps" exists. ######
 eps="eps_a=${alpha}"
+
 if [ ! -e ${eps} ] 
 then
 mkdir ${eps}
@@ -65,6 +66,8 @@ mkdir ${eps}/"velocity(linear)"
 fi
 
 ##### Handling if "bplot.plt" exists. #############
+plot="plot.plt"
+
 if [ -e ${plot} ]
 then
 rm ${plot}
@@ -176,9 +179,8 @@ EOF
 #			"./Gpdf/y2_Gpdf.dat" with lines linetype 2 lw 2
 #EOF
 
-echo -e "Plotting is success!!\n"
-
 gnuplot ${plot}
+echo -e "Plotting is success!!\n"
 
 #rm "gsay1pdf.dat"
 #fi
