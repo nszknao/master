@@ -61,7 +61,7 @@ int main (int argc, char *argv[]) {
 
 	// ルンゲクッタで使う
 	double DY1[4], DY2[4];
-	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES], y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES];
+	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = 0., y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = 0.;
 	double y1min = 0., y1max = 0., y2max = 0., y2min = 0.;
 
 	for (int tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
@@ -83,10 +83,10 @@ int main (int argc, char *argv[]) {
 
 		/*********************** Runge-Kutta **********************************/
 		// 初期値
-		int y1 = 0.;
-		int y2 = 0.;
+		double y1 = 0.;
+		double y2 = 0.;
 
-		for (tmp_lng = 0; tmp_lng<SAMPLE_LENGTH; tmp_lng++)
+		for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 		{
 			DY1[0] = dt*f1(force[tmp_lng], y1, y2);
 			DY2[0] = dt*f2(force[tmp_lng], y1, y2);
@@ -109,20 +109,8 @@ int main (int argc, char *argv[]) {
 			if (y2>y2max) y2max = y2;
 			if (y2<y2min) y2min = y2;
 
-			if (tmp_lng == 0)
-			{
-				// 各入力における変位の応答を格納
-				y1_buffer[tmp_lng][tmp_num] = 0.;
-				// 各入力における速度の応答を格納
-				y2_buffer[tmp_lng][tmp_num] = 0.;
-			}
-			else
-			{
-				// 各入力における変位の応答を格納
-				y1_buffer[tmp_lng][tmp_num] = y1;
-				// 各入力における速度の応答を格納
-				y2_buffer[tmp_lng][tmp_num] = y2;
-			}
+			y1_buffer[tmp_lng][tmp_num] = y1;
+			y2_buffer[tmp_lng][tmp_num] = y2;
 
 			if (tmp_num == 0)
 			{
@@ -133,23 +121,23 @@ int main (int argc, char *argv[]) {
 	}
 
 	/************************* 変位のpdfを計算する ***********************************/
-	int n_dx, pdf_y1, integral_y1 = 0;
+	int n_dx1, pdf_y1, integral_y1 = 0;
 	double y1_pdf_buffer[3000][100];
 	FILE *y1_pdf;
 	y1_pdf = fopen("y1_pdf.dat", "w");
 
-	for (tmp_num = 0; tmp_num<NUM_OF_SAMPLES; tmp_num++)
+	for (tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
 	{
 		for (tmp_ndx = 0; (y1min + tmp_ndx*dx) <= y1max; tmp_ndx++)
 		{
 			// 幅dxに含まれる回数
-			n_dx = 0;
-			for (tmp_lng = 0; tmp_lng<SAMPLE_LENGTH; tmp_lng++)
+			n_dx1 = 0;
+			for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 			{
-				if ((y1_buffer[tmp_lng][tmp_num] < (y1min + (tmp_ndx + 1)*dx)) && (y1_buffer[tmp_lng][tmp_num] >= (y1min + tmp_ndx*dx))) n_dx++;
+				if ((y1_buffer[tmp_lng][tmp_num] < (y1min + (tmp_ndx + 1)*dx)) && (y1_buffer[tmp_lng][tmp_num] >= (y1min + tmp_ndx*dx))) n_dx1++;
 			}
-			//			printf("n_dxの中身:%lf\n",n_dx);
-			y1_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx / SAMPLE_LENGTH / dx;
+			//			printf("n_dx1の中身:%lf\n",n_dx1);
+			y1_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx1 / SAMPLE_LENGTH / dx;
 		}
 	}
 
@@ -158,7 +146,7 @@ int main (int argc, char *argv[]) {
 	for (tmp_ndx = 0; (y1min + tmp_ndx*dx) <= y1max; tmp_ndx++)
 	{
 		pdf_y1 = 0.;
-		for (tmp_num = 0; tmp_num<NUM_OF_SAMPLES; tmp_num++)
+		for (tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
 		{
 			pdf_y1 += y1_pdf_buffer[tmp_ndx][tmp_num];
 			// printf("y1_pdf_bufferの中身:%lf\n",y1_pdf_buffer);
@@ -175,7 +163,7 @@ int main (int argc, char *argv[]) {
 	fclose(y1_pdf);
 
 	/************************* 速度のpdfを計算する ***********************************/
-	//	int n_dx, pdf_y2, integral_y2 = 0;
+	//	int n_dx2, pdf_y2, integral_y2 = 0;
 	//	double y2_pdf_buffer[3000][100];
 	//	FILE *y2_pdf;
 	//	y2_pdf	= fopen("y2_pdf.dat","w");
@@ -185,12 +173,12 @@ int main (int argc, char *argv[]) {
 	//		for(tmp_ndx=0; (y2min+tmp_ndx*dx) <= y2max; tmp_ndx++ )
 	//		{
 	//			// 幅dxに含まれる回数
-	//			n_dx = 0;
+	//			n_dx2 = 0;
 	//			for(tmp_lng=0; tmp_lng<SAMPLE_LENGTH ; tmp_lng++ )
 	//			{
 	//				if((y2_buffer[tmp_lng][tmp_num] < (y2min+(tmp_ndx+1)*dx)) && (y2_buffer[tmp_lng][tmp_num] >= (y2min+tmp_ndx*dx))) n_dx++;
 	//			}
-	//			y2_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx/SAMPLE_LENGTH/dx;
+	//			y2_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx2/SAMPLE_LENGTH/dx;
 	//		}
 	//	}
 	//
