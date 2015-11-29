@@ -14,12 +14,12 @@
 #define zeta 0.05			// 減衰定数
 
 /********** 計算条件 **********/
-#define N 131072	// 131072,65536
+#define SAMPLE_LENGTH 131072	// 131072,65536
+#define NUM_OF_SAMPLES 100		// 入力の標本数
 #define dt 0.01		// 時間刻み幅
 #define dx 0.1		// pdfの横軸の刻み幅
-#define SET 100		// 入力の標本数
 
-double force[N];
+double force[SAMPLE_LENGTH];
 
 // ルンゲクッタで使う
 double f1(double force, double y1, double y2);
@@ -36,7 +36,7 @@ int main (int argc, char *argv[]) {
 	double sigma	= sqrt(2.*M_PI*S0 / dt);
 
 	// カウント変数
-	size_t sample_length;
+	size_t tmp, tmp_ndx, tmp_num, tmp_lng;
 
 	gsl_rng *r;
 	gsl_rng *rp;
@@ -61,24 +61,24 @@ int main (int argc, char *argv[]) {
 
 	// ルンゲクッタで使う
 	double DY1[4], DY2[4];
-	double y1_buffer[N][SET], y2_buffer[N][SET];
+	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES], y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES];
 	double y1min = 0., y1max = 0., y2max = 0., y2min = 0.;
 
-	for (int sample_num = 0; sample_num < SET; sample_num++)
+	for (int tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
 	{
 		gsl_rng_set(r, time(NULL) + clock());
 		gsl_rng_set(rp, time(NULL) + clock() + 1);
 
 		/********** 入力を生成（ホワイトノイズ＋不規則パルス） **********/
-		for (sample_length = 0; sample_length < N; sample_length++)
+		for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 		{
-			// force[sample_length] = (gsl_ran_gaussian(r, sigma) + gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)))/dt;
-			force[sample_length] = wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)) / dt;
-			// force[sample_length] = gsl_ran_gaussian(r, sigma);
-			// force[sample_length] = gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2))/dt;
+			// force[tmp_lng] = (gsl_ran_gaussian(r, sigma) + gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)))/dt;
+			force[tmp_lng] = wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)) / dt;
+			// force[tmp_lng] = gsl_ran_gaussian(r, sigma);
+			// force[tmp_lng] = gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2))/dt;
 
-			if (sample_num == 0)
-				fprintf(t_force, "%lf %lf\n", sample_length*dt, force[sample_length]); //励振の記録
+			if (tmp_num == 0)
+				fprintf(t_force, "%lf %lf\n", tmp_lng*dt, force[tmp_lng]); //励振の記録
 		}
 
 		/*********************** Runge-Kutta **********************************/
@@ -86,19 +86,19 @@ int main (int argc, char *argv[]) {
 		int y1 = 0.;
 		int y2 = 0.;
 
-		for (sample_length = 0; sample_length<N; sample_length++)
+		for (tmp_lng = 0; tmp_lng<SAMPLE_LENGTH; tmp_lng++)
 		{
-			DY1[0] = dt*f1(force[sample_length], y1, y2);
-			DY2[0] = dt*f2(force[sample_length], y1, y2);
+			DY1[0] = dt*f1(force[tmp_lng], y1, y2);
+			DY2[0] = dt*f2(force[tmp_lng], y1, y2);
 
-			DY1[1] = dt*f1(force[sample_length], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
-			DY2[1] = dt*f2(force[sample_length], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
+			DY1[1] = dt*f1(force[tmp_lng], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
+			DY2[1] = dt*f2(force[tmp_lng], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
 
-			DY1[2] = dt*f1(force[sample_length], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
-			DY2[2] = dt*f2(force[sample_length], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
+			DY1[2] = dt*f1(force[tmp_lng], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
+			DY2[2] = dt*f2(force[tmp_lng], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
 
-			DY1[3] = dt*f1(force[sample_length], y1 + DY1[2], y2 + DY2[2]);
-			DY2[3] = dt*f2(force[sample_length], y1 + DY1[2], y2 + DY2[2]);
+			DY1[3] = dt*f1(force[tmp_lng], y1 + DY1[2], y2 + DY2[2]);
+			DY2[3] = dt*f2(force[tmp_lng], y1 + DY1[2], y2 + DY2[2]);
 
 			y1 = y1 + (DY1[0] + 2.*DY1[1] + 2.*DY1[2] + DY1[3]) / 6.0;
 			y2 = y2 + (DY2[0] + 2.*DY2[1] + 2.*DY2[2] + DY2[3]) / 6.0;
@@ -109,25 +109,25 @@ int main (int argc, char *argv[]) {
 			if (y2>y2max) y2max = y2;
 			if (y2<y2min) y2min = y2;
 
-			if (sample_length == 0)
+			if (tmp_lng == 0)
 			{
 				// 各入力における変位の応答を格納
-				y1_buffer[sample_length][sample_num] = 0.;
+				y1_buffer[tmp_lng][tmp_num] = 0.;
 				// 各入力における速度の応答を格納
-				y2_buffer[sample_length][sample_num] = 0.;
+				y2_buffer[tmp_lng][tmp_num] = 0.;
 			}
 			else
 			{
 				// 各入力における変位の応答を格納
-				y1_buffer[sample_length][sample_num] = y1;
+				y1_buffer[tmp_lng][tmp_num] = y1;
 				// 各入力における速度の応答を格納
-				y2_buffer[sample_length][sample_num] = y2;
+				y2_buffer[tmp_lng][tmp_num] = y2;
 			}
 
-			if (sample_num == 0)
+			if (tmp_num == 0)
 			{
 				// 応答変位の記録
-				fprintf(t_x1, "%lf %lf\n", sample_length*dt, y1);
+				fprintf(t_x1, "%lf %lf\n", tmp_lng*dt, y1);
 			}
 		}
 	}
@@ -138,35 +138,35 @@ int main (int argc, char *argv[]) {
 	FILE *y1_pdf;
 	y1_pdf = fopen("y1_pdf.dat", "w");
 
-	for (int k = 0; k<SET; k++)
+	for (tmp_num = 0; tmp_num<NUM_OF_SAMPLES; tmp_num++)
 	{
-		for (int j = 0; (y1min + j*dx) <= y1max; j++)
+		for (tmp_ndx = 0; (y1min + tmp_ndx*dx) <= y1max; tmp_ndx++)
 		{
 			// 幅dxに含まれる回数
 			n_dx = 0;
-			for (int i = 0; i<N; i++)
+			for (tmp_lng = 0; tmp_lng<SAMPLE_LENGTH; tmp_lng++)
 			{
-				if ((y1_buffer[i][k] < (y1min + (j + 1)*dx)) && (y1_buffer[i][k] >= (y1min + j*dx))) n_dx++;
+				if ((y1_buffer[tmp_lng][tmp_num] < (y1min + (tmp_ndx + 1)*dx)) && (y1_buffer[tmp_lng][tmp_num] >= (y1min + tmp_ndx*dx))) n_dx++;
 			}
-			//			printf("n_dxの中身:%lf\n",n_dx);		
-			y1_pdf_buffer[j][k] = (double)n_dx / N / dx;
+			//			printf("n_dxの中身:%lf\n",n_dx);
+			y1_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx / SAMPLE_LENGTH / dx;
 		}
 	}
 
 	//	printf("Inside of the y1min:%lf, y1max:%lf\n",y1min, y1max);		
 
-	for (int i = 0; (y1min + i*dx) <= y1max; i++)
+	for (tmp_ndx = 0; (y1min + tmp_ndx*dx) <= y1max; tmp_ndx++)
 	{
 		pdf_y1 = 0.;
-		for (int k = 0; k<SET; k++)
+		for (tmp_num = 0; tmp_num<NUM_OF_SAMPLES; tmp_num++)
 		{
-			pdf_y1 += y1_pdf_buffer[i][k];
+			pdf_y1 += y1_pdf_buffer[tmp_ndx][tmp_num];
 			// printf("y1_pdf_bufferの中身:%lf\n",y1_pdf_buffer);
 		}
-		pdf_y1 = (double)pdf_y1 / SET;
+		pdf_y1 = (double)pdf_y1 / NUM_OF_SAMPLES;
 		integral_y1 += pdf_y1*dx;
 		// 応答の確率密度関数の記録
-		fprintf(y1_pdf, "%lf %lf\n", (y1min + i*dx), pdf_y1);
+		fprintf(y1_pdf, "%lf %lf\n", (y1min + tmp_ndx*dx), pdf_y1);
 	}
 
 	// pdfの全積分値
@@ -180,31 +180,31 @@ int main (int argc, char *argv[]) {
 	//	FILE *y2_pdf;
 	//	y2_pdf	= fopen("y2_pdf.dat","w");
 	//	
-	//	for(int k=0; k<SET; k++)  
+	//	for(tmp_num=0; tmp_num<NUM_OF_SAMPLES; tmp_num++)  
 	//	{
-	//		for(int j=0; (y2min+j*dx) <= y2max; j++ )
+	//		for(tmp_ndx=0; (y2min+tmp_ndx*dx) <= y2max; tmp_ndx++ )
 	//		{
 	//			// 幅dxに含まれる回数
 	//			n_dx = 0;
-	//			for(i=0; i<N ; i++ )
+	//			for(tmp_lng=0; tmp_lng<SAMPLE_LENGTH ; tmp_lng++ )
 	//			{
-	//				if((y2_buffer[i][k] < (y2min+(j+1)*dx)) && (y2_buffer[i][k] >= (y2min+j*dx))) n_dx++;
+	//				if((y2_buffer[tmp_lng][tmp_num] < (y2min+(tmp_ndx+1)*dx)) && (y2_buffer[tmp_lng][tmp_num] >= (y2min+tmp_ndx*dx))) n_dx++;
 	//			}
-	//			y2_pdf_buffer[j][k] = (double)n_dx/N/dx;
+	//			y2_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx/SAMPLE_LENGTH/dx;
 	//		}
 	//	}
 	//
-	//	for(i=0; (y2min+i*dx) <= y2max; i++)
+	//	for(tmp_ndx=0; (y2min+tmp_ndx*dx) <= y2max; tmp_ndx++)
 	//	{
 	//		pdf_y2 = 0.;
-	//		for(k=0; k<SET; k++)
+	//		for(tmp_num=0; tmp_num<NUM_OF_SAMPLES; tmp_num++)
 	//		{
-	//			pdf_y2 += y2_pdf_buffer[i][k];
+	//			pdf_y2 += y2_pdf_buffer[tmp_ndx][tmp_num];
 	//		}
-	//		pdf_y2 = (double)pdf_y2/SET;
+	//		pdf_y2 = (double)pdf_y2/NUM_OF_SAMPLES;
 	//		integral_y2 += pdf_y2*dx;
 	//		// 応答の確率密度関数の記録
-	//		fprintf(y2_pdf, "%lf %lf\n", (y2min+i*dx), pdf_y2);
+	//		fprintf(y2_pdf, "%lf %lf\n", (y2min+tmp_ndx*dx), pdf_y2);
 	//	}
 	//
 	//	// pdfの全積分値
