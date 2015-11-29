@@ -35,6 +35,9 @@ int main (int argc, char *argv[]) {
 	double alpha	= strtod(argv[3], &ends);
 	double sigma	= sqrt(2.*M_PI*S0 / dt);
 
+	// カウント変数
+	size_t sample_length;
+
 	gsl_rng *r;
 	gsl_rng *rp;
 
@@ -67,7 +70,7 @@ int main (int argc, char *argv[]) {
 		gsl_rng_set(rp, time(NULL) + clock() + 1);
 
 		/********** 入力を生成（ホワイトノイズ＋不規則パルス） **********/
-		for (int sample_length = 0; sample_length < N; sample_length++)
+		for (sample_length = 0; sample_length < N; sample_length++)
 		{
 			// force[sample_length] = (gsl_ran_gaussian(r, sigma) + gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)))/dt;
 			force[sample_length] = wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)) / dt;
@@ -83,7 +86,7 @@ int main (int argc, char *argv[]) {
 		int y1 = 0.;
 		int y2 = 0.;
 
-		for (sample_length = 0; sample<N; sample++)
+		for (sample_length = 0; sample_length<N; sample_length++)
 		{
 			DY1[0] = dt*f1(force[sample_length], y1, y2);
 			DY2[0] = dt*f2(force[sample_length], y1, y2);

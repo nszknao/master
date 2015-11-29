@@ -18,21 +18,22 @@ struct data
 };
 
 // モーメント方程式を解く際の補正係数
-const double keisu[0] = 5.;
-const double keisu[1] = 24./5.;
-const double keisu[2] = 24./6.;
-const double keisu[3] = 24./16.;
-const double keisu[4] = 24./19.;
-const double keisu[5] = 1.;
-const double keisu[6] = 24./32.;
-const double keisu[7] = 24./36.;
-const double keisu[8] = 24./64.;
-const double keisu[9] = 24./79.;
-const double keisu[10] = 24./98.;
-const double keisu[11] = 24./117.;
-const double keisu[12] = 24./144;
-const double keisu[13] = 24./183.;
-const double keisu[14] = 24./216;
+const double keisu[15];
+keisu[0] = 5.;
+keisu[1] = 24./5.;
+keisu[2] = 24./6.;
+keisu[3] = 24./16.;
+keisu[4] = 24./19.;
+keisu[5] = 1.;
+keisu[6] = 24./32.;
+keisu[7] = 24./36.;
+keisu[8] = 24./64.;
+keisu[9] = 24./79.;
+keisu[10] = 24./98.;
+keisu[11] = 24./117.;
+keisu[12] = 24./144;
+keisu[13] = 24./183.;
+keisu[14] = 24./216;
 
 /* 関数を定義 */
 int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
@@ -195,9 +196,9 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	array_result_moment_eq[14] += dG[5];
 	
 	// 補正係数を含めた結果をfに格納
-	for (tmp=0; tmp<n; tmp++)
+	for (tmp=0; tmp<NUM_OF_MOMENT_EQUATION; tmp++)
 	{
-		gsl_vector_set(f, tmp, keisu[tmp]*(array_result_moment_eq[tmp]-y[tmp]);
+		gsl_vector_set(f, tmp, keisu[tmp]*(array_result_moment_eq[tmp]-y[tmp]));
 	}
 
 	return GSL_SUCCESS;
@@ -233,12 +234,13 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*zeta,0,0,0,0,0,-6*epi
 	};
 	
-	size_t i, j;
+	// カウント変数
+	size_t tmp, tmp_param, tmp_moment;
 
 	double param[NUM_OF_PARAMETER];
-	for(i=0; i<NUM_OF_PARAMETER; i++)
+	for(tmp=0; tmp<NUM_OFETER; tmp++)
 	{
-	  param[i] = gsl_vector_get(x, i);
+	  param[tmp] = gsl_vector_get(x, tmp);
 	}
 	// ゆとりパラメータ
 	double pa0 = param[0], pa1 = param[1], pa2 = param[2], pa3 = param[3], pa4 = param[4], pa5 = param[5], pa6 = param[6], pa7 = param[7], pa8 = param[8], pa9 = param[9];
@@ -537,7 +539,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	jacoby[18][6] = pa0*90*pa8*pow(pa5,4)*pa6;
 	jacoby[18][7] = (1 - pa0)/2*(15*pow(pa1*pa1*pa2,2) + 90*pow(pa1*pa2*pa3,2) + 45*pow(pa2,2)*pow(pa3,4) + 120*pa7*pow(pa1,3)*pa2 + 360*pa7*pa1*pa2*pow(pa3,2)
 			+ 15*pow(pa1*pa1*pa4,2) + 90*pow(pa1*pa3*pa4,2) + 180*pow(pa7*pa1,2) + 45*pow(pa3,4)*pow(pa4,2) + 180*pow(pa7*pa3,2));
-	jacoby[18][8] = parameter[0]*(45*pow(pa5*pa5*pa6,2) + 180*pow(pa8*pa5,2));
+	jacoby[18][8] = pa0*(45*pow(pa5*pa5*pa6,2) + 180*pow(pa8*pa5,2));
 	jacoby[18][9] = (1 - pa0)/2*(15*pow(pa1*pa1*pa2,2) + 90*pow(pa1*pa2*pa3,2) + 45*pow(pa2,2)*pow(pa3,4) + 120*pa9*pow(pa1,3)*pa2 + 360*pa9*pa1*pa2*pow(pa3,2)
 			+ 15*pow(pa1*pa1*pa4,2) + 90*pow(pa1*pa3*pa4,2) + 180*pow(pa9*pa1,2) + 45*pow(pa3,4)*pow(pa4,2) + 180*pow(pa9*pa3,2));
 
@@ -617,7 +619,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	{
 		for (tmp_param=0; tmp_param<NUM_OF_PARAMETER; tmp_param++)
 		{
-			v_jacoby[NUM_OF_PARAMETER*tmp_moment + tmp_param] = jacoby[tmp_moment][tmp_param] ;
+			v_jacoby_moment[NUM_OF_PARAMETER*tmp_moment + tmp_param] = jacoby[tmp_moment][tmp_param] ;
 		}
 	}
 

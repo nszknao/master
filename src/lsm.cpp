@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
 #include <cmath>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -47,6 +48,10 @@ int main (int argc, char *argv[])
 	
 	const size_t n	= N;
 	const size_t p	= P;
+	/* 近似対象となる観測データを生成 */
+	double y[N];
+	for (i=0;i<N;i++) y[i] = 0.;
+
 	struct data d = {n, p, y, zeta, epi, dG};
 	
 	// 乱数生成器
@@ -70,10 +75,6 @@ int main (int argc, char *argv[])
 	T = gsl_multifit_fdfsolver_lmsder;
 	s = gsl_multifit_fdfsolver_alloc(T, n, p);
 	
-	/* 近似対象となる観測データを生成 */
-	double y[N];
-	for (i=0;i<N;i++) y[i] = 0.;
-
 	double sigma_x, sigma_y, rho_xy;
 	init_values (lambda, beta2, alpha, &sigma_x, &sigma_y, &rho_xy);
 
@@ -291,5 +292,6 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 	*sigma_y = sqrt(C);
 	*rho_xy  = B/sqrt(A*C);
 
-	return printf("sigma_x=%lf sigma_y=%lf rho_xy=%lf\n", sqrt(A), sqrt(C), B/sqrt(A*C));
+	printf("sigma_x=%lf sigma_y=%lf rho_xy=%lf\n", sqrt(A), sqrt(C), B/sqrt(A*C));
+	return;
 }
