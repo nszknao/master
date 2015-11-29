@@ -4,8 +4,8 @@
 # ----------
 
 ############ Compile-force #############################################
-g++ -lstdc++ -Wl,--heap,900000000,--stack,536870912 research.cpp -o research.exe -lm -lgsl -lgslcblas
-g++ -lstdc++ -Wl,--heap,900000000,--stack,536870912 lsm.cpp -o lsm.exe -lm -lgsl -lgslcblas
+g++ -lstdc++ -Wl,--heap,900000000,--stack,536870912 ./src/research.cpp -o research.exe -lm -lgsl -lgslcblas
+g++ -lstdc++ -Wl,--heap,900000000,--stack,536870912 ./src/lsm.cpp -o lsm.exe -lm -lgsl -lgslcblas
 
 ############ Reading init_value.txt ####################################
 initfile=init_value_disp.txt

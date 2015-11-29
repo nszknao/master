@@ -18,7 +18,7 @@ struct data
 };
 
 // モーメント方程式を解く際の補正係数
-const double keisu[15];
+double keisu[15];
 keisu[0] = 5.;
 keisu[1] = 24./5.;
 keisu[2] = 24./6.;
@@ -238,7 +238,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	size_t tmp, tmp_param, tmp_moment;
 
 	double param[NUM_OF_PARAMETER];
-	for(tmp=0; tmp<NUM_OFETER; tmp++)
+	for(tmp=0; tmp<NUM_OF_PARAMETER; tmp++)
 	{
 	  param[tmp] = gsl_vector_get(x, tmp);
 	}
@@ -574,7 +574,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	jacoby[19][6] = pa0*(36*pow(pa5,4)*pow(pa6,3) + 144*pow(pa7*pa5,2)*pa6);
 	jacoby[19][7] = (1 - pa0)/2*(16*pow(pa1*pa2,3) + 48*pa1*pow(pa2,3)*pow(pa3,2) + 144*pa7*pow(pa1*pa2,2) + 144*pa7*pow(pa2*pa3,2) + 48*pow(pa1,3)*pa2*pow(pa4,2)
 			+ 144*pa1*pa2*pow(pa3*pa4,2) + 144*pa7*pow(pa1*pa4,2) + 288*pa1*pa2*pow(pa7,2) + 144*pa7*pow(pa3*pa4,2) + 96*pow(pa7,3));
-	jacoby[19][8] = parameter[0]*(144*pa8*pow(pa5*pa6,2) + 96*pow(pa8,3));
+	jacoby[19][8] = pa0*(144*pa8*pow(pa5*pa6,2) + 96*pow(pa8,3));
 	jacoby[19][9] = (1 - pa0)/2*(16*pow(pa1*pa2,3) + 48*pa1*pow(pa2,3)*pow(pa3,2) + 144*pa9*pow(pa1*pa2,2) + 144*pa9*pow(pa2*pa3,2) + 48*pow(pa1,3)*pa2*pow(pa4,2)
 			+ 144*pa1*pa2*pow(pa3*pa4,2) + 144*pa9*pow(pa1*pa4,2) + 288*pa1*pa2*pow(pa9,2) + 144*pa9*pow(pa3*pa4,2) + 96*pow(pa9,3));
 	
@@ -607,7 +607,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	jacoby[20][6] = pa0*90*pa8*pow(pa6,4)*pa5;
 	jacoby[20][7] = (1 - pa0)/2*(15*pow(pa2*pa1*pa2,2) + 90*pow(pa1*pa2*pa4,2) + 45*pow(pa1,2)*pow(pa4,4) + 120*pa7*pow(pa2,3)*pa1 + 360*pa7*pa1*pa2*pow(pa4,2)
 			+ 15*pow(pa2*pa2*pa3,2) + 90*pow(pa2*pa3*pa4,2) + 180*pow(pa7*pa2,2) + 45*pow(pa4,4)*pow(pa3,2) + 180*pow(pa7*pa4,2));
-	jacoby[20][8] = parameter[0]*(45*pow(pa6*pa5*pa6,2) + 180*pow(pa8*pa6,2));
+	jacoby[20][8] = pa0*(45*pow(pa6*pa5*pa6,2) + 180*pow(pa8*pa6,2));
 	jacoby[20][9] = (1 - pa0)/2*(15*pow(pa2*pa1*pa2,2) + 90*pow(pa1*pa2*pa4,2) + 45*pow(pa1,2)*pow(pa4,4) + 120*pa9*pow(pa2,3)*pa1 + 360*pa9*pa1*pa2*pow(pa4,2)
 			+ 15*pow(pa2*pa2*pa3,2) + 90*pow(pa2*pa3*pa4,2) + 180*pow(pa9*pa2,2) + 45*pow(pa4,4)*pow(pa3,2) + 180*pow(pa9*pa4,2));
 
@@ -655,7 +655,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	{
 		for(tmp_param=0; tmp_param<10; tmp_param++)
 		{
-			gsl_matrix_set(J, i, j, keisu[tmp_moment]*gsl_matrix_get(&m_cf_jacoby_moment_eq.matrix,tmp_moment,tmp_param));
+			gsl_matrix_set(J, tmp_moment, tmp_param, keisu[tmp_moment]*gsl_matrix_get(&m_cf_jacoby_moment_eq.matrix,tmp_moment,tmp_param));
 		}
 	}
 
