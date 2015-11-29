@@ -60,7 +60,7 @@ int main (int argc, char *argv[]) {
 
 	// ルンゲクッタで使う
 	double DY1[4], DY2[4];
-	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = 0., y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = 0.;
+	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = {{0.}}, y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES] = {{0.}};
 	double y1min = 0., y1max = 0., y2max = 0., y2min = 0.;
 
 	for (tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
@@ -116,8 +116,8 @@ int main (int argc, char *argv[]) {
 	}
 
 	/************************* 変位のpdfを計算する ***********************************/
-	int n_dx1, pdf_y1, integral_y1 = 0;
-	double y1_pdf_buffer[3000][100];
+	int n_dx1;
+	double y1_pdf_buffer[3000][100], pdf_y1, integral_y1 = 0.;
 	FILE *y1_pdf;
 	y1_pdf = fopen("y1_pdf.dat", "w");
 
