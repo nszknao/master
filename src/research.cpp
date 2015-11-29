@@ -6,6 +6,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_statistics.h>
+#include <gsl/gsl_sf.h>
 
 
 /********** 系の係数・入力条件（不変）**********/
@@ -43,11 +44,9 @@ int main (int argc, char *argv[]) {
 
 	FILE *t_force;
 	FILE *t_x1;
-	//	FILE *x_Gpdf;
 
 	t_force = fopen("t_force.dat", "w");
 	t_x1 = fopen("t_x1.dat", "w");
-	//	x_Gpdf	= fopen("y2_Gpdf.dat","w");
 
 	r = gsl_rng_alloc(gsl_rng_default);
 	rp = gsl_rng_alloc(gsl_rng_default);
@@ -111,11 +110,8 @@ int main (int argc, char *argv[]) {
 			y1_buffer[tmp_lng][tmp_num] = y1;
 			y2_buffer[tmp_lng][tmp_num] = y2;
 
-			if (tmp_num == 0)
-			{
-				// 応答変位の記録
-				fprintf(t_x1, "%lf %lf\n", tmp_lng*dt, y1);
-			}
+			// 応答変位の記録
+			if (tmp_num == 0) fprintf(t_x1, "%lf %lf\n", tmp_lng*dt, y1);
 		}
 	}
 
@@ -194,6 +190,7 @@ int main (int argc, char *argv[]) {
 	//	printf("integral of pdf_y2 = %lf\n",integral_y2);
 	//
 	//	fclose(y2_pdf);
+
 	/************************** シミュレーション結果の変位分散を計算 *******************************/
 	//	int scan_file, var_y1, mo4_y1, first_row, second_row;
 	//	FILE *y1_var;
@@ -212,6 +209,7 @@ int main (int argc, char *argv[]) {
 	//
 	//	fclose(y1_pdf);
 	//	fclose(y1_var);
+
 	/************************** シミュレーション結果の速度分散を計算 *******************************/
 	//	int scan_file, var_y2, first_row, second_row;
 	//	int var_y2;
@@ -229,12 +227,40 @@ int main (int argc, char *argv[]) {
 	//	fclose(y2_var);
 	//	fclose(y2_pdf);
 
-	/////////////////////////////////////////////////////////////
-	fclose(t_force);
-	fclose(t_x1);
+	/*************** ガウス性ホワイトノイズの厳密解 ***************/
+	//	FILE *x_Gpdf;
+	//	x_Gpdf	= fopen("y1_Gpdf.dat","w");
+	//	// 第二修正ベッセル関数
+	//	double K_nu;
+	//	double bessel_p, bessel_q;
+	//	double bessel_C, bessel_arg;
+	//	// 確率密度関数の厳密解
+	//	double exact_gauss_pdf;
+	//	double integral_gauss_pdf;
+	//
+	//	bessel_p	= 2*zeta;
+	//	bessel_q	= zeta*epsilon;
+	//	bessel_arg	= pow(bessel_p,2)/(8*bessel_q);
+	//
+	//	K_nu	= gsl_sf_bessel_Knu(0.25, bessel_arg);
+	//	bessel_C	= sqrt(bessel_q/bessel_p)*exp(-bessel_arg)/K_nu;
+	//	
+	//	for(i=0; (y1min+i*dx) <= y1max; i++)
+	//	{
+	//		exact_gauss_pdf = 0.;
+	//		exact_gauss_pdf	= 2*bessel_C*exp(-bessel_p*pow(y1min+i*dx,2) - bessel_q*pow(y1min+i*dx,4));
+	//		integral_gauss_pdf += exact_gauss_pdf*dx;
+	//		// 厳密解の記録
+	//		fprintf(x_Gpdf, "%lf %lf\n", (y1min+i*dx), exact_gauss_pdf);
+	//	}
+	//	printf("integral of exact_gauss_pdf = %f\n", integral_gauss_pdf);
+	//
 	//	fclose(x_Gpdf);
 
-	printf("\nIt is done !\n");
+	fclose(t_force);
+	fclose(t_x1);
+
+	printf("\nresearch.cpp has done !\n");
 	return 0;
 }
 
