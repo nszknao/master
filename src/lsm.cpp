@@ -9,6 +9,7 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include <gsl/gsl_gamma.h>
 #include "expfit.cpp"
 
 #define N 15
@@ -31,28 +32,37 @@ int main (int argc, char *argv[])
 	size_t i;
 
 	char *ends;
-	double lambda = strtod(argv[1], &ends);
-	double beta2  = strtod(argv[2], &ends);
-	double alpha  = strtod(argv[3], &ends);
+	double lambda	= strtod(argv[1], &ends);
+	double beta2	= strtod(argv[2], &ends);
+	double alpha	= strtod(argv[3], &ends);
 
-	double mu1_width = strtod(argv[4], &ends);
-//	double mu1_width = 0.489;
+	double mu1	= strtod(argv[4], &ends);
+//	double mu1 = 0.489;
+	double mu2	= mu1;
 
-	double dG[6];
-	dG[0] = 0;
-	dG[1] = alpha*S0+lambda*pow(sqrt(1-alpha),2.)*beta2;
-	dG[2] = 0;
-	dG[3] = 3*lambda*pow(sqrt(1-alpha),4.)*pow(beta2,2.);
-	dG[4] = 0;
-	dG[5] = 15*lambda*pow(sqrt(1-alpha),6.)*pow(beta2,3.);
-	
+	// パルス振幅（generalized Gauss distribution）に関するパラメータ
+	double ggd_kappa	= 2.;	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
+	double ggd_a		= sqrt(gsl_sf_gamma(1./ggd_kappa)*pow(gsl_sf_gamma(3./ggd_kappa), -1.));
+
+	// 入力に関するモーメント
+	double dF[6];
+	dF[0]	= 0;
+//	dF[1]	= alpha*S0+lambda*pow(sqrt(1-alpha),2.)*beta2;
+	dF[1]	= alpha*S0+lambda*pow(sqrt(1.-alpha),2.)*(pow(ggd_a,2.)*gsl_sf_gamma(3./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
+	dF[2]	= 0;
+//	dF[3]	= 3*lambda*pow(sqrt(1-alpha),4.)*pow(beta2,2.);
+	dF[3]	= lambda*pow(sqrt(1-alpha),4.)*(pow(ggd_a,4.)*gsl_sf_gamma(5./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
+	dF[4]	= 0;
+//	dF[5]	= 15*lambda*pow(sqrt(1-alpha),6.)*pow(beta2,3.);
+	dF[5]	= lambda*pow(sqrt(1-alpha),6.)*(pow(ggd_a,6.)*gsl_sf_gamma(7./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
+
 	const size_t n	= N;
 	const size_t p	= P;
 	/* 近似対象となる観測データを生成 */
 	double y[N];
 	for (i=0;i<N;i++) y[i] = 0.;
 
-	struct data d = {n, p, y, zeta, epi, dG};
+	struct data d = {n, p, y, zeta, epi, dF};
 	
 	// 乱数生成器
 	gsl_rng * r;
@@ -79,7 +89,7 @@ int main (int argc, char *argv[])
 	init_values (lambda, beta2, alpha, &sigma_x, &sigma_y, &rho_xy);
 
 	/*  初期値         {a,   μ1,               μ2,               σ11,    σ12,    σ21,    σ22,    k1,                     k2, k3}*/
-	double x_init[P] = {0.5, sigma_x+mu1_width, sigma_y+mu1_width, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0.};
+	double x_init[P] = {0.5, sigma_x+mu1, sigma_y+mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0.};
 
 	//**********************************************************************/
 	x = gsl_vector_view_array (x_init, p);
@@ -248,15 +258,15 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 
 	/******* 応答のガウス性を仮定し，等価線形化法により2次定常モーメントを求める *******/
 	do{
-		Exxold = A;		 // 前ループの解を保存
+		Exxold = A;
 		Exyold = B;
 		Eyyold = C;
 		
 		/*************** 等価線形係数 **************************************/
 		ke = 1.+3.*epi*A;	// 等価線形係数 ke = 1+3εE[X^2]
 		
-		for(k=0; k<iN*iN; k++) a[k] = 0.;	// 初期化
-		for(k=0; k<iN;   k++) b[k] = 0.;	// 初期化
+		for(k=0; k<iN*iN; k++) a[k] = 0.;
+		for(k=0; k<iN;   k++) b[k] = 0.;
 		
 		/**************** 定常モーメント方程式の係数をAとBに代入 ********************/
 		// dXX
@@ -278,7 +288,7 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		gsl_linalg_LU_decomp(&m.matrix, px, &s);
 		gsl_linalg_LU_solve(&m.matrix, px, &c.vector, x);
 		
-		A = gsl_vector_get(x,0); // 解の保存
+		A = gsl_vector_get(x,0);
 		B = gsl_vector_get(x,1);
 		C = gsl_vector_get(x,2);
 		err = pow(A-Exxold,2.)+pow(B-Exyold,2.)+pow(C-Eyyold,2.);	// 収束条件に使う誤差，前ループとの差の二乗和
@@ -286,7 +296,7 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		gsl_vector_free(x);
 		gsl_permutation_free(px);
 		
-	}while(err>10e-6);			// 収束判定
+	}　while(err　>　10e-6);
 
 	*sigma_x = sqrt(A);
 	*sigma_y = sqrt(C);

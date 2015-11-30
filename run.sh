@@ -18,7 +18,6 @@ do
 
 tmp1=`echo "scale=7; 1 / ${lambda}" | bc`
 beta2=${tmp1}
-params="l=${lambda},b2=${beta2}"
 
 echo "lambda = " $lambda "beta2 = " $beta2
 
@@ -31,6 +30,8 @@ mkdir ./${results}/
 fi
 
 ##### Handling if "results" exists. #############
+params="l=${lambda},b2=${beta2}"
+
 X=`echo "${alpha} * 10" | bc`
 XX=${X%.*}
 echo ${XX}
@@ -38,7 +39,7 @@ if [[ $XX -eq 1 ]]
 then
 if [ -e ./${results}/${params}/ ]
 then
-rm -Rf ./${results}/${params}/
+rm -Rf ./${results}/${params}/*
 else
 mkdir ./${results}/${params}/
 fi
@@ -162,7 +163,7 @@ set logscale y
 set format y "10^{%L}"
 p [-6:6][0.00001:1.0] "./y1_pdf.dat" with p pt 6 ps 1 lc rgb "blue",\
 		"./gsay1pdf.dat" with lines linetype 1 lw 4 lc rgb "red",\
-		"./y1_Gpdf.dat" with lines linetype 2 lw 4
+		"./Gpdf/y1_Gpdf.dat" with lines linetype 2 lw 4
 EOF
 
 ##速度応答の確率密度関数(対数軸)をプロットする
