@@ -237,6 +237,10 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 	gsl_blas_dnrm2 (s->f));
 }
 
+/**
+ * 等価線形化法により初期値を計算
+ *
+ */
 void init_values(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
 {
 	int tmp, s;
@@ -252,7 +256,7 @@ void init_values(double lambda, double beta2, double ggd_kappa, double alpha, do
 	 * a_1 = 1, a_2 = a_3 = 0
 	 * mu_1 = mu_2 = 0：対称なガウス分布を仮定しているから（ただ，後で mu_1 = 1 にするかも）
 	 * sigma_1, sigma_2 はそのまま
-	 * kappa_1 = 0（ro をすべて０で仮定し，平均もゼロだから）
+	 * kappa_1 = 0（ro をすべて0で仮定し，平均もゼロだから）
 	 */
 
 	/******* 応答のガウス性を仮定し，等価線形化法により2次定常モーメントを求める *******/
@@ -304,22 +308,34 @@ void init_values(double lambda, double beta2, double ggd_kappa, double alpha, do
 	return;
 }
 
-// 1変数のガウス分布を3つ足し合わせる関数
-double create_gaussian_pdf(double a[3], double mu[3], double sigma[3], double x) 
+/**
+ * 1変数のガウス分布を3つ足し合わせる
+ * 
+ * @param double a[] 重み
+ * @param double mu[] 平均
+ * @param double sigma[] 分散
+ * @param double x 変数
+ * @return pdf 確率密度関数
+ */
+double create_gaussian_pdf(double a[], double mu[], double sigma[], double x) 
 {
-	double gaussian_pdf = 0.;
+	double pdf = 0.;
 	size_t tmp;
 
 	for (tmp = 0; tmp < 3; tmp++)
 	{
-		gaussian_pdf += a[tmp]*(1./sqrt(2.*PI)/sigma[tmp])*exp(-(x-mu[tmp])*(x-mu[tmp])/2./pow(sigma[tmp],2.));
+		pdf += a[tmp]*(1./sqrt(2.*PI)/sigma[tmp])*exp(-(x-mu[tmp])*(x-mu[tmp])/2./pow(sigma[tmp],2.));
 	}
 
-	return gaussian_pdf;
+	return pdf;
 }
 
-// 閾値通過率を計算
-double culc_level_crossing(double zeta, double a[3], double mu1[3], double mu2[3], double sigma1[3], double sigma2[3], double kappa[3])
+/**
+ * 閾値通過率を計算
+ *
+ * 
+ */
+double culc_level_crossing(double zeta, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
 {
 	double prob_pass;
 	double pp_c, pp_g, pp_sigma;
