@@ -296,7 +296,7 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		gsl_vector_free(x);
 		gsl_permutation_free(px);
 		
-	}　while(err　>　10e-6);
+	} while(err　>　10e-6);
 
 	*sigma_x = sqrt(A);
 	*sigma_y = sqrt(C);
