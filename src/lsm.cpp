@@ -9,7 +9,7 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
-#include <gsl/gsl_gamma.h>
+#include <gsl/gsl_sf.h>
 #include "expfit.cpp"
 
 #define N 15
@@ -19,48 +19,47 @@
 
 /************ 系の係数・入力条件（不変）*******************/
 #define S0 (1./(2.*PI))
-#define zeta 0.05
+#define zeta 0.2
 #define epi 0.3
+#define GGD_KAPPA 2.	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
 
 
 void print_state (size_t iter, gsl_multifit_fdfsolver * s);
-void init_values(double lambda, double beta2, double alpha, double *sigma_x, double *sigma_y, double *rho_xy);
+void init_values(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy);
+double create_gaussian_pdf(double a[3], double mu[3], double sigma[3], double x);
+double culc_level_crossing(double zeta, double a[3], double mu1[3], double mu2[3], double sigma1[3], double sigma2[3], double kappa[3]);
 
 int main (int argc, char *argv[])
 {
 	// カウント変数
-	size_t i;
+	size_t i, tmp;
 
 	char *ends;
 	double lambda	= strtod(argv[1], &ends);
 	double beta2	= strtod(argv[2], &ends);
 	double alpha	= strtod(argv[3], &ends);
 
-	double mu1	= strtod(argv[4], &ends);
-//	double mu1 = 0.489;
-	double mu2	= mu1;
+	double mu1		= strtod(argv[4], &ends);
+	double mu2		= mu1;
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_kappa	= 2.;	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
-	double ggd_a		= sqrt(gsl_sf_gamma(1./ggd_kappa)*pow(gsl_sf_gamma(3./ggd_kappa), -1.));
+	double ggd_a	= sqrt(gsl_sf_gamma(1./GGD_KAPPA)*pow(gsl_sf_gamma(3./GGD_KAPPA), -1.)*beta2);
 
 	// 入力に関するモーメント
 	double dF[6];
 	dF[0]	= 0;
-//	dF[1]	= alpha*S0+lambda*pow(sqrt(1-alpha),2.)*beta2;
-	dF[1]	= alpha*S0+lambda*pow(sqrt(1.-alpha),2.)*(pow(ggd_a,2.)*gsl_sf_gamma(3./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
+	dF[1]	= alpha*S0+lambda*(1.-alpha)*(pow(ggd_a,2.)*gsl_sf_gamma(3./GGD_KAPPA)*pow(gsl_sf_gamma(1./GGD_KAPPA),-1.));
 	dF[2]	= 0;
-//	dF[3]	= 3*lambda*pow(sqrt(1-alpha),4.)*pow(beta2,2.);
-	dF[3]	= lambda*pow(sqrt(1-alpha),4.)*(pow(ggd_a,4.)*gsl_sf_gamma(5./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
+	dF[3]	= lambda*pow((1.-alpha),2.)*(pow(ggd_a,4.)*gsl_sf_gamma(5./GGD_KAPPA)*pow(gsl_sf_gamma(1./GGD_KAPPA),-1.));
 	dF[4]	= 0;
-//	dF[5]	= 15*lambda*pow(sqrt(1-alpha),6.)*pow(beta2,3.);
-	dF[5]	= lambda*pow(sqrt(1-alpha),6.)*(pow(ggd_a,6.)*gsl_sf_gamma(7./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
+	dF[5]	= lambda*pow((1.-alpha),3.)*(pow(ggd_a,6.)*gsl_sf_gamma(7./GGD_KAPPA)*pow(gsl_sf_gamma(1./GGD_KAPPA),-1.));
 
 	const size_t n	= N;
 	const size_t p	= P;
+
 	/* 近似対象となる観測データを生成 */
 	double y[N];
-	for (i=0;i<N;i++) y[i] = 0.;
+	for (tmp = 0; tmp < N; tmp++) y[tmp] = 0.;
 
 	struct data d = {n, p, y, zeta, epi, dF};
 	
@@ -85,10 +84,11 @@ int main (int argc, char *argv[])
 	T = gsl_multifit_fdfsolver_lmsder;
 	s = gsl_multifit_fdfsolver_alloc(T, n, p);
 	
+	// 等価線形化法で初期値を計算
 	double sigma_x, sigma_y, rho_xy;
-	init_values (lambda, beta2, alpha, &sigma_x, &sigma_y, &rho_xy);
+	init_values (lambda, beta2, GGD_KAPPA, alpha, &sigma_x, &sigma_y, &rho_xy);
 
-	/*  初期値         {a,   μ1,               μ2,               σ11,    σ12,    σ21,    σ22,    k1,                     k2, k3}*/
+	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
 	double x_init[P] = {0.5, sigma_x+mu1, sigma_y+mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0.};
 
 	//**********************************************************************/
@@ -105,27 +105,6 @@ int main (int argc, char *argv[])
 
 	gsl_matrix *covar = gsl_matrix_alloc (p, p);
 	gsl_multifit_covar(s->J, 0.0, covar);
-	
-	// 重み
-	double a2 =  gsl_vector_get(s->x,0) ;
-	double a1 = (1.0-a2)/2.0;
-	double a3 = a1;
-
-	// 変位に関するパラメータ
-	double mu11 = gsl_vector_get(s->x,1);
-	double mu21 = 0.;
-	double mu31 = -1.*mu11;
-	double sigma11 = gsl_vector_get(s->x,3);
-	double sigma21 = gsl_vector_get(s->x,5);
-	double sigma31 = sigma11;
-
-	// 速度に関するパラメータ
-	double mu12 = gsl_vector_get(s->x,2);
-	double mu22 = 0.;
-	double mu32 = -1.*mu12;
-	double sigma12 = gsl_vector_get(s->x,4);
-	double sigma22 = gsl_vector_get(s->x,6);
-	double sigma32 = sigma12;
 	
 	#define FIT(i) gsl_vector_get(s->x, i)
 	#define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
@@ -148,85 +127,102 @@ int main (int argc, char *argv[])
 	printf("/**************************************************/\n");
 	printf("status = %s\n", gsl_strerror (status));
 
+
+	/********** パラメータ **********/
+	double prm_a[3], prm_mu1[3], prm_mu2[3], prm_sigma1[3], prm_sigma2[3], prm_kappa[3];
 	// 重み
-	a2 = FIT(0);
-	a1 = (1.-a2)/2.;
-	a3 = a1;
+	prm_a[1]	= FIT(0);				// a2
+	prm_a[0]	= (1.-prm_a[1])/2.;	// a1
+	prm_a[2]	= prm_a[0];			// a3
+	// 変位
+	prm_mu1[0]	= FIT(1);			// mu11
+	prm_mu1[1]	= 0.;				// mu21
+	prm_mu1[2]	= -1.*prm_mu1[0];	// mu31
+	prm_sigma1[0]	= FIT(3);			// sigma11
+	prm_sigma1[1]	= FIT(5);			// sigma21
+	prm_sigma1[2]	= prm_sigma1[0];	// sigma31
+	// 速度
+	prm_mu2[0]	= FIT(2);			// mu12
+	prm_mu2[1]	= 0.;				// mu22
+	prm_mu2[2]	= -1.*prm_mu2[0];	// mu32
+	prm_sigma2[0]	= FIT(4);			// sigma12
+	prm_sigma2[1]	= FIT(6);			// sigma22
+	prm_sigma2[2]	= prm_sigma2[0];	// sigma32
+	// 共分散
+	prm_kappa[0]	= FIT(7);			// kappa123
+	prm_kappa[1]	= FIT(8);			// kappa223
+	prm_kappa[2]	= FIT(9);			// kappa323
 
-	// 変位に関するパラメータ
-	mu11 = FIT(1);
-	mu21 = 0.;
-	mu31 = -1.*mu11;
-	sigma11 = FIT(3);
-	sigma21 = FIT(5);
-	sigma31 = sigma11;
 
-	// 速度に関するパラメータ
-	mu12 = FIT(2);
-	mu22 = 0.;
-	mu32 = -1.*mu12;
-	sigma12 = FIT(4);
-	sigma22 = FIT(6);
-	sigma32 = sigma12;
-
-
-	#define gsa_xmin -6
-	#define gsa_ymin -15
 	if (strcmp(gsl_strerror (status), "success") == 0) {
-/********** 変位応答のpdfを生成 **********/
+
+		/********** 変位応答のpdfを生成 **********/
+		#define gsa_xmin -6.
 		FILE *gsax1pdf;
-		gsax1pdf=fopen("gsay1pdf.dat","w");
-		double integration=0.;
-		for(i=0;i<1200;i++) 
+		gsax1pdf	= fopen("gsay1pdf.dat","w");
+		double integration = 0.;
+		for(tmp = 0; tmp*0.01 < 12; tmp++)
 		{
-			fprintf(gsax1pdf, "%lf %lf\n", gsa_xmin+i*0.01,   a1*(1/sqrt(2*PI)/sigma11)*exp(-(gsa_xmin+i*0.01-mu11)*(gsa_xmin+i*0.01-mu11)/2/sigma11/sigma11) 
-									+ a2*(1/sqrt(2*PI)/sigma21)*exp(-(gsa_xmin+i*0.01-mu21)*(gsa_xmin+i*0.01-mu21)/2/sigma21/sigma21) 
-									+ a3*(1/sqrt(2*PI)/sigma31)*exp(-(gsa_xmin+i*0.01-mu31)*(gsa_xmin+i*0.01-mu31)/2/sigma31/sigma31));
-			integration += 0.01*(a1*(1/sqrt(2*PI)/sigma11)*exp(-(gsa_xmin+i*0.01-mu11)*(gsa_xmin+i*0.01-mu11)/2/sigma11/sigma11)
-					+ a2*(1/sqrt(2*PI)/sigma21)*exp(-(gsa_xmin+i*0.01-mu21)*(gsa_xmin+i*0.01-mu21)/2/sigma21/sigma21)
-					+ a3*(1/sqrt(2*PI)/sigma31)*exp(-(gsa_xmin+i*0.01-mu31)*(gsa_xmin+i*0.01-mu31)/2/sigma31/sigma31));
+			fprintf(gsax1pdf, "%lf %lf\n", gsa_xmin + tmp*0.01, create_gaussian_pdf(prm_a, prm_mu1, prm_sigma1, gsa_xmin + tmp*0.01));
+			integration += 0.01*create_gaussian_pdf(prm_a, prm_mu1, prm_sigma1, gsa_xmin + tmp*0.01);
 		}
 		fclose(gsax1pdf);
 //		printf("y1 integration = %lf \n",integration);
-/********** 変位分散を計算 **********/
+		/********** 変位分散を計算 **********/
 		FILE *y1_var;
 		y1_var  = fopen("anl_y1_var.dat", "w");
 		gsax1pdf = fopen("gsay1pdf.dat", "r");
 		
 		double var_y1 = 0.;
 		double mo4_y1 = 0.;
-		int line = 0;
-		int ret1;
+		int line = 0, ret1;
 		double row1, row2;
 		while((ret1 = fscanf(gsax1pdf, "%lf %lf", &row1, &row2)) != EOF)
 		{
 			if((line%10) == 0)
 			{
-				var_y1 += pow(row1,2)*row2;
-				mo4_y1 += pow(row1,4)*row2;
+				var_y1 += pow(row1,2.)*row2;
+				mo4_y1 += pow(row1,4.)*row2;
 			}
 			line++;
 		}
 		
-		fprintf(y1_var, "%lf", mo4_y1/pow(var_y1,2));
+		fprintf(y1_var, "%lf", mo4_y1/pow(var_y1,2.));
 	
 		fclose(gsax1pdf);
 		fclose(y1_var);
-/********** 速度応答のpdfを生成 **********/
-		FILE *gsax2pdf;
-		gsax2pdf=fopen("gsay2pdf.dat","w");
-		integration = 0.;
-		for(i=0;i<3000;i++) 
+
+		/********** 閾値通過率を計算 **********/
+		FILE *x1_prob_pass;
+		x1_prob_pass	= fopen("x1_prob_pass.dat", "w");
+
+		size_t tmp_xi;
+		double pp_xi, prob_pass = 0.;
+
+		for (tmp_xi = 0; tmp_xi*0.01 < 8; tmp_xi++)
 		{
-			fprintf(gsax2pdf, "%lf %lf\n", gsa_ymin+i*0.01,   a1*(1/sqrt(2*PI)/sigma12)*exp(-(gsa_ymin+i*0.01-mu12)*(gsa_ymin+i*0.01-mu12)/2/sigma12/sigma12)
-									+ a2*(1/sqrt(2*PI)/sigma22)*exp(-(gsa_ymin+i*0.01-mu22)*(gsa_ymin+i*0.01-mu22)/2/sigma22/sigma22)
-									+ a3*(1/sqrt(2*PI)/sigma32)*exp(-(gsa_ymin+i*0.01-mu32)*(gsa_ymin+i*0.01-mu32)/2/sigma32/sigma32));
-			integration += 0.01*(a1*(1/sqrt(2*PI)/sigma12)*exp(-(gsa_ymin+i*0.01-mu12)*(gsa_ymin+i*0.01-mu12)/2/sigma12/sigma12)
-					+ a2*(1/sqrt(2*PI)/sigma22)*exp(-(gsa_ymin+i*0.01-mu22)*(gsa_ymin+i*0.01-mu22)/2/sigma22/sigma22)
-					+ a3*(1/sqrt(2*PI)/sigma32)*exp(-(gsa_ymin+i*0.01-mu32)*(gsa_ymin+i*0.01-mu32)/2/sigma32/sigma32));
+			prob_pass	= 0.;	// 元に戻す
+			pp_xi	= (double)tmp_xi*0.01;
+
+			prob_pass	= culc_level_crossing(pp_xi, prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
+
+			fprintf(x1_prob_pass, "%lf %lf\n", pp_xi, prob_pass);
 		}
-//		printf("y integration = %lf \n",integration);
-		fclose(gsax2pdf);
+
+		fclose(x1_prob_pass);
+
+		/********** 速度応答のpdfを生成 **********/
+//		#define gsa_ymin -15.
+//		FILE *gsax2pdf;
+//		gsax2pdf=fopen("gsay2pdf.dat","w");
+//		integration = 0.;
+//		for(tmp = 0; tmp*0.01 < 30; tmp++) 
+//		{
+//			fprintf(gsax2pdf, "%lf %lf\n", gsa_ymin+tmp*0.01, create_gaussian_pdf(prm_a, prm_mu2, prm_sigma2, gsa_ymin));
+//			integration += 0.01*create_gaussian_pdf(prm_a, prm_mu2, prm_sigma2, gsa_ymin);
+//		}
+//		fclose(gsax2pdf);
+////	printf("y integration = %lf \n",integration);
 	}
 
 	gsl_multifit_fdfsolver_free(s);
@@ -241,19 +237,26 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 	gsl_blas_dnrm2 (s->f));
 }
 
-void init_values(double lambda, double beta2, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
+/**
+ * 等価線形化法により初期値を計算
+ *
+ */
+void init_values(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
 {
-	int k, s;
+	int tmp, s;
 	
 	double a[iN*iN], b[iN];					// 線形連立方程式Ax=bのAとB
 	double Exxold, Exyold, Eyyold, A=0., B=0., C=0., err;	// ループ計算時の解の保存用，x:変位，y:速度
-	double ke;						// 等価線形係数
+
+	// パルス振幅（generalized Gauss distribution）に関するパラメータ
+	double ggd_a		= sqrt(gsl_sf_gamma(1./ggd_kappa)*pow(gsl_sf_gamma(3./ggd_kappa), -1.)*beta2);
+
 
 	/******* 初期値 *******
 	 * a_1 = 1, a_2 = a_3 = 0
 	 * mu_1 = mu_2 = 0：対称なガウス分布を仮定しているから（ただ，後で mu_1 = 1 にするかも）
 	 * sigma_1, sigma_2 はそのまま
-	 * kappa_1 = 0（ro をすべて０で仮定し，平均もゼロだから）
+	 * kappa_1 = 0（ro をすべて0で仮定し，平均もゼロだから）
 	 */
 
 	/******* 応答のガウス性を仮定し，等価線形化法により2次定常モーメントを求める *******/
@@ -262,11 +265,10 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		Exyold = B;
 		Eyyold = C;
 		
-		/*************** 等価線形係数 **************************************/
-		ke = 1.+3.*epi*A;	// 等価線形係数 ke = 1+3εE[X^2]
-		
-		for(k=0; k<iN*iN; k++) a[k] = 0.;
-		for(k=0; k<iN;   k++) b[k] = 0.;
+		double ke = 1.+3.*epi*A;	// 等価線形係数 ke = 1+3εE[X^2]
+
+		for(tmp=0; tmp<iN*iN; tmp++) a[tmp] = 0.;
+		for(tmp=0; tmp<iN;   tmp++) b[tmp] = 0.;
 		
 		/**************** 定常モーメント方程式の係数をAとBに代入 ********************/
 		// dXX
@@ -276,7 +278,7 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		a[1*iN+0] = -ke;		a[1*iN+1] = -2.*zeta;	a[1*iN+2] = 1.;	b[1] = 0.;
 		
 		// dYY
-		a[2*iN+1] = 2.*ke;	a[2*iN+2] = 4.*zeta;	b[2] = alpha*2.*PI*S0 + (1-alpha)*lambda*beta2;
+		a[2*iN+1] = 2.*ke;	a[2*iN+2] = 4.*zeta;	b[2] = alpha*2.*PI*S0 + (1.-alpha)*lambda*(pow(ggd_a,2.)*gsl_sf_gamma(3./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
 		/**************************************************************************/
 		
 		gsl_matrix_view m	= gsl_matrix_view_array(a, iN, iN);
@@ -296,7 +298,7 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 		gsl_vector_free(x);
 		gsl_permutation_free(px);
 		
-	} while(err　>　10e-6);
+	} while(err > 10e-6);
 
 	*sigma_x = sqrt(A);
 	*sigma_y = sqrt(C);
@@ -304,4 +306,50 @@ void init_values(double lambda, double beta2, double alpha, double *sigma_x, dou
 
 	printf("sigma_x=%lf sigma_y=%lf rho_xy=%lf\n", sqrt(A), sqrt(C), B/sqrt(A*C));
 	return;
+}
+
+/**
+ * 1変数のガウス分布を3つ足し合わせる
+ * 
+ * @param double a[] 重み
+ * @param double mu[] 平均
+ * @param double sigma[] 分散
+ * @param double x 変数
+ * @return pdf 確率密度関数
+ */
+double create_gaussian_pdf(double a[], double mu[], double sigma[], double x) 
+{
+	double pdf = 0.;
+	size_t tmp;
+
+	for (tmp = 0; tmp < 3; tmp++)
+	{
+		pdf += a[tmp]*(1./sqrt(2.*PI)/sigma[tmp])*exp(-(x-mu[tmp])*(x-mu[tmp])/2./pow(sigma[tmp],2.));
+	}
+
+	return pdf;
+}
+
+/**
+ * 閾値通過率を計算
+ *
+ * 
+ */
+double culc_level_crossing(double zeta, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
+{
+	double prob_pass;
+	double pp_c, pp_g, pp_sigma;
+	size_t tmp;
+
+	for (tmp = 0; tmp < 3; tmp++)
+	{
+		pp_c		= kappa[tmp]/sigma1[tmp]/sigma2[tmp];
+		pp_g		= mu2[tmp] + pp_c*sigma2[tmp]*(pp_xi - mu1[tmp])/sigma1[tmp];
+		pp_sigma	= sigma2[tmp]*sqrt(1. - pow(pp_c,2.));
+		// 閾値通過率
+		prob_pass	+= a[tmp]*exp(-pow((pp_xi - sigma1[tmp]),2.)/2./pow(sigma1[tmp],2.)) /2./PI/sigma1[tmp]/sigma2[tmp]/sqrt(1. - pow(pp_c,2.))* (pow(pp_sigma,2.)*exp(-pow(pp_g,2.)/2./pow(pp_sigma,2.))
+						+ sqrt(PI/2.)*pp_g*pp_sigma*(1. + erf(pp_g/sqrt(2.)/pp_sigma)));
+	}
+
+	return prob_pass;
 }
