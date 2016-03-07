@@ -53,7 +53,7 @@ int main (int argc, char *argv[]) {
 	rp = gsl_rng_alloc(gsl_rng_default);
     
     cout << "The syatem is beta^2 = " << beta2 << ", lambda = " << lambda << "\n\n" << endl;
-    cout << "Creating a file of the pdf(.dat)!\n\n" endl;
+    cout << "Creating a file of the pdf(.dat)!\n\n" << endl;
 	
 	// 入力強度
 	double wSt = sqrt(alpha);
