@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
+#include <iostream>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_statistics.h>
@@ -50,9 +51,9 @@ int main (int argc, char *argv[]) {
 
 	r = gsl_rng_alloc(gsl_rng_default);
 	rp = gsl_rng_alloc(gsl_rng_default);
-
-	printf("The syatem is beta^2 = %lf , lambda = %lf  \n\n", beta2, lambda);
-	printf("Creating a file of the pdf(.dat) ! \n\n");
+    
+    cout << "The syatem is beta^2 = " << beta2 << ", lambda = " << lambda << "\n\n" << endl;
+    cout << "Creating a file of the pdf(.dat)!\n\n" endl;
 	
 	// 入力強度
 	double wSt = sqrt(alpha);
