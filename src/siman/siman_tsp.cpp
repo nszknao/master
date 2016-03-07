@@ -5,11 +5,11 @@
  * 巡回セールスマン問題の円バージョン 
  */
 
-#include <cmath>
-#include <cstring>
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_siman.h>
@@ -21,7 +21,7 @@
 #define STEP_SIZE 1.0           /* max step size in random walk */
 #define K 1.0                   /* Boltzmann constant */
 #define T_INITIAL 5000.0        /* initial temperature */
-#define MU_T 1.001              /* damping factor for temperature */
+#define MU_T 1.001              /* 冷却スケジュール（幾何冷却法T_k+1=rT_k or 対数冷却法T_k=c/log(k+1)） */
 #define T_MIN 1.0e-4
 
 /* マクロ */
@@ -153,10 +153,6 @@ int main(void)
   }
   x_initial = shuffle(ret, N_DOTS);
 
-  /* 各点間の距離を保持するマトリクスを表示 */
-//  printf("# distance matrix is:\n");
-//  print_distance_matrix();
-
   /* 点の初期配列を表示 */
   printf("# initial coordinates of dots\n");
   /* プロットに使うので消さない */
@@ -235,7 +231,8 @@ void prepare_distance_matrix()
 
 /**
  * @fn
- * 各点間の距離を保持するマトリクスをコンソールに表示
+ * 各点間の距離を保持するマトリクスを表示
+ * デバッグ用
  */
 void print_distance_matrix()
 {
@@ -253,6 +250,7 @@ void print_distance_matrix()
 /**
  * @fn
  * int型の配列をシャッフルする
+ * 初期値をランダムに生成するため
  */
 int *shuffle(int *ary, int size)
 {
