@@ -9,6 +9,8 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_sf.h>
 
+using namespace std;
+
 
 /********** 系の係数・入力条件（不変）**********/
 #define S0 (1./(2.*M_PI))	// whitenoiseのパワースペクトル
@@ -73,8 +75,8 @@ int main (int argc, char *argv[]) {
 		for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 		{
 			force[tmp_lng] = wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2)) / dt;
-			// force[tmp_lng] = gsl_ran_gaussian(r, sigma);
-			// force[tmp_lng] = gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2))/dt;
+//			force[tmp_lng] = gsl_ran_gaussian(r, sigma);
+//			force[tmp_lng] = gsl_ran_bernoulli(r, dt*lambda)*gsl_ran_gaussian(rp, sqrt(beta2))/dt;
 
 			// 入力の記録
 			if (tmp_num == 0) fprintf(t_force, "%lf %lf\n", tmp_lng*dt, force[tmp_lng]);
