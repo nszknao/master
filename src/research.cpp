@@ -147,7 +147,7 @@ void Simulation::culcRungeKutta()
 /* 変位の確率密度関数を生成 */
 void Simulation::culcDisplacementPdf()
 {
-	cout << "Creating a file of the displacement-pdf(.dat).\n" << endl;
+	cout << "Creating a file of the displacement pdf(.dat).\n" << endl;
 
 	// カウント変数
 	size_t tmp_num, tmp_ndx, tmp_lng;
@@ -193,7 +193,7 @@ void Simulation::culcDisplacementPdf()
 /* 速度の確率密度関数を生成 */
 void Simulation::culcVelocityPdf()
 {
-	cout << "Creating a file of the velocity-pdf(.dat).\n" << endl;
+	cout << "Creating a file of the velocity pdf(.dat).\n" << endl;
 
 	// カウント変数
 	size_t tmp_num, tmp_ndx, tmp_lng;
