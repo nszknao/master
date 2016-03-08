@@ -27,6 +27,10 @@ using namespace std;
 double f1(double force, double y1, double y2);
 double f2(double force, double y1, double y2);
 
+class Common
+{
+    public 
+};
 
 int main (int argc, char *argv[]) {
 
