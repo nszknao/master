@@ -9,9 +9,8 @@
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_linalg.h>
-#include <gsl/gsl_blas.h>
 #include <gsl/gsl_sf.h>
-#include "expfit.cpp"
+#include "expfit.h"
 
 #define N 15
 #define P 10
@@ -76,16 +75,14 @@ std::string Analysis::leastSquareMethod()
 	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
 	double x_init[P] = { 0.5, sigma_x + this->mu1, sigma_y + this->mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
 
-	struct data d = { N, P, y, ZETA, EPSILON, dF };
-
+	MomentEq* momentEq	= new MomentEq(N, P, y, ZETA, EPSILON, dF);
 	// 最小二乗法を解くための関数をセット
 	gsl_multifit_function_fdf f;
-	f.f = &expb_f;
-	f.df = &expb_df;
-	f.fdf = &expb_fdf;
-	f.n = N;
-	f.p = P;
-	f.params = &d;
+	f.f		= momentEq->expb_f;
+	f.df	= momentEq->expb_df;
+	f.fdf	= momentEq->expb_fdf;
+	f.n		= N;
+	f.p		= P;
 
 	// 最小二乗法のソルバーをセット
 	const gsl_multifit_fdfsolver_type *T;

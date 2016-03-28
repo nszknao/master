@@ -2,29 +2,27 @@
  * メモ
  * m_：マトリクス，v_：ベクトル，cf_：係数
  */
+#include "expfit.h"
 
-struct data
+// コンストラクタ
+MomentEq::MomentEq(int n, int p, double *y, double zeta, double epsilon, double *dG)
 {
-	size_t n;	// 方程式の数
-	size_t p;	// パラメータの数
-	double *y;
-	
-	//系のパラメータ
-	double zeta;
-	double epi;
-	
-	//入力のモーメント4次まで。
-	double *dG;
-};
+	this->n			= n;
+	this->p			= p;
+	this->y		= y;
+	this->zeta		= zeta;
+	this->epsilon	= epsilon;
+	this->dG		= dG;
+}
 
-int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
+int MomentEq::*expb_f(const gsl_vector *x, void *data, gsl_vector *f)
 {
-	size_t NUM_OF_MOMENT_EQUATION	= ((struct data *)data)->n;
-	size_t NUM_OF_PARAMETER			= ((struct data *)data)->p;
-	double *y						= ((struct data *)data)->y;
-	double zeta						= ((struct data *)data)->zeta;
-	double epi						= ((struct data *)data)->epi;
-	double *dG						= ((struct data *)data)->dG;
+	int NUM_OF_MOMENT_EQUATION		= this->n;
+	int NUM_OF_PARAMETER			= this->p;
+	double *y						= this->y;
+	double zeta						= this->zeta;
+	double epi						= this->epi;
+	double *dG						= this->dG;
 	double cf_moment_eq[] =						// モーメント方程式 係数行列 15x21
 	{
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -49,20 +47,20 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 	// モーメント方程式を解く際の補正係数
 	double keisu[15];
 	keisu[0] = 5.;
-	keisu[1] = 24./5.;
-	keisu[2] = 24./6.;
-	keisu[3] = 24./16.;
-	keisu[4] = 24./19.;
+	keisu[1] = 24. / 5.;
+	keisu[2] = 24. / 6.;
+	keisu[3] = 24. / 16.;
+	keisu[4] = 24. / 19.;
 	keisu[5] = 1.;
-	keisu[6] = 24./32.;
-	keisu[7] = 24./36.;
-	keisu[8] = 24./64.;
-	keisu[9] = 24./79.;
-	keisu[10] = 24./98.;
-	keisu[11] = 24./117.;
-	keisu[12] = 24./144;
-	keisu[13] = 24./183.;
-	keisu[14] = 24./216;
+	keisu[6] = 24. / 32.;
+	keisu[7] = 24. / 36.;
+	keisu[8] = 24. / 64.;
+	keisu[9] = 24. / 79.;
+	keisu[10] = 24. / 98.;
+	keisu[11] = 24. / 117.;
+	keisu[12] = 24. / 144;
+	keisu[13] = 24. / 183.;
+	keisu[14] = 24. / 216;
 
 	// カウント変数
 	size_t tmp;
@@ -204,14 +202,14 @@ int expb_f (const gsl_vector *x, void *data, gsl_vector *f)
 }
 
 /* ヤコビ行列を定義 */
-int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
+int (*MomentEq::expb_df) (const gsl_vector * x, void *data, gsl_matrix *J)
 {
-	size_t NUM_OF_MOMENT_EQUATION	= ((struct data *)data)->n;
-	size_t NUM_OF_PARAMETER			= ((struct data *)data)->p;
-	double *y						= ((struct data *)data)->y;
-	double zeta						= ((struct data *)data)->zeta;
-	double epi						= ((struct data *)data)->epi;
-	double *dG						= ((struct data *)data)->dG;
+	int NUM_OF_MOMENT_EQUATION	= this->n;
+	int NUM_OF_PARAMETER			= this->p;
+	double y						= this->y;
+	double zeta						= this->zeta;
+	double epi						= this->epi;
+	double dG						= this->dG;
 	double cf_moment_eq[] =						//モーメント方程式 係数行列 15x21
 	{
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -236,20 +234,20 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	// モーメント方程式を解く際の補正係数
 	double keisu[15];
 	keisu[0] = 5.;
-	keisu[1] = 24./5.;
-	keisu[2] = 24./6.;
-	keisu[3] = 24./16.;
-	keisu[4] = 24./19.;
+	keisu[1] = 24. / 5.;
+	keisu[2] = 24. / 6.;
+	keisu[3] = 24. / 16.;
+	keisu[4] = 24. / 19.;
 	keisu[5] = 1.;
-	keisu[6] = 24./32.;
-	keisu[7] = 24./36.;
-	keisu[8] = 24./64.;
-	keisu[9] = 24./79.;
-	keisu[10] = 24./98.;
-	keisu[11] = 24./117.;
-	keisu[12] = 24./144;
-	keisu[13] = 24./183.;
-	keisu[14] = 24./216;
+	keisu[6] = 24. / 32.;
+	keisu[7] = 24. / 36.;
+	keisu[8] = 24. / 64.;
+	keisu[9] = 24. / 79.;
+	keisu[10] = 24. / 98.;
+	keisu[11] = 24. / 117.;
+	keisu[12] = 24. / 144;
+	keisu[13] = 24. / 183.;
+	keisu[14] = 24. / 216;
 
 	// カウント変数
 	size_t tmp, tmp_param, tmp_moment;
@@ -679,7 +677,7 @@ int expb_df (const gsl_vector * x, void *data, gsl_matrix *J)
 	return GSL_SUCCESS;
 }
 
-int expb_fdf (const gsl_vector *x, void *data, gsl_vector *f, gsl_matrix *J)
+int (*MomentEq::expb_fdf) (const gsl_vector *x, void *data, gsl_vector *f, gsl_matrix *J)
 {
 	expb_f(x, data, f);
 	expb_df(x, data, J);
