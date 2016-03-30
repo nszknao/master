@@ -3,26 +3,18 @@
  * m_：マトリクス，v_：ベクトル，cf_：係数
  */
 #include "expfit.h"
+#include "ParamData.h"
 
-// コンストラクタ
-MomentEq::MomentEq(int n, int p, double *y, double zeta, double epsilon, double *dG)
+int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
-	this->n			= n;
-	this->p			= p;
-	this->y		= y;
-	this->zeta		= zeta;
-	this->epsilon	= epsilon;
-	this->dG		= dG;
-}
+	ParamData* paramData	= static_cast<ParamData*>(params);
+	int NUM_OF_MOMENT_EQUATION		= paramData->_n;
+	int NUM_OF_PARAMETER			= paramData->_p;
+	double *y						= paramData->_y;
+	double zeta						= paramData->_zeta;
+	double epi						= paramData->_epsilon;
+	double *dG						= paramData->_dG;
 
-int MomentEq::*expb_f(const gsl_vector *x, void *data, gsl_vector *f)
-{
-	int NUM_OF_MOMENT_EQUATION		= this->n;
-	int NUM_OF_PARAMETER			= this->p;
-	double *y						= this->y;
-	double zeta						= this->zeta;
-	double epi						= this->epi;
-	double *dG						= this->dG;
 	double cf_moment_eq[] =						// モーメント方程式 係数行列 15x21
 	{
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -202,14 +194,17 @@ int MomentEq::*expb_f(const gsl_vector *x, void *data, gsl_vector *f)
 }
 
 /* ヤコビ行列を定義 */
-int (*MomentEq::expb_df) (const gsl_vector * x, void *data, gsl_matrix *J)
+int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 {
-	int NUM_OF_MOMENT_EQUATION	= this->n;
-	int NUM_OF_PARAMETER			= this->p;
-	double y						= this->y;
-	double zeta						= this->zeta;
-	double epi						= this->epi;
-	double dG						= this->dG;
+	ParamData* paramData = static_cast<ParamData*>(params);
+	int NUM_OF_MOMENT_EQUATION = paramData->_n;
+	int NUM_OF_PARAMETER = paramData->_p;
+	double *y = paramData->_y;
+	double zeta = paramData->_zeta;
+	double epi = paramData->_epsilon;
+	double *dG = paramData->_dG;
+
+
 	double cf_moment_eq[] =						//モーメント方程式 係数行列 15x21
 	{
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -677,10 +672,10 @@ int (*MomentEq::expb_df) (const gsl_vector * x, void *data, gsl_matrix *J)
 	return GSL_SUCCESS;
 }
 
-int (*MomentEq::expb_fdf) (const gsl_vector *x, void *data, gsl_vector *f, gsl_matrix *J)
+int MomentEq::expb_fdf (const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *J)
 {
-	expb_f(x, data, f);
-	expb_df(x, data, J);
+	expb_f(x, params, f);
+	expb_df(x, params, J);
 	
 	return GSL_SUCCESS;
 }
