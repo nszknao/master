@@ -1,54 +1,4 @@
-#define _USE_MATH_DEFINES
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <ctime>
-#include <iostream>
-#include <map>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_statistics.h>
-#include <gsl/gsl_sf.h>
-
-using namespace std;
-
-
-/********** 系の係数・入力条件（不変）**********/
-#define S0 (1./(2.*M_PI))	// whitenoiseのパワースペクトル
-#define epsilon 0.3			// 非線形性の強さ
-#define zeta 0.05			// 減衰定数
-
-/********** 計算条件 **********/
-#define SAMPLE_LENGTH 131072	// 131072,65536
-#define NUM_OF_SAMPLES 100		// 入力の標本数
-#define dt 0.01		// 時間刻み幅
-#define dx 0.1		// pdfの横軸の刻み幅
-
-
-class Simulation
-{
-private:
-	// 入力標本
-	double force[SAMPLE_LENGTH];
-	// pdf作成時のバッファー
-	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES];
-	double y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES];
-	// pdfの横軸の最小値，最大値
-	double y1min, y1max, y2max, y2min;
-	void _createExcitation();
-	// ルンゲクッタで使う
-	static double _f1(double force, double y1, double y2);
-	static double _f2(double force, double y1, double y2);
-
-public:
-	double lambda, beta2, alpha, sigma;
-	void culcRungeKutta();
-	void culcDisplacementPdf();
-	void culcVelocityPdf();
-	void culcDispVariance();
-	void culcVelVariance();
-	void exactSolutionOfGaussianWhiteNoise();
-};
+#include "research.h"
 
 /* 入力を生成する */
 void Simulation::_createExcitation()
@@ -107,8 +57,7 @@ void Simulation::culcRungeKutta()
 	for (tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
 	{
 		// 初期値
-		double y1 = 0.;
-		double y2 = 0.;
+		double y1 = 0., y2 = 0.;
 
 		for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 		{
@@ -133,8 +82,8 @@ void Simulation::culcRungeKutta()
 			if (y2>y2max) y2max = y2;
 			if (y2<y2min) y2min = y2;
 
-			y1_buffer[tmp_lng][tmp_num] = y1;
-			y2_buffer[tmp_lng][tmp_num] = y2;
+			this->y1_buffer[tmp_lng][tmp_num] = y1;
+			this->y2_buffer[tmp_lng][tmp_num] = y2;
 
 			// 応答変位の記録
 			if (tmp_num == 0) fprintf(t_x1, "%lf %lf\n", tmp_lng*dt, y1);
@@ -166,7 +115,7 @@ void Simulation::culcDisplacementPdf()
 			n_dx1 = 0;
 			for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 			{
-				if ((y1_buffer[tmp_lng][tmp_num] < (y1min + (tmp_ndx + 1)*dx)) && (y1_buffer[tmp_lng][tmp_num] >= (y1min + tmp_ndx*dx))) n_dx1++;
+				if ((this->y1_buffer[tmp_lng][tmp_num] < (y1min + (tmp_ndx + 1)*dx)) && (this->y1_buffer[tmp_lng][tmp_num] >= (y1min + tmp_ndx*dx))) n_dx1++;
 			}
 			y1_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx1 / SAMPLE_LENGTH / dx;
 		}
@@ -212,7 +161,7 @@ void Simulation::culcVelocityPdf()
 			n_dx = 0;
 			for (tmp_lng = 0; tmp_lng<SAMPLE_LENGTH; tmp_lng++)
 			{
-				if ((y2_buffer[tmp_lng][tmp_num] < (y2min + (tmp_ndx + 1)*dx)) && (y2_buffer[tmp_lng][tmp_num] >= (y2min + tmp_ndx*dx))) n_dx++;
+				if ((this->y2_buffer[tmp_lng][tmp_num] < (y2min + (tmp_ndx + 1)*dx)) && (this->y2_buffer[tmp_lng][tmp_num] >= (y2min + tmp_ndx*dx))) n_dx++;
 			}
 			y2_pdf_buffer[tmp_ndx][tmp_num] = (double)n_dx / SAMPLE_LENGTH / dx;
 		}
@@ -300,21 +249,20 @@ void Simulation::exactSolutionOfGaussianWhiteNoise()
 	double bessel_p, bessel_q;
 	double bessel_C, bessel_arg;
 
-	// 確率密度関数の厳密解
+	// 確率密度関数の厳密解epsilon
 	double exact_gauss_pdf;
 	double integral_gauss_pdf;
 
-	bessel_p = 2 * zeta;
-	bessel_q = zeta*epsilon;
-	bessel_arg = pow(bessel_p, 2) / (8 * bessel_q);
+	bessel_p = 2.*ZETA;
+	bessel_q = ZETA*EPSILON;
+	bessel_arg = pow(bessel_p, 2) / (8.*bessel_q);
 
 	K_nu = gsl_sf_bessel_Knu(0.25, bessel_arg);
-	bessel_C = sqrt(bessel_q / bessel_p)*exp(-bessel_arg) / K_nu;
+	bessel_C = 2.*sqrt(bessel_q / bessel_p)*exp(-bessel_arg) / K_nu;
 
 	for (tmp = 0; (y1min + tmp*dx) <= y1max; tmp++)
 	{
-		exact_gauss_pdf = 0.;
-		exact_gauss_pdf = 2 * bessel_C*exp(-bessel_p*pow(y1min + tmp*dx, 2) - bessel_q*pow(y1min + tmp*dx, 4));
+		exact_gauss_pdf = bessel_C*exp(-bessel_p*pow(y1min + tmp*dx, 2) - bessel_q*pow(y1min + tmp*dx, 4));
 		integral_gauss_pdf += exact_gauss_pdf*dx;
 		// 厳密解の記録
 		fprintf(x_Gpdf, "%lf %lf\n", (y1min + tmp*dx), exact_gauss_pdf);
@@ -332,7 +280,7 @@ double Simulation::_f1(double force, double y1, double y2)
 
 double Simulation::_f2(double force, double y1, double y2)
 {
-	return force - 2 * zeta*y2 - y1 - epsilon*y1*y1*y1;
+	return force - 2*ZETA*y2 - y1 - EPSILON*y1*y1*y1;
 }
 
 int main (int argc, char *argv[]) {
@@ -352,6 +300,7 @@ int main (int argc, char *argv[]) {
 
 	sim->culcRungeKutta();
 	sim->culcDisplacementPdf();
+	sim->exactSolutionOfGaussianWhiteNoise();
 
 	cout << "research.cpp has done.\n" << endl;
 	cout << "--------------------------\n" << endl;

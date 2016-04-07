@@ -9,9 +9,9 @@
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_linalg.h>
-#include <gsl/gsl_blas.h>
 #include <gsl/gsl_sf.h>
-#include "expfit.cpp"
+#include "expfit.h"
+#include "ParamData.h"
 
 #define N 15
 #define P 10
@@ -20,7 +20,7 @@
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
 
 /************ 系の係数・入力条件（不変）*******************/
-#define S0 (1./(2.*PI))
+#define S0 1./(2.*PI)
 #define ZETA 0.2
 #define EPSILON 0.3
 #define GGD_KAPPA 2.	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
@@ -31,9 +31,9 @@ class Analysis
 private:
 	// 混合ガウス分布のパラメータ
 	double prm_a[NUM_GAUSS], prm_mu1[NUM_GAUSS], prm_mu2[NUM_GAUSS], prm_sigma1[NUM_GAUSS], prm_sigma2[NUM_GAUSS], prm_kappa[NUM_GAUSS];
-	double createGaussianPdf(double a[], double mu[], double sigma[], double x);
-	double culcLevelCrossing(double ZETA, double a[3], double mu1[3], double mu2[3], double sigma1[3], double sigma2[3], double kappa[3]);
-	void culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy);
+	double _createGaussianPdf(double a[], double mu[], double sigma[], double x);
+	double _culcLevelCrossing(double pp_xi, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[]);
+	void _culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy);
 
 public:
 	double lambda, beta2, alpha, mu1, mu2;
@@ -45,9 +45,10 @@ public:
 	void createLevelCrossing();
 };
 
+// 最小二乗法を解いて解析解を求める
 std::string Analysis::leastSquareMethod()
 {
-	cout << "Get analysis solution using least squeare method.\n" << endl;
+	std::cout << "Get analysis solution using least squeare method.\n" << std::endl;
 
 	// カウント変数
 	size_t tmp;
@@ -70,21 +71,22 @@ std::string Analysis::leastSquareMethod()
 
 	// 等価線形化法で初期値を計算
 	double sigma_x, sigma_y, rho_xy;
-	this->culcInitValue(this->lambda, this->beta2, GGD_KAPPA, this->alpha, &sigma_x, &sigma_y, &rho_xy);
+	this->_culcInitValue(this->lambda, this->beta2, GGD_KAPPA, this->alpha, &sigma_x, &sigma_y, &rho_xy);
 
 	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
 	double x_init[P] = { 0.5, sigma_x + this->mu1, sigma_y + this->mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
-
-	struct data d = { N, P, y, ZETA, EPSILON, dF };
+	
+	// 最小二乗法で使うパラメータ
+	ParamData* setData = new ParamData(N, P, y, ZETA, EPSILON, dF);
 
 	// 最小二乗法を解くための関数をセット
 	gsl_multifit_function_fdf f;
-	f.f = &expb_f;
-	f.df = &expb_df;
-	f.fdf = &expb_fdf;
-	f.n = N;
-	f.p = P;
-	f.params = &d;
+	f.f		= &MomentEq::expb_f;
+	f.df	= &MomentEq::expb_df;
+	f.fdf	= &MomentEq::expb_fdf;
+	f.n		= N;
+	f.p		= P;
+	f.params = setData;
 
 	// 最小二乗法のソルバーをセット
 	const gsl_multifit_fdfsolver_type *T;
@@ -140,19 +142,19 @@ std::string Analysis::leastSquareMethod()
 	double dof = N - P;
 	double c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
-	std::cout << "\nroop(iter): " << iter << "\n" << std::endl;
-	std::cout << "/*********************solution*********************/\n" << std::endl;
-	std::cout << "a	      = " << this->prm_a[1] << " +/- " << c*ERR(0) << "\n" << std::endl;
-	std::cout << "mu1     = " << this->prm_mu1[0] << " +/- " << c*ERR(1) << "\n" << std::endl;
-	std::cout << "mu2     = " << this->prm_mu2[0] << " +/- " << c*ERR(2) << "\n" << std::endl;
-	std::cout << "sigma11 = " << this->prm_sigma1[0] << " +/- " << c*ERR(3) << "\n" << std::endl;
-	std::cout << "sigma11 = " << this->prm_sigma2[0] << " +/- " << c*ERR(4) << "\n" << std::endl;
-	std::cout << "sigma21 = " << this->prm_sigma1[1] << " +/- " << c*ERR(5) << "\n" << std::endl;
-	std::cout << "sigma22 = " << this->prm_sigma2[1] << " +/- " << c*ERR(6) << "\n" << std::endl;
-	std::cout << "k1      = " << this->prm_kappa[0] << " +/- " << c*ERR(7) << "\n" << std::endl;
-	std::cout << "k2      = " << this->prm_kappa[1] << " +/- " << c*ERR(8) << "\n" << std::endl;
-	std::cout << "k3      = " << this->prm_kappa[2] << " +/- " << c*ERR(9) << "\n" << std::endl;
-	std::cout << "/**************************************************/\n" << std::endl;
+	std::cout << "roop(iter): " << iter << std::endl;
+	std::cout << "/*********************solution*********************/" << std::endl;
+	std::cout << "a	      = " << this->prm_a[1] << " +/- " << c*ERR(0) << std::endl;
+	std::cout << "mu1     = " << this->prm_mu1[0] << " +/- " << c*ERR(1) << std::endl;
+	std::cout << "mu2     = " << this->prm_mu2[0] << " +/- " << c*ERR(2) << std::endl;
+	std::cout << "sigma11 = " << this->prm_sigma1[0] << " +/- " << c*ERR(3) << std::endl;
+	std::cout << "sigma11 = " << this->prm_sigma2[0] << " +/- " << c*ERR(4) << std::endl;
+	std::cout << "sigma21 = " << this->prm_sigma1[1] << " +/- " << c*ERR(5) << std::endl;
+	std::cout << "sigma22 = " << this->prm_sigma2[1] << " +/- " << c*ERR(6) << std::endl;
+	std::cout << "k1      = " << this->prm_kappa[0] << " +/- " << c*ERR(7) << std::endl;
+	std::cout << "k2      = " << this->prm_kappa[1] << " +/- " << c*ERR(8) << std::endl;
+	std::cout << "k3      = " << this->prm_kappa[2] << " +/- " << c*ERR(9)<< std::endl;
+	std::cout << "/**************************************************/" << std::endl;
 	std::cout << "status  = " << gsl_strerror(status) << "\n" << std::endl;
 
 	gsl_multifit_fdfsolver_free(s);
@@ -160,9 +162,10 @@ std::string Analysis::leastSquareMethod()
 	return gsl_strerror(status);
 }
 
+// 変位のpdfを求める
 void Analysis::createDispPdf()
 {
-	cout << "Creating a file of the displacement pdf(.dat).\n" << endl;
+	std::cout << "Creating a file of the displacement pdf(.dat).\n" << std::endl;
 
 	// カウント変数
 	size_t tmp;
@@ -174,19 +177,20 @@ void Analysis::createDispPdf()
 
 	for (tmp = 0; tmp*0.01 < 12; tmp++)
 	{
-		fprintf(gsax1pdf, "%lf %lf\n", gsa_xmin + tmp*0.01, this->createGaussianPdf(this->prm_a, this->prm_mu1, this->prm_sigma1, gsa_xmin + tmp*0.01));
-		integration += 0.01*this->createGaussianPdf(this->prm_a, this->prm_mu1, this->prm_sigma1, gsa_xmin + tmp*0.01);
+		fprintf(gsax1pdf, "%lf %lf\n", gsa_xmin + tmp*0.01, this->_createGaussianPdf(this->prm_a, this->prm_mu1, this->prm_sigma1, gsa_xmin + tmp*0.01));
+		integration += 0.01*this->_createGaussianPdf(this->prm_a, this->prm_mu1, this->prm_sigma1, gsa_xmin + tmp*0.01);
 	}
 
 	fclose(gsax1pdf);
-	std::cout << "y1 integration = " << integration << ".\n" std::endl;
+	std::cout << "y1 integration = " << integration << ".\n" << std::endl;
 }
 
+// 変位の尖り度を求める
 void Analysis::culcDispVarience()
 {
-	cout << "Creating a file of the displacement varience(.dat).\n" << endl;
+	std::cout << "Creating a file of the displacement varience(.dat).\n" << std::endl;
 
-	FILE *y1_var;
+	FILE *y1_var, *gsax1pdf;
 	y1_var = fopen("anl_y1_var.dat", "w");
 	gsax1pdf = fopen("gsay1pdf.dat", "r");
 
@@ -209,9 +213,10 @@ void Analysis::culcDispVarience()
 	fclose(y1_var);
 }
 
+// 閾値通過率の分布を求める
 void Analysis::createLevelCrossing()
 {
-	cout << "Creating a file of the level crossing(.dat).\n" << endl;
+	std::cout << "Creating a file of the level crossing(.dat).\n" << std::endl;
 
 	// カウント変数
 	size_t tmp_xi;
@@ -226,7 +231,7 @@ void Analysis::createLevelCrossing()
 		prob_pass = 0.;	// 元に戻す
 		pp_xi = (double)tmp_xi*0.01;
 
-		prob_pass = culcLevelCrossing(pp_xi, this->prm_a, this->prm_mu1, this->prm_mu2, this->prm_sigma1, this->prm_sigma2, this->prm_kappa);
+		prob_pass = this->_culcLevelCrossing(pp_xi, this->prm_a, this->prm_mu1, this->prm_mu2, this->prm_sigma1, this->prm_sigma2, this->prm_kappa);
 
 		fprintf(x1_prob_pass, "%lf %lf\n", pp_xi, prob_pass);
 	}
@@ -234,9 +239,10 @@ void Analysis::createLevelCrossing()
 	fclose(x1_prob_pass);
 }
 
+// 速度のpdfを作成する
 void Analysis::createVelPdf()
 {
-	cout << "Creating a file of the velocity varience(.dat).\n" << endl;
+	std::cout << "Creating a file of the velocity varience(.dat).\n" << std::endl;
 
 	// カウント変数
 	size_t tmp;
@@ -248,8 +254,8 @@ void Analysis::createVelPdf()
 
 	for (tmp = 0; tmp*0.01 < 30; tmp++)
 	{
-		fprintf(gsax2pdf, "%lf %lf\n", gsa_ymin + tmp*0.01, this->createGaussianPdf(this->prm_a, this->prm_mu2, this->prm_sigma2, gsa_ymin));
-		integration += 0.01*this->createGaussianPdf(this->prm_a, this->prm_mu2, this->prm_sigma2, gsa_ymin);
+		fprintf(gsax2pdf, "%lf %lf\n", gsa_ymin + tmp*0.01, this->_createGaussianPdf(this->prm_a, this->prm_mu2, this->prm_sigma2, gsa_ymin));
+		integration += 0.01*this->_createGaussianPdf(this->prm_a, this->prm_mu2, this->prm_sigma2, gsa_ymin);
 	}
 
 	fclose(gsax2pdf);
@@ -260,15 +266,15 @@ void Analysis::createVelPdf()
  * 等価線形化法により初期値を計算
  *
  */
-void Analysis::culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
+void Analysis::_culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
 {
 	int tmp, s;
 	
 	double a[iN*iN], b[iN];					// 線形連立方程式Ax=bのAとB
-	double Exxold, Exyold, Eyyold, A=0., B=0., C=0., err;	// ループ計算時の解の保存用，x:変位，y:速度
+	double Exxold, Exyold, Eyyold, Exx=0., Exy=0., Eyy=0., err;	// ループ計算時の解の保存用，x:変位，y:速度
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_a		= sqrt(gsl_sf_gamma(1./ggd_kappa)*pow(gsl_sf_gamma(3./ggd_kappa), -1.)*beta2);
+	double ggd_a	= sqrt(gsl_sf_gamma(1./ggd_kappa)*pow(gsl_sf_gamma(3./ggd_kappa), -1.)*beta2);
 
 
 	/******* 初期値 *******
@@ -278,16 +284,13 @@ void Analysis::culcInitValue(double lambda, double beta2, double ggd_kappa, doub
 	 * kappa_1 = 0（ro をすべて0で仮定し，平均もゼロだから）
 	 */
 
+	int loop = 0;
 	/******* 応答のガウス性を仮定し，等価線形化法により2次定常モーメントを求める *******/
 	do{
-		Exxold = A;
-		Exyold = B;
-		Eyyold = C;
-		
-		double ke = 1.+3.*EPSILON*A;	// 等価線形係数 ke = 1+3εE[X^2]
+		double ke = 1.+3.*EPSILON*Exx;	// 等価線形係数 ke = 1+3εE[X^2]
 
 		for(tmp=0; tmp<iN*iN; tmp++) a[tmp] = 0.;
-		for(tmp=0; tmp<iN;   tmp++) b[tmp] = 0.;
+		for(tmp=0; tmp<iN; tmp++) b[tmp]	= 0.;
 		
 		/**************** 定常モーメント方程式の係数をAとBに代入 ********************/
 		// dXX
@@ -309,21 +312,28 @@ void Analysis::culcInitValue(double lambda, double beta2, double ggd_kappa, doub
 		gsl_linalg_LU_decomp(&m.matrix, px, &s);
 		gsl_linalg_LU_solve(&m.matrix, px, &c.vector, x);
 		
-		A = gsl_vector_get(x,0);
-		B = gsl_vector_get(x,1);
-		C = gsl_vector_get(x,2);
-		err = pow(A-Exxold,2.)+pow(B-Exyold,2.)+pow(C-Eyyold,2.);	// 収束条件に使う誤差，前ループとの差の二乗和
+		Exx = gsl_vector_get(x,0);
+		Exy = gsl_vector_get(x,1);
+		Eyy = gsl_vector_get(x,2);
 		
 		gsl_vector_free(x);
 		gsl_permutation_free(px);
-		
+
+		Exxold = Exx;
+		Exyold = Exy;
+		Eyyold = Eyy;
+		loop += 1;
+		if (loop == 0) continue;
+
+		err = pow(Exx - Exxold, 2.) + pow(Exy - Exyold, 2.) + pow(Eyy - Eyyold, 2.);	// 収束条件に使う誤差，前ループとの差の二乗和
+
 	} while(err > 10e-6);
 
-	*sigma_x = sqrt(A);
-	*sigma_y = sqrt(C);
-	*rho_xy  = B/sqrt(A*C);
+	*sigma_x = sqrt(Exx);
+	*sigma_y = sqrt(Exy);
+	*rho_xy  = Exy/sqrt(Exx*Eyy);
 
-	printf("sigma_x=%lf sigma_y=%lf rho_xy=%lf\n", sqrt(A), sqrt(C), B/sqrt(A*C));
+	std::cout << "sigma_x=" << sqrt(Exx) << ", sigma_y=" << sqrt(Eyy) << ", rho_xy=" << Exy/sqrt(Exx*Eyy) << "\n" << std::endl;
 	return;
 }
 
@@ -336,7 +346,7 @@ void Analysis::culcInitValue(double lambda, double beta2, double ggd_kappa, doub
  * @param double x 変数
  * @return pdf 確率密度関数
  */
-double Analysis::createGaussianPdf(double a[], double mu[], double sigma[], double x) 
+double Analysis::_createGaussianPdf(double a[], double mu[], double sigma[], double x) 
 {
 	double pdf = 0.;
 	size_t tmp;
@@ -354,7 +364,7 @@ double Analysis::createGaussianPdf(double a[], double mu[], double sigma[], doub
  *
  * 
  */
-double Analysis::culcLevelCrossing(double ZETA, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
+double Analysis::_culcLevelCrossing(double pp_xi, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
 {
 	double prob_pass;
 	double pp_c, pp_g, pp_sigma;
@@ -384,19 +394,19 @@ int main(int argc, char *argv[])
 	ana->beta2 = strtod(argv[2], &ends);
 	ana->alpha = strtod(argv[3], &ends);
 	ana->mu1 = strtod(argv[4], &ends);
-	ana->mu2 = mu1;
+	ana->mu2 = ana->mu1;
 
-	cout << "--------------------------\n" << endl;
-	cout << "lsm.cpp started.\n" << endl;
+	std::cout << "--------------------------\n" << std::endl;
+	std::cout << "lsm.cpp started.\n" << std::endl;
 
 	std::string result = ana->leastSquareMethod();
-	if (strcmp(result, "success") == 0)
+	if (result == "success")
 	{
 		ana->createDispPdf();
 	}
 
-	cout << "lsm.cpp has done.\n" << endl;
-	cout << "--------------------------\n" << endl;
+	std::cout << "lsm.cpp has done.\n" << std::endl;
+	std::cout << "--------------------------\n" << std::endl;
 
 	return 0;
 }
