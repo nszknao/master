@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <random>
 #include <math.h>
+#include <iostream>
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))
 
 class GA
@@ -14,6 +15,7 @@ public:
 	void initGene();
 	void culcFitness();
 	void output(int generation);
+	void uniformCrossover();
 
 private:
 	/*
@@ -26,6 +28,7 @@ private:
 	double* fitness;
 	double meanFitness;
 	double maxFitness;
+	int maxFitnessNumber;
 	int population;
 	int geneLength;
 	unsigned int **allIndividual;

@@ -76,18 +76,28 @@ void GA::culcFitness()
 
 	double x;
 
+	this->meanFitness = 0.0;
+	this->maxFitness = 0.0;
+	this->maxFitnessNumber = 0;
 	for (tmp_column = 0; tmp_column < this->population; tmp_column++)
 	{
 		switch (this->fitnessIndex[tmp_column])
 		{
 		case 0:
-			// @TODO:max‚Æmean‚Ì“K‰“x‚ğ‹‚ß‚é
-
+			// ‰½‚às‚í‚È‚¢
 			break;
 		case 1:
 			x = this->_binary2Decimal(allIndividual[tmp_column]) * 1.0 / (pow(2.0, (double)this->geneLength) - 1.0);
 			this->fitness[tmp_column] = this->_getObjectiveFunc(x);
 			this->fitnessIndex[tmp_column] = ;
+			break;
+		case 2:
+			this->meanFitness += this->fitness[tmp_column];
+			if (this->fitness[tmp_column] > this->maxFitness)
+			{
+				this->maxFitness = this->fitness[tmp_column];
+				this->maxFitnessNumber = tmp_column;
+			}
 			break;
 		default:
 			break;
@@ -127,9 +137,15 @@ void GA::output(int generation)
 {
 	size_t tmp_column, tmp_row;
 
-	// yŸ‰ñzo—Í•û–@‚ğl‚¦‚é
+	std::cout << "‘æ" << generation << "¢‘ã" << std::endl;
 	for (tmp_column = 0; tmp_column < this->geneLength; tmp_column++)
 	{
-
+		x = this->_binary2Decimal(allIndividual[tmp_column]) * 1.0 / (pow(2.0, (double)this->geneLength) - 1.0);
+		std::cout << tmp_column << "\t" << x << "\t" << this->_getObjectiveFunc(x) << std::endl;
 	}
+}
+
+void GA::uniformCrossover()
+{
+	// yŸ‰ñzˆê—lŒğ³‚ÌÀ‘•
 }
