@@ -260,7 +260,7 @@ void Analysis::createVelPdf()
  * 等価線形化法により初期値を計算
  *
  */
-void culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
+void Analysis::culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
 {
 	int tmp, s;
 	
@@ -354,7 +354,7 @@ double Analysis::createGaussianPdf(double a[], double mu[], double sigma[], doub
  *
  * 
  */
-double culcLevelCrossing(double ZETA, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
+double Analysis::culcLevelCrossing(double ZETA, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
 {
 	double prob_pass;
 	double pp_c, pp_g, pp_sigma;
