@@ -8,12 +8,12 @@
 int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
 	ParamData* paramData	= static_cast<ParamData*>(params);
-	int NUM_OF_MOMENT_EQUATION		= paramData->_n;
-	int NUM_OF_PARAMETER			= paramData->_p;
-	double *y						= paramData->_y;
-	double zeta						= paramData->_zeta;
-	double epi						= paramData->_epsilon;
-	double *dG						= paramData->_dG;
+	int NUM_OF_MOMENT_EQUATION		= paramData->n;
+	int NUM_OF_PARAMETER			= paramData->p;
+	double *y						= paramData->y;
+	double zeta						= paramData->zeta;
+	double epi						= paramData->epsilon;
+	double *dG						= paramData->dG;
 
 	double cf_moment_eq[] =						// モーメント方程式 係数行列 15x21
 	{
@@ -197,12 +197,12 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 {
 	ParamData* paramData = static_cast<ParamData*>(params);
-	int NUM_OF_MOMENT_EQUATION = paramData->_n;
-	int NUM_OF_PARAMETER = paramData->_p;
-	double *y = paramData->_y;
-	double zeta = paramData->_zeta;
-	double epi = paramData->_epsilon;
-	double *dG = paramData->_dG;
+	int NUM_OF_MOMENT_EQUATION	= paramData->n;
+	int NUM_OF_PARAMETER		= paramData->p;
+	double *y					= paramData->y;
+	double zeta					= paramData->zeta;
+	double epi					= paramData->epsilon;
+	double *dG					= paramData->dG;
 
 
 	double cf_moment_eq[] =						//モーメント方程式 係数行列 15x21

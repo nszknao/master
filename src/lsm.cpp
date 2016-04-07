@@ -75,6 +75,7 @@ std::string Analysis::leastSquareMethod()
 
 	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
 	double x_init[P] = { 0.5, sigma_x + this->mu1, sigma_y + this->mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
+	
 	// 最小二乗法で使うパラメータ
 	ParamData* setData = new ParamData(N, P, y, ZETA, EPSILON, dF);
 
