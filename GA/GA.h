@@ -19,6 +19,7 @@ public:
 	void output(int generation);
 	void uniformCrossover();
 	int selectIndividual();
+	void mutation();
 
 private:
 	/*

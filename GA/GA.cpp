@@ -149,7 +149,46 @@ void GA::output(int generation)
 
 void GA::uniformCrossover()
 {
-	// 【次回】一様交叉の実装
+	// カウント変数
+	size_t tmp;
+
+	int parent1, parent2;
+	std::vector<int> maskPattern, parent1Individual, parent2Individual, childIndividual;
+	
+	// 親を選択
+	do
+	{
+		parent1 = this->selectIndividual();
+		parent2 = this->selectIndividual();
+	} while (parent1 == parent2);
+	parent1Individual.push_back(this->allIndividual[parent1]);
+	parent2Individual.push_back(this->allIndividual[parent2]);
+
+	// マスクパターンを生成
+	std::random_device seedGen;
+	std::mt19937 mt(seedGen());
+	std::uniform_real_distribution<int> randomValue(0, 1);
+	for (tmp = 0; tmp < this->geneLength; tmp++)
+	{
+		maskPattern.push_back(randomValue(mt));
+	}
+
+	// 交叉
+	for (tmp = 0; tmp < this->geneLength; tmp++)
+	{
+		if (maskPattern[tmp] == 0)
+		{
+			childIndividual.push_back(parent1Individual[tmp]);
+		}
+		else if (maskPattern[tmp] == 1)
+		{
+			childIndividual.push_back(parent2Individual[tmp]);
+		}
+	}
+
+	// 個体集団に子供を追加
+	this->allIndividual.push_back(childIndividual);
+	this->fitnessIndex.push_back(1);
 }
 
 /*
@@ -221,4 +260,36 @@ int GA::selectIndividual()
 	}
 
 	return -1;	// 固体が存在しなかった場合
+}
+
+void GA::mutation(double mutationRate)
+{
+	// カウント変数
+	size_t tmp_column, tmp_row;
+
+	std::random_device seedGen;
+	std::mt19937 mt(seedGen());
+	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
+
+	for (tmp_column = 0; tmp_column < this->population; tmp_column++)
+	{
+		if (this->fitnessIndex[tmp_column] == 1)
+		{
+			for (tmp_row = 0; tmp_row < this->geneLength; tmp_row++)
+			{
+				if (mutationRate > randomValue(mt))
+				{
+					switch (this->allIndividual[tmp_column][tmp_row])
+					{
+					case 0:
+						this->allIndividual[tmp_column][tmp_row] = 1;
+					case 1:
+						this->allIndividual[tmp_column][tmp_row] = 0;
+					default:
+						break;
+					}
+				}
+			}
+		}
+	}
 }
