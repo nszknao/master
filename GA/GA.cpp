@@ -42,9 +42,9 @@ void GA::initGene()
 }
 
 /*
-@param gene 個体集団の2次元配列
+	@param gene 個体集団の2次元配列
 */
-bool GA::_isDuplicatedGene(unsigned int **gene, int column)
+bool GA::_isDuplicatedGene(std::vector<std::vector<int>> gene, int column)
 {
 	// カウント変数
 	size_t tmp_column, tmp_row;
@@ -87,7 +87,7 @@ void GA::culcFitness()
 			// 何も行わない
 			break;
 		case 1:
-			x = this->_binary2Decimal(allIndividual[tmp_column]) * 1.0 / (pow(2.0, (double)this->geneLength) - 1.0);
+			x = this->_binary2Phenotype(allIndividual[tmp_column]);
 			this->fitness[tmp_column] = this->_getObjectiveFunc(x);
 			this->fitnessIndex[tmp_column] = ;
 			break;
@@ -105,7 +105,10 @@ void GA::culcFitness()
 	}
 }
 
-double GA::_binary2Decimal(int* binary)
+/*
+	2進数データを表現型に変換
+*/
+double GA::_binary2Phenotype(std::vector<int> binary)
 {
 	// カウント変数
 	size_t tmp;
@@ -113,10 +116,9 @@ double GA::_binary2Decimal(int* binary)
 	double decimal;
 	int place,  numRow;
 
-	numRow	= ARRAY_LENGTH(binary);
 	decimal		= 0.0;
 	place	= 0;
-	for (tmp = numRow; tmp >= 0; tmp--)
+	for (tmp = binary.size(); tmp >= 0; tmp--)
 	{
 		x = 0.0;
 		place = 0.0;
@@ -125,7 +127,7 @@ double GA::_binary2Decimal(int* binary)
 		place += 1;
 	}
 
-	return decimal;
+	return decimal * 1.0 / (pow(2.0, (double)this->geneLength) - 1.0);
 }
 
 double GA::_getObjectiveFunc(double x)
@@ -135,12 +137,12 @@ double GA::_getObjectiveFunc(double x)
 
 void GA::output(int generation)
 {
-	size_t tmp_column, tmp_row;
+	size_t tmp_column;
 
 	std::cout << "第" << generation << "世代" << std::endl;
 	for (tmp_column = 0; tmp_column < this->geneLength; tmp_column++)
 	{
-		x = this->_binary2Decimal(allIndividual[tmp_column]) * 1.0 / (pow(2.0, (double)this->geneLength) - 1.0);
+		x = this->_binary2Phenotype(allIndividual[tmp_column]);
 		std::cout << tmp_column << "\t" << x << "\t" << this->_getObjectiveFunc(x) << std::endl;
 	}
 }
@@ -148,4 +150,75 @@ void GA::output(int generation)
 void GA::uniformCrossover()
 {
 	// 【次回】一様交叉の実装
+}
+
+/*
+	適応度比例戦略から固体を選択し，その番号を返す．
+	失敗した場合は-1を返す．
+*/
+int GA::selectIndividual()
+{
+	// カウント変数
+	size_t tmp_column;
+
+	std::vector<std::vector<int>> evaluatedIndividual;
+	std::vector<double> evaluatedFitness, fitnessRatio, selectedIndividual;
+	double sumFitness = 0.0, x;
+	int individualNum;
+
+	// 適応度が評価済みの個体集団を作る
+	for (tmp_column = 0; tmp_column < this->population; tmp_column++)
+	{
+		if (this->fitnessIndex[tmp_column] == 2)
+		{
+			evaluatedIndividual.push_back(this->allIndividual[tmp_column]);
+		}
+	}
+
+	// 固体集団をシャッフルして順番を変えずに適応度を求める
+	// @MEMO:２重配列のときのsize()の挙動
+	std::shuffle(evaluatedIndividual.begin(), evaluatedIndividual.end(), std::mt19937());
+	for (tmp_column = 0; tmp_column < evaluatedIndividual.size(); tmp_column++)
+	{
+		x = this->_binary2Phenotype(evaluatedIndividual[tmp_column]);
+		evaluatedFitness.push_back(this->_getObjectiveFunc(x));
+		sumFitness += this->_getObjectiveFunc(x);
+	}
+
+	// 適応度の比
+	for (tmp_column = 0; tmp_column < evaluatedFitness.size(); tmp_column++)
+	{
+		fitnessRatio.push_back(evaluatedFitness[tmp_column] / sumFitness);
+	}
+
+	// 適応度から確率的に固体を選択
+	std::random_device seedGen;
+	std::mt19937 mt(seedGen());
+	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
+	int selectedFlg = 0;
+	do
+	{
+		for (tmp_column = 0; tmp_column < fitnessRatio.size(); tmp_column++)
+		{
+			if (fitnessRatio[tmp_column] > randomValue(mt))	// 毎回ランダム値が生成される	
+			{
+				selectedIndividual.push_back(evaluatedIndividual[tmp_column]);
+				selectedFlg = 1;
+				break;
+			}
+		}
+	} while (selectedFlg == 0);
+
+	// 選ばれた個体の番号を返す
+	bool correspond = false;
+	for (individualNum = 0; individualNum < this->population; individualNum++)
+	{
+		correspond = std::equal(this->allIndividual[tmp_column].cbegin(), this->allIndividual[tmp_column].cend(), selectedIndividual.cbegin());
+		if (correspond)
+		{
+			return individualNum;
+		}
+	}
+
+	return -1;	// 固体が存在しなかった場合
 }
