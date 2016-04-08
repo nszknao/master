@@ -20,27 +20,22 @@ public:
 	void uniformCrossover();
 	int selectIndividual();
 	void mutation();
+	void selectRanking();
 
 private:
-	/*
-		適応度の計算指標
-			0:未使用
-			1:適応度計算前（突然変異はこの個体だけに適応）
-			2:適応度計算済み（交叉時に親とみなす）
-		@TODO:enumを用意する
-	*/
-	std::vector<int> fitnessIndex;
+	std::vector<std::vector<int>> allIndividual;
 	std::vector<double> fitness;
-	double meanFitness;
-	double maxFitness;
-	int maxFitnessNumber;
+	double meanFitness;	// 使ってない
+	double maxFitness;	// 使ってない
+	int maxFitnessNumber;	// 使ってない
 	int population;
 	int geneLength;
-	std::vector<std::vector<int>> allIndividual;
-	double _binary2Phenotype(int* binary);
-	bool _isDuplicatedGene(unsigned int **gene);
+
 	// @TODO:setObjectiveFuncを追加したり
 	double _getObjectiveFunc(double x);	// 1変数の場合
+	double _binary2Phenotype(int* binary);
+	bool _isDuplicatedGene(unsigned int **gene);
+	void _assignAllIndividual();
 };
 
 #endif // !__GA_H_INCLUDE__
