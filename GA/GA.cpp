@@ -135,7 +135,7 @@ double GA::_getObjectiveFunc(double x)
 
 void GA::output(int generation)
 {
-	size_t tmp_column, tmp_row;
+	size_t tmp_column;
 
 	std::cout << "‘æ" << generation << "¢‘ã" << std::endl;
 	for (tmp_column = 0; tmp_column < this->geneLength; tmp_column++)
