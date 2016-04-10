@@ -12,14 +12,14 @@
 class GA
 {
 public:
-	GA();
+	GA(int population, int geneLength);
 	~GA();
 	void initGene();
 	void culcFitness();
 	void output(int generation);
 	void uniformCrossover();
 	int selectIndividual();
-	void mutation();
+	void mutation(double mutationRate);
 	void selectRanking();
 
 private:
@@ -28,13 +28,17 @@ private:
 	double meanFitness;	// g‚Á‚Ä‚È‚¢
 	double maxFitness;	// g‚Á‚Ä‚È‚¢
 	int maxFitnessNumber;	// g‚Á‚Ä‚È‚¢
-	int population;
-	int geneLength;
+	int _population;
+	int _geneLength;
 
+	void _setPopulation(int population);
+	void _setGeneLength(int length);
+	int _getPopulation();
+	int _getGeneLength();
 	// @TODO:setObjectiveFunc‚ğ’Ç‰Á‚µ‚½‚è
 	double _getObjectiveFunc(double x);	// 1•Ï”‚Ìê‡
-	double _binary2Phenotype(int* binary);
-	bool _isDuplicatedGene(unsigned int **gene);
+	double _binary2Phenotype(std::vector<int>);
+	bool _isDuplicatedGene(std::vector<std::vector<int>> gene, int column);
 };
 
 #endif // !__GA_H_INCLUDE__

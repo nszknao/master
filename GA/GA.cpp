@@ -1,12 +1,39 @@
 #include "GA.h"
 
 
-GA::GA()
+GA::GA(int population, int geneLength)
 {
+	std::cout << "Calls constructor." << std::endl;
+
+	this->_setPopulation(population);
+	this->_setGeneLength(geneLength);
+
+	std::vector<std::vector<int>> allIndividual(this->_getPopulation(), std::vector<int>(this->_getGeneLength()));
+	std::vector<double> fitness;
 }
 
 GA::~GA()
 {
+}
+
+void GA::_setPopulation(int population)
+{
+	this->_population = population;
+}
+
+void GA::_setGeneLength(int length)
+{
+	this->_geneLength = length;
+}
+
+int GA::_getPopulation()
+{
+	return this->_population;
+}
+
+int GA::_getGeneLength()
+{
+	return this->_geneLength;
 }
 
 void GA::initGene()
@@ -19,22 +46,25 @@ void GA::initGene()
 	// [0.0, 1.0]のランダム値を作成
 	std::random_device rd;
 	std::mt19937 mt(rd());
-	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
+	std::uniform_real_distribution<> randomValue(0.0, 1.0);
 
 	do {
 		duplicateFlg = 0;
-		for (tmp_column = 0; tmp_column < this->population; tmp_column++)
+		for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
 		{
 			// 遺伝子の作成
-			for (tmp_row = 0; tmp_row < this->geneLength; tmp_row++)
+			for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
 			{
-				allIndividual[tmp_column][tmp_row] = (randomValue(mt) > 0.5) ? 1 : 0;
+				this->allIndividual.at(0).at(0) = 0;
+				std::cout << "Here!!!" << std::endl;
+				return;
+//				this->allIndividual.at(tmp_column).at(tmp_row) = (randomValue(mt) > 0.5) ? 1 : 0;
 			}
 
-			if (this->_isDuplicatedGene(allIndividual, tmp_column))
+			if (this->_isDuplicatedGene(this->allIndividual, tmp_column))
 				duplicateFlg = 1;
 		}
-	} while (duplicateFlg = 1)
+	} while (duplicateFlg = 1);
 }
 
 /*
@@ -51,7 +81,7 @@ bool GA::_isDuplicatedGene(std::vector<std::vector<int>> gene, int column)
 	for (tmp_column = 0; tmp_column < column; tmp_column++)
 	{
 		duplicateFlg = 1;
-		for (tmp_row = 0; tmp_row < this->geneLength; tmp_row++)
+		for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
 		{
 			// 1つでも遺伝子が異なればフラグを回収
 			if (gene[column][tmp_row] != gene[tmp_column][tmp_row])
@@ -71,7 +101,7 @@ void GA::culcFitness()
 	int tmp_column, tmp_row;
 
 	double x;
-	for (tmp_column = 0; tmp_column < this->population; tmp_column++)
+	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
 	{
 		x = this->_binary2Phenotype(allIndividual[tmp_column]);
 		this->fitness[tmp_column] = this->_getObjectiveFunc(x);
@@ -93,14 +123,12 @@ double GA::_binary2Phenotype(std::vector<int> binary)
 	place	= 0;
 	for (tmp = binary.size(); tmp >= 0; tmp--)
 	{
-		x = 0.0;
-		place = 0.0;
 		if (binary[tmp] > 0)
 			decimal += pow(2.0, (double)place);
 		place += 1;
 	}
 
-	return decimal * 1.0 / (pow(2.0, (double)this->geneLength) - 1.0);
+	return decimal * 1.0 / (pow(2.0, (double)this->_geneLength) - 1.0);
 }
 
 double GA::_getObjectiveFunc(double x)
@@ -112,8 +140,10 @@ void GA::output(int generation)
 {
 	size_t tmp_column;
 
+	double x;
+
 	std::cout << "第" << generation << "世代" << std::endl;
-	for (tmp_column = 0; tmp_column < this->geneLength; tmp_column++)
+	for (tmp_column = 0; tmp_column < this->_geneLength; tmp_column++)
 	{
 		x = this->_binary2Phenotype(allIndividual[tmp_column]);
 		std::cout << tmp_column << "\t" << x << "\t" << this->_getObjectiveFunc(x) << std::endl;
@@ -134,35 +164,39 @@ void GA::uniformCrossover()
 		parent1 = this->selectIndividual();
 		parent2 = this->selectIndividual();
 	} while (parent1 == parent2);
-	parent1Individual.push_back(this->allIndividual[parent1]);
-	parent2Individual.push_back(this->allIndividual[parent2]);
+	
+	for (tmp = 0; tmp < this->_geneLength; tmp++)
+	{
+		parent1Individual.push_back(this->allIndividual[parent1][tmp]);
+		parent2Individual.push_back(this->allIndividual[parent2][tmp]);
+	}
 
 	// マスクパターンを生成
 	std::random_device seedGen;
 	std::mt19937 mt(seedGen());
-	std::uniform_real_distribution<int> randomValue(0, 1);
-	for (tmp = 0; tmp < this->geneLength; tmp++)
+	std::uniform_int_distribution<int> randomValue(0, 1);
+	for (tmp = 0; tmp < this->_geneLength; tmp++)
 	{
 		maskPattern.push_back(randomValue(mt));
 	}
 
 	// 交叉
-	for (tmp = 0; tmp < this->geneLength; tmp++)
+	for (tmp = 0; tmp < this->_geneLength; tmp++)
 	{
 		if (maskPattern[tmp] == 0)
 		{
-			childIndividual.push_back(parent1Individual[tmp]);
+			child1Individual.push_back(parent1Individual[tmp]);
 			child2Individual.push_back(parent2Individual[tmp]);
 		}
 		else if (maskPattern[tmp] == 1)
 		{
-			childIndividual.push_back(parent2Individual[tmp]);
+			child1Individual.push_back(parent2Individual[tmp]);
 			child2Individual.push_back(parent1Individual[tmp]);
 		}
 	}
 
 	// 世代交代
-	this->allIndividual[parent1].swap(child1Individual)
+	this->allIndividual[parent1].swap(child1Individual);
 	this->allIndividual[parent2].swap(child2Individual);
 }
 
@@ -173,7 +207,7 @@ void GA::uniformCrossover()
 int GA::selectIndividual()
 {
 	// カウント変数
-	size_t tmp_column;
+	size_t tmp_column, tmp_row;
 
 	std::vector<std::vector<int>> shuffledAllIndividual	= this->allIndividual;
 	std::vector<double> shuffledFitness, fitnessRatio, selectedIndividual;
@@ -206,7 +240,10 @@ int GA::selectIndividual()
 		{
 			if (fitnessRatio[tmp_column] > randomValue(mt))	// 毎回ランダム値が生成される	
 			{
-				selectedIndividual.push_back(shuffledAllIndividual[tmp_column]);
+				for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
+				{
+					selectedIndividual.push_back(shuffledAllIndividual[tmp_column][tmp_row]);
+				}
 				selectedFlg = 1;
 				break;
 			}
@@ -216,7 +253,7 @@ int GA::selectIndividual()
 	// 選ばれた個体の番号を返す
 	int individualNum;
 	bool correspond = false;
-	for (individualNum = 0; individualNum < this->population; individualNum++)
+	for (individualNum = 0; individualNum < this->_population; individualNum++)
 	{
 		correspond = std::equal(shuffledAllIndividual[tmp_column].cbegin(), shuffledAllIndividual[tmp_column].cend(), selectedIndividual.cbegin());
 		if (correspond)
@@ -238,7 +275,7 @@ void GA::selectRanking()
 
 	// ソート順を記憶するためのキー
 	std::vector<int> key;
-	for (tmp = 0; tmp < this->population; tmp++)
+	for (tmp = 0; tmp < this->_population; tmp++)
 		key[tmp] = tmp;
 
 	// 適応度を降順にソート．その順番をkeyに保存．
@@ -262,14 +299,14 @@ void GA::selectRanking()
 	}
 
 	// 個体集団を適応度の降順に並べる
-	for (tmp = 0; tmp < this->geneLength; tmp++)
+	for (tmp = 0; tmp < this->_geneLength; tmp++)
 	{
 		this->allIndividual[tmp] = this->allIndividual[key[tmp]];
 	}
 
 	// 適応度が上位2つの個体をコピーし，下位2つを淘汰する．
-	this->allIndividual[this->geneLength - 1]	= this->allIndividual[0];
-	this->allIndividual[this->geneLength - 2]	= this->allIndividual[0];
+	this->allIndividual[this->_geneLength - 1]	= this->allIndividual[0];
+	this->allIndividual[this->_geneLength - 2]	= this->allIndividual[0];
 }
 
 /*
@@ -288,7 +325,7 @@ void GA::mutation(double mutationRate)
 	std::mt19937 mt(seedGen());
 	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
 
-	for (tmp_row = 0; tmp_row < this->geneLength; tmp_row++)
+	for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
 	{
 		if (mutationRate > randomValue(mt))
 		{
