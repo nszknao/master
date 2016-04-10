@@ -35,7 +35,6 @@ private:
 	double _getObjectiveFunc(double x);	// 1•Ï”‚Ìê‡
 	double _binary2Phenotype(int* binary);
 	bool _isDuplicatedGene(unsigned int **gene);
-	void _assignAllIndividual();
 };
 
 #endif // !__GA_H_INCLUDE__

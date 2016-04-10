@@ -254,9 +254,9 @@ void GA::selectRanking()
 				this->fitness[tmp1] = this->fitness[tmp2];
 				this->fitness[tmp2] = tmpVar;
 
-				tmpKey = key[tmp1];
-				key[tmp1] = key[tmp2];
-				key[tmp2] = tmpKey;
+				tmpKey		= key[tmp1];
+				key[tmp1]	= key[tmp2];
+				key[tmp2]	= tmpKey;
 			}
 		}
 	}
@@ -267,12 +267,9 @@ void GA::selectRanking()
 		this->allIndividual[tmp] = this->allIndividual[key[tmp]];
 	}
 
-	this->_assignAllIndividual();
-}
-
-void GA::_assignAllIndevidual()
-{
-	// 【次回】割り当て関数から（本を参考に）
+	// 適応度が上位2つの個体をコピーし，下位2つを淘汰する．
+	this->allIndividual[this->geneLength - 1]	= this->allIndividual[0];
+	this->allIndividual[this->geneLength - 2]	= this->allIndividual[0];
 }
 
 /*
