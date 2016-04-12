@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))
 
 class GA
@@ -16,7 +17,7 @@ public:
 	~GA();
 	void initGene();
 	void culcFitness();
-	void output(int generation);
+	void outputGeneration(int generation);
 	void uniformCrossover();
 	int selectIndividual();
 	void mutation(double mutationRate);
@@ -39,6 +40,8 @@ private:
 	double _getObjectiveFunc(double x);	// 1ïœêîÇÃèÍçá
 	double _binary2Phenotype(std::vector<int>);
 	bool _isDuplicatedGene(std::vector<std::vector<int>> gene, int column);
+	void _outputIndividuals(std::vector<std::vector<int>> individuals);
+	void _outputIndividual(std::vector<int> individual);
 };
 
 #endif // !__GA_H_INCLUDE__
