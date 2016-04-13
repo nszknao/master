@@ -2,8 +2,8 @@
  * メモ
  * m_：マトリクス，v_：ベクトル，cf_：係数
  */
-#include "expfit.h"
-#include "ParamData.h"
+#include "../include/expfit.h"
+#include "../include/ParamData.h"
 
 int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {

@@ -10,8 +10,8 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_sf.h>
-#include "expfit.h"
-#include "ParamData.h"
+#include "../include/expfit.h"
+#include "../include/ParamData.h"
 
 #define N 15
 #define P 10

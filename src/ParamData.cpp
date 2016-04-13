@@ -1,4 +1,4 @@
-#include "ParamData.h"
+#include "../include/ParamData.h"
 
 ParamData::ParamData(int arg_n, int arg_p, double* arg_y, double arg_zeta, double arg_epsilon, double* arg_dG)
 {

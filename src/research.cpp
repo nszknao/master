@@ -1,4 +1,4 @@
-#include "research.h"
+#include "../include/research.h"
 
 /* 入力を生成する */
 void Simulation::_createExcitation()
