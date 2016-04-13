@@ -243,21 +243,17 @@ void GA::uniformCrossover()
 int GA::selectIndividual()
 {
 	// カウント変数
-	int tmp_column, tmp_row;
-
-	// 個体集団のコピーを作成
-	std::vector<std::vector<int>> shuffledAllIndividual;
-	std::copy(this->allIndividual.begin(), this->allIndividual.end(), back_inserter(shuffledAllIndividual));
+	int tmp_column;
 
 	std::vector<double> shuffledFitness, fitnessRatio, selectedIndividual;
 
 	// 固体集団をシャッフルして順番を変えずに適応度を求める
 	double sumFitness = 0.0, x;
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-	std::shuffle(shuffledAllIndividual.begin(), shuffledAllIndividual.end(), std::mt19937(seed));
+	std::shuffle(this->allIndividual.begin(), this->allIndividual.end(), std::mt19937(seed));
 	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
 	{
-		x = this->_binary2Phenotype(shuffledAllIndividual[tmp_column]);
+		x = this->_binary2Phenotype(this->allIndividual[tmp_column]);
 		shuffledFitness.push_back(this->_getObjectiveFunc(x));
 		sumFitness += this->_getObjectiveFunc(x);
 	}
@@ -272,34 +268,17 @@ int GA::selectIndividual()
 	std::random_device seedGen;
 	std::mt19937 mt(seedGen());
 	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
-	int selectedFlg = 0;
+	int selectedFlg = 0, individualNum = 0;
 	do
 	{
-		for (tmp_column = 0; tmp_column < fitnessRatio.size(); tmp_column++)
+		for (individualNum = 0; individualNum < fitnessRatio.size(); individualNum++)
 		{
-			if (fitnessRatio[tmp_column] > randomValue(mt))	// 毎回ランダム値が生成される	
+			if (fitnessRatio[individualNum] > randomValue(mt))	// 毎回ランダム値が生成される	
 			{
-				for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
-				{
-					selectedIndividual.push_back(shuffledAllIndividual[tmp_column][tmp_row]);
-				}
-				selectedFlg = 1;
-				break;
+				return individualNum;
 			}
 		}
 	} while (selectedFlg == 0);
-
-	// 選ばれた個体の番号を返す
-	int individualNum;
-	bool correspond = false;
-	for (individualNum = 0; individualNum < this->_population; individualNum++)
-	{
-		correspond = std::equal(shuffledAllIndividual[individualNum].cbegin(), shuffledAllIndividual[individualNum].cend(), selectedIndividual.cbegin());
-		if (correspond)
-		{
-			return individualNum;
-		}
-	}
 
 	return -1;	// 固体が存在しなかった場合
 }
