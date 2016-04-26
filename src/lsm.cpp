@@ -33,10 +33,11 @@ private:
 	double prm_a[NUM_GAUSS], prm_mu1[NUM_GAUSS], prm_mu2[NUM_GAUSS], prm_sigma1[NUM_GAUSS], prm_sigma2[NUM_GAUSS], prm_kappa[NUM_GAUSS];
 	double _createGaussianPdf(double a[], double mu[], double sigma[], double x);
 	double _culcLevelCrossing(double pp_xi, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[]);
-	void _culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy);
+	void _culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy);
 
 public:
 	double lambda, beta2, alpha, mu1, mu2;
+	Analysis(double lambda, double beta2, double alpha, double mu1, double mu2);
 	std::string leastSquareMethod();
 	void createDispPdf();
 	void createVelPdf();
@@ -45,13 +46,23 @@ public:
 	void createLevelCrossing();
 };
 
+// コンストラクタ
+Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, double arg_m2)
+{
+	this->lambda	= arg_l;
+	this->beta2	= arg_b;
+	this->alpha	= arg_a;
+	this->mu1	= arg_m1;
+	this->mu2	= arg_m2;
+}
+
 // 最小二乗法を解いて解析解を求める
 std::string Analysis::leastSquareMethod()
 {
 	std::cout << "Get analysis solution using least squeare method.\n" << std::endl;
 
 	// カウント変数
-	size_t tmp;
+	int tmp;
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
 	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*beta2);
@@ -71,7 +82,7 @@ std::string Analysis::leastSquareMethod()
 
 	// 等価線形化法で初期値を計算
 	double sigma_x, sigma_y, rho_xy;
-	this->_culcInitValue(this->lambda, this->beta2, GGD_KAPPA, this->alpha, &sigma_x, &sigma_y, &rho_xy);
+	this->_culcInitValue(&sigma_x, &sigma_y, &rho_xy);
 
 	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
 	double x_init[P] = { 0.5, sigma_x + this->mu1, sigma_y + this->mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
@@ -264,44 +275,39 @@ void Analysis::createVelPdf()
 
 /**
  * 等価線形化法により初期値を計算
- *
+ * 線形の連立方程式Ax=Bを解く
  */
-void Analysis::_culcInitValue(double lambda, double beta2, double ggd_kappa, double alpha, double *sigma_x, double *sigma_y, double *rho_xy)
+void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 {
 	int tmp, s;
 	
-	double a[iN*iN], b[iN];					// 線形連立方程式Ax=bのAとB
-	double Exxold, Exyold, Eyyold, Exx=0., Exy=0., Eyy=0., err;	// ループ計算時の解の保存用，x:変位，y:速度
+	double a[iN*iN], b[iN];
+	double ke, Exxold, Exyold, Eyyold, Exx=0., Exy=0., Eyy=0., err = 1000.;	// ループ計算時の解の保存用，x:変位，y:速度
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_a	= sqrt(gsl_sf_gamma(1./ggd_kappa)*pow(gsl_sf_gamma(3./ggd_kappa), -1.)*beta2);
+	double ggd_a	= sqrt(gsl_sf_gamma(1./GGD_KAPPA)*pow(gsl_sf_gamma(3./GGD_KAPPA), -1.)*this->beta2);
 
-
-	/******* 初期値 *******
-	 * a_1 = 1, a_2 = a_3 = 0
-	 * mu_1 = mu_2 = 0：対称なガウス分布を仮定しているから（ただ，後で mu_1 = 1 にするかも）
-	 * sigma_1, sigma_2 はそのまま
-	 * kappa_1 = 0（ro をすべて0で仮定し，平均もゼロだから）
-	 */
-
-	int loop = 0;
 	/******* 応答のガウス性を仮定し，等価線形化法により2次定常モーメントを求める *******/
-	do{
-		double ke = 1.+3.*EPSILON*Exx;	// 等価線形係数 ke = 1+3εE[X^2]
+	for (tmp = 0; err >10e-6; tmp++)
+	{
+		// ひとつ前の情報を保存
+		Exxold = Exx;
+		Exyold = Exy;
+		Eyyold = Eyy;
 
-		for(tmp=0; tmp<iN*iN; tmp++) a[tmp] = 0.;
-		for(tmp=0; tmp<iN; tmp++) b[tmp]	= 0.;
-		
-		/**************** 定常モーメント方程式の係数をAとBに代入 ********************/
-		// dXX
-		a[0*iN+1] = 2.;	b[0] = 0.;
+		ke = 1.+3.*EPSILON*Exx;	// 等価線形係数 ke = 1+3εE[X^2]
+
+		// Exx
+		a[0*iN+0] = 0.;	a[0*iN+1] = 2.;	a[0*iN+2] = 0.;
+		b[0] = 0.;
 				
-		// dXY
-		a[1*iN+0] = -ke;		a[1*iN+1] = -2.*ZETA;	a[1*iN+2] = 1.;	b[1] = 0.;
+		// Exy
+		a[1*iN+0] = -ke;	a[1*iN+1] = -2.*ZETA;	a[1*iN+2] = 1.;
+		b[1] = 0.;
 		
-		// dYY
-		a[2*iN+1] = 2.*ke;	a[2*iN+2] = 4.*ZETA;	b[2] = alpha*2.*PI*S0 + (1.-alpha)*lambda*(pow(ggd_a,2.)*gsl_sf_gamma(3./ggd_kappa)*pow(gsl_sf_gamma(1./ggd_kappa),-1.));
-		/**************************************************************************/
+		// Eyy
+		a[2*iN+0] = 0.;	a[2*iN+1] = 2.*ke;	a[2*iN+2] = 4.*ZETA;
+		b[2] = this->alpha*2.*PI*S0 + (1.-this->alpha)*this->lambda*(pow(ggd_a,2.)*gsl_sf_gamma(3./GGD_KAPPA)*pow(gsl_sf_gamma(1./GGD_KAPPA),-1.));
 		
 		gsl_matrix_view m	= gsl_matrix_view_array(a, iN, iN);
 		gsl_vector_view c	= gsl_vector_view_array(b, iN);
@@ -311,24 +317,18 @@ void Analysis::_culcInitValue(double lambda, double beta2, double ggd_kappa, dou
 		// LU分解の方法でモーメント方程式を解く
 		gsl_linalg_LU_decomp(&m.matrix, px, &s);
 		gsl_linalg_LU_solve(&m.matrix, px, &c.vector, x);
-		
 		Exx = gsl_vector_get(x,0);
 		Exy = gsl_vector_get(x,1);
 		Eyy = gsl_vector_get(x,2);
-		
 		gsl_vector_free(x);
 		gsl_permutation_free(px);
 
-		Exxold = Exx;
-		Exyold = Exy;
-		Eyyold = Eyy;
-		loop += 1;
-		if (loop == 0) continue;
+		std::cout << "error:" <<  err << "\n" << std::endl;
+		if (tmp == 0) continue;
 
 		err = pow(Exx - Exxold, 2.) + pow(Exy - Exyold, 2.) + pow(Eyy - Eyyold, 2.);	// 収束条件に使う誤差，前ループとの差の二乗和
-
-	} while(err > 10e-6);
-
+	}
+	
 	*sigma_x = sqrt(Exx);
 	*sigma_y = sqrt(Exy);
 	*rho_xy  = Exy/sqrt(Exx*Eyy);
@@ -385,16 +385,9 @@ double Analysis::_culcLevelCrossing(double pp_xi, double a[], double mu1[], doub
 
 int main(int argc, char *argv[])
 {
-	Analysis *ana;
-	ana = new Analysis;
-
-	// 入力パラメータ
 	char *ends;
-	ana->lambda = strtod(argv[1], &ends);
-	ana->beta2 = strtod(argv[2], &ends);
-	ana->alpha = strtod(argv[3], &ends);
-	ana->mu1 = strtod(argv[4], &ends);
-	ana->mu2 = ana->mu1;
+	Analysis *ana;
+	ana = new Analysis(strtod(argv[1], &ends), strtod(argv[2], &ends), strtod(argv[3], &ends), strtod(argv[4], &ends), strtod(argv[4], &ends));
 
 	std::cout << "--------------------------\n" << std::endl;
 	std::cout << "lsm.cpp started.\n" << std::endl;
