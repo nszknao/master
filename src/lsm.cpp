@@ -70,7 +70,7 @@ std::string Analysis::leastSquareMethod()
 	// 入力に関するモーメント
 	double dF[6];
 	dF[0] = 0;
-	dF[1] = this->alpha*S0 + this->lambda*(1. - this->alpha)*(pow(ggd_a, 2.)*gsl_sf_gamma(3. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[1] = this->alpha*S0 + this->lambda*(1. - this->alpha)*this->beta2;
 	dF[2] = 0;
 	dF[3] = this->lambda*pow((1. - alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 	dF[4] = 0;
@@ -284,10 +284,12 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 	double a[iN*iN], b[iN];
 	double ke, Exxold, Exyold, Eyyold, Exx=0., Exy=0., Eyy=0., err = 1000.;	// ループ計算時の解の保存用，x:変位，y:速度
 
-	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_a	= sqrt(gsl_sf_gamma(1./GGD_KAPPA)*pow(gsl_sf_gamma(3./GGD_KAPPA), -1.)*this->beta2);
-
-	/******* 応答のガウス性を仮定し，等価線形化法により2次定常モーメントを求める *******/
+	/**
+		応答のガウス性を仮定し，等価線形化した系のモーメント方程式を解く
+			2*Exy = 0
+			-2*ke*Exx - 2*ZETA*Exy + Eyy = 0
+			-2*Exy -4*ZETA + (alpha*2*PI*S0 + (1-alpha)*lambda*beta2) = 0
+	 */
 	for (tmp = 0; err >10e-6; tmp++)
 	{
 		// ひとつ前の情報を保存
@@ -297,17 +299,12 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 
 		ke = 1.+3.*EPSILON*Exx;	// 等価線形係数 ke = 1+3εE[X^2]
 
-		// Exx
 		a[0*iN+0] = 0.;	a[0*iN+1] = 2.;	a[0*iN+2] = 0.;
-		b[0] = 0.;
-				
-		// Exy
 		a[1*iN+0] = -ke;	a[1*iN+1] = -2.*ZETA;	a[1*iN+2] = 1.;
-		b[1] = 0.;
-		
-		// Eyy
 		a[2*iN+0] = 0.;	a[2*iN+1] = 2.*ke;	a[2*iN+2] = 4.*ZETA;
-		b[2] = this->alpha*2.*PI*S0 + (1.-this->alpha)*this->lambda*(pow(ggd_a,2.)*gsl_sf_gamma(3./GGD_KAPPA)*pow(gsl_sf_gamma(1./GGD_KAPPA),-1.));
+		b[0] = 0.;				
+		b[1] = 0.;
+		b[2] = this->alpha*2.*PI*S0 + (1.-this->alpha)*this->lambda*this->beta2;
 		
 		gsl_matrix_view m	= gsl_matrix_view_array(a, iN, iN);
 		gsl_vector_view c	= gsl_vector_view_array(b, iN);
