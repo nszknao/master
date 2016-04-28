@@ -16,7 +16,6 @@
 #define N 15
 #define P 10
 #define PI M_PI
-#define iN 3		// 初期値を求めるときの方程式の数
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
 
 /************ 系の係数・入力条件（不変）*******************/
@@ -279,16 +278,18 @@ void Analysis::createVelPdf()
  */
 void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 {
-	int tmp, s;
+	// カウント変数
+	int tmp;
 	
-	double a[iN*iN], b[iN];
-	double ke, Exxold, Exyold, Eyyold, Exx=0., Exy=0., Eyy=0., err = 1000.;	// ループ計算時の解の保存用，x:変位，y:速度
+	int s, num = 3;
+	double a[num*num], b[num];
+	double ke, Exxold, Exyold, Eyyold, Exx=0.5, Exy=0., Eyy=0., err = 1000.;	// ループ計算時の解の保存用，x:変位，y:速度
 
 	/**
 		応答のガウス性を仮定し，等価線形化した系のモーメント方程式を解く
 			2*Exy = 0
 			-2*ke*Exx - 2*ZETA*Exy + Eyy = 0
-			-2*Exy -4*ZETA + (alpha*2*PI*S0 + (1-alpha)*lambda*beta2) = 0
+			-2*Exy -4*ZETA*Eyy + (alpha*2*PI*S0 + (1-alpha)*lambda*beta2)/dt = 0
 	 */
 	for (tmp = 0; err >10e-6; tmp++)
 	{
@@ -299,19 +300,18 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 
 		ke = 1.+3.*EPSILON*Exx;	// 等価線形係数 ke = 1+3εE[X^2]
 
-		a[0*iN+0] = 0.;	a[0*iN+1] = 2.;	a[0*iN+2] = 0.;
-		a[1*iN+0] = -ke;	a[1*iN+1] = -2.*ZETA;	a[1*iN+2] = 1.;
-		a[2*iN+0] = 0.;	a[2*iN+1] = 2.*ke;	a[2*iN+2] = 4.*ZETA;
-		b[0] = 0.;				
-		b[1] = 0.;
-		b[2] = this->alpha*2.*PI*S0 + (1.-this->alpha)*this->lambda*this->beta2;
-		
-		gsl_matrix_view m	= gsl_matrix_view_array(a, iN, iN);
-		gsl_vector_view c	= gsl_vector_view_array(b, iN);
-		gsl_vector *x		= gsl_vector_alloc(iN);
-		gsl_permutation *px	= gsl_permutation_alloc(iN);
+		a[0*num+0]	= 0.;	a[0*num+1]	= 2.;		a[0*num+2]	= 0.;
+		a[1*num+0]	= -ke;	a[1*num+1]	= 2.*ZETA;	a[1*num+2]	= 1.;
+		a[2*num+0]	= 0.;	a[2*num+1]	= 2.*ke;	a[2*num+2]	= 4.*ZETA;
+		b[0]	= 0.;
+		b[1]	= 0.;
+		b[2]	= this->alpha*2.*PI*S0 + (1.-this->alpha)*this->lambda*this->beta2;
 		
 		// LU分解の方法でモーメント方程式を解く
+		gsl_matrix_view m	= gsl_matrix_view_array(a, num, num);
+		gsl_vector_view c	= gsl_vector_view_array(b, num);
+		gsl_vector *x		= gsl_vector_alloc(num);
+		gsl_permutation *px	= gsl_permutation_alloc(num);
 		gsl_linalg_LU_decomp(&m.matrix, px, &s);
 		gsl_linalg_LU_solve(&m.matrix, px, &c.vector, x);
 		Exx = gsl_vector_get(x,0);
@@ -320,9 +320,7 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 		gsl_vector_free(x);
 		gsl_permutation_free(px);
 
-		std::cout << "error:" <<  err << "\n" << std::endl;
 		if (tmp == 0) continue;
-
 		err = pow(Exx - Exxold, 2.) + pow(Exy - Exyold, 2.) + pow(Eyy - Eyyold, 2.);	// 収束条件に使う誤差，前ループとの差の二乗和
 	}
 	
@@ -330,6 +328,7 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 	*sigma_y = sqrt(Exy);
 	*rho_xy  = Exy/sqrt(Exx*Eyy);
 
+	std::cout << "roop(_culcInitValue):" <<  tmp << std::endl;
 	std::cout << "sigma_x=" << sqrt(Exx) << ", sigma_y=" << sqrt(Eyy) << ", rho_xy=" << Exy/sqrt(Exx*Eyy) << "\n" << std::endl;
 	return;
 }
