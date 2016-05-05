@@ -35,6 +35,7 @@ private:
 	void _culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy);
 
 public:
+	// TODO:グローバル変数はアンスコから始める．
 	double lambda, beta2, alpha, mu1, mu2;
 	Analysis(double lambda, double beta2, double alpha, double mu1, double mu2);
 	std::string leastSquareMethod();
@@ -255,7 +256,7 @@ void Analysis::createVelPdf()
 	std::cout << "Creating a file of the velocity varience(.dat).\n" << std::endl;
 
 	// カウント変数
-	size_t tmp;
+	int tmp;
 
 	double gsa_ymin = -15., integration = 0.;
 
@@ -345,7 +346,7 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 double Analysis::_createGaussianPdf(double a[], double mu[], double sigma[], double x) 
 {
 	double pdf = 0.;
-	size_t tmp;
+	int tmp;
 
 	for (tmp = 0; tmp < NUM_GAUSS; tmp++)
 	{
@@ -362,9 +363,9 @@ double Analysis::_createGaussianPdf(double a[], double mu[], double sigma[], dou
  */
 double Analysis::_culcLevelCrossing(double pp_xi, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
 {
-	double prob_pass;
-	double pp_c, pp_g, pp_sigma;
-	size_t tmp;
+	double prob_pass = 0.;
+	double pp_c = 0., pp_g = 0., pp_sigma = 0.;
+	int tmp;
 
 	for (tmp = 0; tmp < 3; tmp++)
 	{

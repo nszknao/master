@@ -1,24 +1,27 @@
+/***********
+	GA.cpp
+	目的関数は_getObjectiveFuncに記述する
+************/
+
 #include "GA.h"
 
 
-GA::GA(int population, int geneLength)
+GA::GA(int numVariable)
 {
 	std::cout << "Calls constructor." << std::endl;
 
-	size_t tmp;
+	// カウント変数
+	int tmp;
+
+	int geneLength	= 20;	// 遺伝子長
+	int population	= 120;	// 個体数
 
 	this->_setPopulation(population);
 	this->_setGeneLength(geneLength);
+	this->_setNumVariable(numVariable);
 
-	// 領域確保
-	this->allIndividual.resize(population);
-	for (tmp = 0; tmp < population; tmp++)
-	{
-		this->allIndividual[tmp].resize(geneLength);
-	}
-
-	// 領域確保
-	this->fitness.resize(population);
+	this->_searchPopulation	= std::vector< std::vector<int> >(population, std::vector<int>(geneLength));
+	this->fitness	= std::vector<int>(population);
 }
 
 GA::~GA()
@@ -27,28 +30,35 @@ GA::~GA()
 
 void GA::_setPopulation(int population)
 {
-	this->_population = population;
+	this->_population	= population;
 }
 
 void GA::_setGeneLength(int length)
 {
-	this->_geneLength = length;
+	this->_geneLength	= length;
 }
 
-int GA::_getPopulation()
+void GA::_setNumVariable(int num)
 {
-	return this->_population;
+	this->_numVariable	= num;
 }
 
-int GA::_getGeneLength()
-{
-	return this->_geneLength;
-}
-
+/*
+	初期化処理
+*/
 void GA::initGene()
 {
+	this->_initSearchPopulation();
+	this->_archivePopulation	= std::vector< std::vector<int> >(this->population, std::vector<int>(this->geneLength));
+}
+
+/*
+	探索母集団を初期化する．
+*/
+void GA::_initSearchPopulation()
+{
 	// カウント変数
-	int tmp, tmp_column, tmp_row;
+	int tmp_column, tmp_row;
 
 	int duplicateFlg;
 
@@ -64,13 +74,13 @@ void GA::initGene()
 			// 遺伝子の作成
 			for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
 			{
-				this->allIndividual.at(tmp_column).at(tmp_row) = (randomValue(mt) > 0.5) ? 1 : 0;
+				this->_searchPopulation.at(tmp_column).at(tmp_row) = (randomValue(mt) > 0.5) ? 1 : 0;
 			}
 
-			if (this->_isDuplicatedGene(this->allIndividual, tmp_column))
+			if (this->_isDuplicatedGene(this->_searchPopulation, tmp_column))
 				duplicateFlg = 1;
 		}
-	} while (duplicateFlg == 1);
+	} while (duplicateFlg == 1);	
 }
 
 /*
@@ -123,12 +133,14 @@ bool GA::_isDuplicatedGene(std::vector<std::vector<int>> gene, int column)
 void GA::culcFitness()
 {
 	// カウント変数
-	int tmp_column, tmp_row;
+	int tmp_column;
 
+	std::vector<int> gene(this->_geneLength);
 	double x;
+
 	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
 	{
-		x = this->_binary2Phenotype(allIndividual[tmp_column]);
+		x = this->_binary2Phenotype(this->allIndividual[tmp_column]);
 		this->fitness[tmp_column] = this->_getObjectiveFunc(x);
 	}
 }
@@ -136,13 +148,13 @@ void GA::culcFitness()
 /*
 	2進数データを表現型に変換
 */
-double GA::_binary2Phenotype(std::vector<int> binary)
+double GA::_binary2Phenotype(const std::vector<int> &binary)
 {
 	// カウント変数
 	int tmp;
 
 	double decimal;
-	int place,  numRow;
+	int place;
 
 	decimal		= 0.0;
 	place	= 0;
@@ -156,9 +168,35 @@ double GA::_binary2Phenotype(std::vector<int> binary)
 	return decimal * 1.0 / (pow(2.0, (double)this->_geneLength) - 1.0);
 }
 
-double GA::_getObjectiveFunc(double x)
+double GA::_getObjectiveFunc(const std::vector<double> &var, int num)
 {
+	switch(num)
+	{
+		case 0:
+		return 100 * pow(var.at(1) - pow(var.at(0),2.0),2.0) + 
+		break;
+	}
 	return sin(3.0*x) + 0.5*sin(9.0*x) + sin(15.0*x + 50.0);
+}
+
+/*
+	２つの二次元配列の和集合をとる．
+	３つ目の引数に結果を格納．
+*/
+void GA::_joinGene(const std::vector<std::vector<int> > &joinedGene1, const std::vector<std::vector<int> > &joinedGene2, std::vector<std::vector<int> > &resultGene)
+{
+	// gene1の遺伝子をすべてコピー
+	std::copy(joinedGene1.begin(), joinedGene1.end(), std::back_inserter(resultGene));
+
+	for (auto match = joinedGene2.begin(); match != joinedGene2.end(); ++match)
+	{
+		auto obj	= std::find(resultGene.begin(), resultGene.end(), *match);
+		if (obj == resultGene.end())
+		{
+			// gene2にのみ存在する遺伝子を追加
+			resultGene.push_back(*match);
+		}
+	}
 }
 
 /*
