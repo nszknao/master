@@ -10,37 +10,19 @@ GA::GA(int numVariable)
 {
 	std::cout << "Calls constructor." << std::endl;
 
-	// カウント変数
-	int tmp;
-
 	int geneLength	= 20;	// 遺伝子長
 	int population	= 120;	// 個体数
 
-	this->_setPopulation(population);
-	this->_setGeneLength(geneLength);
-	this->_setNumVariable(numVariable);
+	this->_population	= population;
+	this->_geneLength	= geneLength;
+	this->_numVariable	= numVariable;
 
 	this->_searchPopulation	= std::vector< std::vector<int> >(population, std::vector<int>(geneLength));
-	this->fitness	= std::vector<int>(population);
+	this->fitness			= std::vector<int>(population);
 }
 
 GA::~GA()
 {
-}
-
-void GA::_setPopulation(int population)
-{
-	this->_population	= population;
-}
-
-void GA::_setGeneLength(int length)
-{
-	this->_geneLength	= length;
-}
-
-void GA::_setNumVariable(int num)
-{
-	this->_numVariable	= num;
 }
 
 /*
@@ -49,7 +31,7 @@ void GA::_setNumVariable(int num)
 void GA::initGene()
 {
 	this->_initSearchPopulation();
-	this->_archivePopulation	= std::vector< std::vector<int> >(this->population, std::vector<int>(this->geneLength));
+	this->_archivePopulation	= std::vector< std::vector<int> >(this->_population, std::vector<int>(this->_geneLength));
 }
 
 /*
@@ -72,7 +54,7 @@ void GA::_initSearchPopulation()
 		for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
 		{
 			// 遺伝子の作成
-			for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
+			for (tmp_row = 0; tmp_row < this->_geneLength*this->_numVariable; tmp_row++)
 			{
 				this->_searchPopulation.at(tmp_column).at(tmp_row) = (randomValue(mt) > 0.5) ? 1 : 0;
 			}
@@ -87,14 +69,14 @@ void GA::_initSearchPopulation()
 	個体集団を表示する．
 	テスト用
 */
-void GA::_outputIndividuals(std::vector<std::vector<int>> individuals)
+void GA::_outputIndividuals(std::vector<std::vector<int>> &individuals)
 {
 	// カウント変数
 	int tmp_column, tmp_row;
 
 	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
 	{
-		for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
+		for (tmp_row = 0; tmp_row < this->_geneLength*this->_numVariable; tmp_row++)
 		{
 			std::cout << individuals[tmp_column][tmp_row];
 		}
@@ -105,7 +87,7 @@ void GA::_outputIndividuals(std::vector<std::vector<int>> individuals)
 /*
 	@param gene 個体集団の2次元配列
 */
-bool GA::_isDuplicatedGene(std::vector<std::vector<int>> gene, int column)
+bool GA::_isDuplicatedGene(std::vector<std::vector<int>> &gene, int column)
 {
 	// カウント変数
 	int tmp_column, tmp_row;
@@ -146,57 +128,91 @@ void GA::culcFitness()
 }
 
 /*
-	2進数データを表現型に変換
+	1個体の2進数データを表現型に変換
+	2つ目の引数に結果を格納
+	@param &binary 1個体の遺伝子
+	@param &phenotype 遺伝子型を表現型に変換したもの
+*/
+void GA::_convertPhenotype(const std::vector<int> &binary, std::vector<double> &phenotype)
+{
+	// カウント変数
+	int tmp_var, tmp_cnt;
+
+	std::vector<int> tmpGene(this->geneLength);
+
+	for (tmp_cnt = 0; tmp_cnt < this->_numVariable; ++tmp_cnt)
+	{
+		for (tmp_var = 0; tmp_var < this->_geneLength; ++tmp_var)
+		{
+			tmpGene.push_back(binary[tmp_column][tmp_cnt*this->_geneLength + tmp_var]);
+		}
+		phenotype.push_back(this->_binary2Phenotype(tmpGene));
+		tmpGene.clear();
+	}
+}
+
+/*
+	1遺伝子の2進数データを表現型に変換
+	@param &binary 1遺伝子長の長さを持つ2進数データ
 */
 double GA::_binary2Phenotype(const std::vector<int> &binary)
 {
 	// カウント変数
 	int tmp;
 
-	double decimal;
-	int place;
+	double decimal	= 0.;
+	int place	= 0;
 
-	decimal		= 0.0;
-	place	= 0;
-	for (tmp = binary.size() - 1; tmp >= 0; --tmp)
+	for (tmp = this->_geneLength - 1; tmp >= 0 ; --tmp)
 	{
 		if (binary[tmp] == 1)
-			decimal += pow(2.0, (double)place);
-		place += 1;
+		{
+			decimal	+= pow(2.0, (double)place);
+			place	+= 1;
+		}
 	}
 
-	return decimal * 1.0 / (pow(2.0, (double)this->_geneLength) - 1.0);
-}
-
-double GA::_getObjectiveFunc(const std::vector<double> &var, int num)
-{
-	switch(num)
-	{
-		case 0:
-		return 100 * pow(var.at(1) - pow(var.at(0),2.0),2.0) + 
-		break;
-	}
-	return sin(3.0*x) + 0.5*sin(9.0*x) + sin(15.0*x + 50.0);
+	return decimal / (pow(2.0, (double)this->_geneLength) - 1.0);
 }
 
 /*
-	２つの二次元配列の和集合をとる．
-	３つ目の引数に結果を格納．
+	目的関数を計算
+	@param &var 変数
+	@param &obj 目的関数の値（目的関数の数だけ領域を確保しておく）
 */
-void GA::_joinGene(const std::vector<std::vector<int> > &joinedGene1, const std::vector<std::vector<int> > &joinedGene2, std::vector<std::vector<int> > &resultGene)
+void GA::_getObjectiveFunc(const std::vector<double> &var, std::vector<double> &obj)
 {
-	// gene1の遺伝子をすべてコピー
-	std::copy(joinedGene1.begin(), joinedGene1.end(), std::back_inserter(resultGene));
+	obj.at(0)	= this->_f1(var);
+	obj.at(1)	= this->_f2(var);
+}
 
-	for (auto match = joinedGene2.begin(); match != joinedGene2.end(); ++match)
-	{
-		auto obj	= std::find(resultGene.begin(), resultGene.end(), *match);
-		if (obj == resultGene.end())
-		{
-			// gene2にのみ存在する遺伝子を追加
-			resultGene.push_back(*match);
-		}
-	}
+double GA::_f1(const std::vector<double> &var)
+{
+	return 1. - exp(-4.*var[0])*pow(sin(6.*M_PI*var[0]),6);
+}
+
+double GA::_f2(const std::vector<double> &var)
+{
+	double g, h;
+
+	g = 1. + 9.*pow((var[1]+var[2]+var[3]+var[4]+var[5]+var[6]+var[7]+var[8]+var[9])/(9.),0.25);
+	h = 1. - pow(this->_f1(var)/g,2);
+
+	return g*h;
+}
+
+/*
+	1個体から目的関数値を計算
+	@param &binary 1個体の遺伝子
+	@param &obj 目的関数の値（目的関数の数だけ領域を確保しておく）
+*/
+void GA::_binary2ObjectiveFunc(const std::vector<int> &binary, std::vector<double> &obj)
+{
+	// 表現型を一時的に保存
+	std::vector<double> tmpPhenotype(this->_numVariable);
+
+	this->_convertPhenotype(binary, tmpPhenotype);
+	this->_getObjectiveFunc(tmpPhenotype, obj);
 }
 
 /*
@@ -210,7 +226,7 @@ void GA::outputGeneration(int generation)
 
 	std::cout << generation << "-generation" << std::endl;
 	std::cout << "number\tx\tfitness" << std::endl;
-	for (tmp_column = 0; tmp_column < this->_geneLength; tmp_column++)
+	for (tmp_column = 0; tmp_column < this->_geneLength*this->_numVariable; tmp_column++)
 	{
 		x = this->_binary2Phenotype(allIndividual[tmp_column]);
 		std::cout << tmp_column << "\t" << x << "\t" << this->_getObjectiveFunc(x) << std::endl;
@@ -396,5 +412,72 @@ void GA::mutation(double mutationRate)
 				break;
 			}
 		}
+	}
+}
+
+/*** 未テスト関数 ***/
+
+/*
+	２つの二次元配列の和集合をとる．
+	３つ目の引数に結果を格納．
+*/
+void GA::_joinGene(const std::vector<std::vector<int> > &gene1, const std::vector<std::vector<int> > &gene2, std::vector<std::vector<int> > &joinedGene)
+{
+	// gene1の遺伝子をすべてコピー
+	std::copy(gene1.begin(), gene1.end(), std::back_inserter(joinedGene));
+
+	for (auto match = gene2.begin(); match != gene2.end(); ++match)
+	{
+		auto obj	= std::find(joinedGene.begin(), joinedGene.end(), *match);
+		if (obj == joinedGene.end())
+		{
+			// gene2にのみ存在する遺伝子を追加
+			joinedGene.push_back(*match);
+		}
+	}
+}
+
+/*
+	母集団に対して非優越ソートを行う
+	２つ目の引数に結果をリストとして格納．
+*/
+void GA::_nonSuperioritySort(std::vector <std::vector<int> > gene, std::vector<std::vector<std::vector<int> > > &sortedGene)
+{
+	// カウント変数
+	int tmp, tmp_column, tmp_row;
+
+	int num, superiorityFlg;
+	std::vector<double> comparedObject(2);	// 目的関数の数
+	std::vector<double> targetObject(2);	// 目的関数の数
+	std::vector<std::vector<int> > tmpRankedGene;
+
+	while(gene.size() > 0)
+	{
+		num		= 0;
+		while(num < gene.size())
+		{
+			superiorityFlg	= 1;
+			this->_binary2ObjectiveFunc(gene[num], comparedObject);
+
+			for (tmp_column = 0; tmp_column < objValue.size(); ++tmp_column)
+			{
+				if (num == tmp_column) continue;
+				this->_binary2ObjectiveFunc(gene[tmp_column], targetObject);
+
+				for (tmp_row = 0; tmp_row < 2; ++tmp_row)	// 目的関数の数
+					if (comparedObject[tmp_row] < targetObject[tmp_row]) superiorityFlg	= 0;
+			}
+
+			if (superiorityFlg == 1)
+				tmpRankedGene.push_back(gene[num]);
+			comparedObject.clear();
+			num += 1;
+		}
+
+		// ランクごとに個体を保存し，個体群を更新
+		sortedGene.push_back(tmpRankedGene);
+		for (tmp = 0; tmp < tmpRankedGene.size(); ++tmp)
+			this->removeElement(gene, tmpRankedGene[tmp]);
+		tmpRankedGene.clear();
 	}
 }
