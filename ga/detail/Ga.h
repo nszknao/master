@@ -6,7 +6,7 @@
 	“¯‚¶—v‘f‚Í‚·‚×‚Äíœ‚³‚ê‚é
 */
 template<typename T>
-void removeElement(std::vector<std::vector<T> > &population, const std::vector<T> &element)
+static void removeElement(std::vector<std::vector<T> > &population, const std::vector<T> &element)
 {
 	for (int tmp = 0; tmp < population.size(); ++tmp)
 	{

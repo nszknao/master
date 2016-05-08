@@ -17,7 +17,6 @@ public:
 	GA(int numVariable);
 	~GA();
 	void initGene();
-	void culcFitness();
 	void outputGeneration(int generation);
 	void uniformCrossover();
 	int selectIndividual();
@@ -43,13 +42,10 @@ private:
 	std::vector< std::vector<int> > _searchPopulation;
 	std::vector< std::vector<int> > _archivePopulation;
 	void _initSearchPopulation();
-	void _joinGene(const std::vector <std::vector<int> >, const std::vector <std::vector<int> >, std::vector <std::vector<int> >);
 	void _nonSuperioritySort(const std::vector <std::vector<int> >, std::vector<std::vector<std::vector<int> > >);
 	void _binary2ObjectiveFunc(const std::vector<int>, std::vector<double>);
+	void _updateArchivePopulation(const std::vector<std::vector<std::vector<int> > >, std::vector<std::vector<int> >);
+	double _culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > >, std::vector<std::vector<int> >);
 };
-
-// テンプレート関数の実装を記述したファイルを読み込む
-// link:http://qiita.com/MasayaMizuhara/items/37f8c2a5462a4f7f8ea0
-#include "detail/GA.h"
 
 #endif // !__GA_H_INCLUDE__

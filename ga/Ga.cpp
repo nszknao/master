@@ -3,7 +3,8 @@
 	目的関数は_getObjectiveFuncに記述する
 ************/
 
-#include "GA.h"
+#include "Ga.h"
+#include "GaCommon.h"
 
 
 GA::GA(int numVariable)
@@ -112,21 +113,6 @@ bool GA::_isDuplicatedGene(std::vector<std::vector<int>> &gene, int column)
 	return result;
 }
 
-void GA::culcFitness()
-{
-	// カウント変数
-	int tmp_column;
-
-	std::vector<int> gene(this->_geneLength);
-	double x;
-
-	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
-	{
-		x = this->_binary2Phenotype(this->allIndividual[tmp_column]);
-		this->fitness[tmp_column] = this->_getObjectiveFunc(x);
-	}
-}
-
 /*
 	1個体の2進数データを表現型に変換
 	2つ目の引数に結果を格納
@@ -214,6 +200,153 @@ void GA::_binary2ObjectiveFunc(const std::vector<int> &binary, std::vector<doubl
 	this->_convertPhenotype(binary, tmpPhenotype);
 	this->_getObjectiveFunc(tmpPhenotype, obj);
 }
+
+/***************
+	未テスト関数
+***************/
+
+/*
+	母集団に対して非優越ソートを行う
+	２つ目の引数に結果をリストとして格納．
+*/
+void GA::_nonSuperioritySort(std::vector <std::vector<int> > gene, std::vector<std::vector<std::vector<int> > > &sortedGene)
+{
+	// カウント変数
+	int tmp, tmp_column, tmp_row;
+
+	int num, superiorityFlg;
+	std::vector<double> comparedObject(2);	// 目的関数の数
+	std::vector<double> targetObject(2);	// 目的関数の数
+	std::vector<std::vector<int> > tmpRankedGene;
+
+	while(gene.size() > 0)
+	{
+		num		= 0;
+		while(num < gene.size())
+		{
+			superiorityFlg	= 1;
+			this->_binary2ObjectiveFunc(gene[num], targetObject);
+
+			for (tmp_column = 0; tmp_column < objValue.size(); ++tmp_column)
+			{
+				if (num == tmp_column) continue;
+				this->_binary2ObjectiveFunc(gene[tmp_column], comparedObject);
+
+				for (tmp_row = 0; tmp_row < 2; ++tmp_row)	// 目的関数の数
+					if (targetObject[tmp_row] < comparedObject[tmp_row])
+						superiorityFlg	= 0;
+			}
+
+			if (superiorityFlg == 1)
+				tmpRankedGene.push_back(gene[num]);
+			targetObject.clear();
+			num += 1;
+		}
+
+		// ランクごとに個体を保存し，個体群を更新
+		sortedGene.push_back(tmpRankedGene);
+		for (tmp = 0; tmp < tmpRankedGene.size(); ++tmp)
+			GaCommon::removeElement(gene, tmpRankedGene[tmp]);
+		tmpRankedGene.clear();
+	}
+}
+
+/*
+	新たなアーカイブ集団を生成
+	@param &sortedGene ランクごとの個体
+	@param &newArchivePopulation ランク上位から取得した更新用アーカイブ母集団
+*/
+void GA::_updateArchivePopulation(const std::vector<std::vector<std::vector<int> > > &sortedGene, std::vector<std::vector<int> > &newArchivePopulation)
+{
+	for (int rank = 0; rank < sortedGene.size(); ++rank)
+	{
+		if (this->_population - newArchivePopulation.size() > sortedGene[rank].size())
+			newArchivePopulation.push_back(sortedGene[rank]);
+		else
+			break;
+	}
+}
+
+/*
+	混雑度ソート
+	@param &sortedGene ランクごとにソートされた個体群
+*/
+void GA::_crowdingSort(const std::vector<std::vector<std::vector<int> > > &sortedGene)
+{
+	// カウント変数
+	int tmp;
+
+	int numIndividual, rank;
+	double distance;
+	std::vector<double> tmpObjectFunc(2);	// 目的関数の数
+	std::vector<std::vector<std::vector<int> > > sortedObjectiveFunc(2);	// 目的関数の数	
+
+	// ランクごと
+	for (rank = 0; rank < sortedGene.size(); ++rank)
+	{
+		distance	= 0.;
+		numIndividual	= sortedGene[rank].size();
+
+		// 目的関数ごと
+		for (tmp = 0; tmp < 2; ++tmp)	// 目的関数の数
+		{
+			this->_sortRegardingObjective(sortedGene[rank], sortedObjectiveFunc[tmp], tmp);
+			std::reverse(sortedObjectiveFunc[tmp].begin(), sortedObjectiveFunc[tmp].end());
+		}
+	}
+}
+
+/*
+	指定した目的関数値が小さい順に個体をバブルソートする
+	@param &targetGene ソートしたい個体群
+	@param &sortedGene ソート後の個体群
+	@param num 対象とする目的関数の番号
+*/
+void GA::_sortRegardingObjective(const std::vector<std::vector<int> > &targetGene, std::vector<std::vector<int> > &sortedGene, int num)
+{
+	// カウント変数
+	int tmp1, tmp2;
+
+	std::vector<double> tmpObject1(2);	// 目的関数の数
+	std::vector<double> tmpObject2(2);	// 目的関数の数
+	std::vector<int> tmpGene(this->_geneLength*this->_numVariable);
+
+	std::copy(targetGene.begin(), targetGene.end(), std::back_inserter(sortedGene));
+
+	for (tmp1 = 0; tmp1 < targetGene.size(); ++tmp1)
+	{
+		for (tmp2 = targetGene.size() - 1; tmp2 > tmp1; --tmp2)
+		{
+			this->_binary2ObjectiveFunc(targetGene[tmp2], tmpObject1);
+			this->_binary2ObjectiveFunc(targetGene[tmp2-1], tmpObject2);
+			if (tmpObject1[num] < tmpObject2[num])
+			{
+				tmpGene	= sortedGene[tmp2];
+				sortedGene[tmp2]	= sortedGene[tmp2-1];
+				sortedGene[tmp2-1]	= tmpGene;
+			}
+		}
+	}
+}
+
+/*
+	混雑度を計算する
+	@param &objectiveSortedGene 目的関数ごとにソートされた個体群
+	@param &crowdingSortedGene 混雑度に関してソートされた個体群
+*/
+double GA::_culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > > &objectiveSortedGene, std::vector<std::vector<int> > crowdingSortedGene)
+{
+	double distance;
+
+}
+
+
+
+
+
+/***************
+	古い関数
+***************/
 
 /*
 	指定した世代の個体集団のxと適応度を表示する。
@@ -412,72 +545,5 @@ void GA::mutation(double mutationRate)
 				break;
 			}
 		}
-	}
-}
-
-/*** 未テスト関数 ***/
-
-/*
-	２つの二次元配列の和集合をとる．
-	３つ目の引数に結果を格納．
-*/
-void GA::_joinGene(const std::vector<std::vector<int> > &gene1, const std::vector<std::vector<int> > &gene2, std::vector<std::vector<int> > &joinedGene)
-{
-	// gene1の遺伝子をすべてコピー
-	std::copy(gene1.begin(), gene1.end(), std::back_inserter(joinedGene));
-
-	for (auto match = gene2.begin(); match != gene2.end(); ++match)
-	{
-		auto obj	= std::find(joinedGene.begin(), joinedGene.end(), *match);
-		if (obj == joinedGene.end())
-		{
-			// gene2にのみ存在する遺伝子を追加
-			joinedGene.push_back(*match);
-		}
-	}
-}
-
-/*
-	母集団に対して非優越ソートを行う
-	２つ目の引数に結果をリストとして格納．
-*/
-void GA::_nonSuperioritySort(std::vector <std::vector<int> > gene, std::vector<std::vector<std::vector<int> > > &sortedGene)
-{
-	// カウント変数
-	int tmp, tmp_column, tmp_row;
-
-	int num, superiorityFlg;
-	std::vector<double> comparedObject(2);	// 目的関数の数
-	std::vector<double> targetObject(2);	// 目的関数の数
-	std::vector<std::vector<int> > tmpRankedGene;
-
-	while(gene.size() > 0)
-	{
-		num		= 0;
-		while(num < gene.size())
-		{
-			superiorityFlg	= 1;
-			this->_binary2ObjectiveFunc(gene[num], comparedObject);
-
-			for (tmp_column = 0; tmp_column < objValue.size(); ++tmp_column)
-			{
-				if (num == tmp_column) continue;
-				this->_binary2ObjectiveFunc(gene[tmp_column], targetObject);
-
-				for (tmp_row = 0; tmp_row < 2; ++tmp_row)	// 目的関数の数
-					if (comparedObject[tmp_row] < targetObject[tmp_row]) superiorityFlg	= 0;
-			}
-
-			if (superiorityFlg == 1)
-				tmpRankedGene.push_back(gene[num]);
-			comparedObject.clear();
-			num += 1;
-		}
-
-		// ランクごとに個体を保存し，個体群を更新
-		sortedGene.push_back(tmpRankedGene);
-		for (tmp = 0; tmp < tmpRankedGene.size(); ++tmp)
-			this->removeElement(gene, tmpRankedGene[tmp]);
-		tmpRankedGene.clear();
 	}
 }
