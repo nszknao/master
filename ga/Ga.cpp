@@ -205,6 +205,11 @@ void GA::_binary2ObjectiveFunc(const std::vector<int> &binary, std::vector<doubl
 	未テスト関数
 ***************/
 
+void GA::nsga2Run()
+{
+	
+}
+
 /*
 	母集団に対して非優越ソートを行う
 	２つ目の引数に結果をリストとして格納．
@@ -269,29 +274,41 @@ void GA::_updateArchivePopulation(const std::vector<std::vector<std::vector<int>
 
 /*
 	混雑度ソート
-	@param &sortedGene ランクごとにソートされた個体群
+	@param &sortedGene あるランクに関してソートされた個体群
+	@param &crowdingSortedGene 混雑度ごとにソートされた個体群
 */
-void GA::_crowdingSort(const std::vector<std::vector<std::vector<int> > > &sortedGene)
+void GA::_crowdingSort(const std::vector<std::vector<int > > &classifiedByRankGene, std::vector<std::vector<int> > &crowdingSortedGene)
 {
 	// カウント変数
-	int tmp;
+	int tmp1, tmp2;
 
-	int numIndividual, rank;
-	double distance;
+	int numObj;
+	std::vector<int> tmpGene(this->_geneLength*this->_numVariable);
 	std::vector<double> tmpObjectFunc(2);	// 目的関数の数
 	std::vector<std::vector<std::vector<int> > > sortedObjectiveFunc(2);	// 目的関数の数	
 
-	// ランクごと
-	for (rank = 0; rank < sortedGene.size(); ++rank)
+	// 目的関数ごとに目的関数値が悪い順に並べる
+	for (numObj = 0; numObj < 2; ++numObj)	// 目的関数の数
 	{
-		distance	= 0.;
-		numIndividual	= sortedGene[rank].size();
+		this->_sortRegardingObjective(classifiedByRankGene, sortedObjectiveFunc[numObj], numObj);
+		std::reverse(sortedObjectiveFunc[numObj].begin(), sortedObjectiveFunc[numObj].end());
+	}
 
-		// 目的関数ごと
-		for (tmp = 0; tmp < 2; ++tmp)	// 目的関数の数
+	// 混雑度が大きい順に固体をソート
+	std::copy(classifiedByRankGene.begin(), classifiedByRankGene.end(), std::back_inserter(crowdingSortedGene));
+	double distance1 = 0., distance2 = 0.;
+	for (tmp1 = 1; tmp1 < classifiedByRankGene.size()-1; ++tmp1)
+	{
+		for (tmp2 = classifiedByRankGene.size()-2;  tmp2 > tmp1; --tmp2)
 		{
-			this->_sortRegardingObjective(sortedGene[rank], sortedObjectiveFunc[tmp], tmp);
-			std::reverse(sortedObjectiveFunc[tmp].begin(), sortedObjectiveFunc[tmp].end());
+			distance1	= this->_culcCrowdingDistanseForIndividual(sortedObjectiveFunc, crowdingSortedGene[tmp2]);
+			distance2	= this->_culcCrowdingDistanseForIndividual(sortedObjectiveFunc, crowdingSortedGene[tmp2-1]);
+			if (distance1 > distance2)
+			{
+				tmpGene	= crowdingSortedGene[tmp2];
+				crowdingSortedGene[tmp2]	= crowdingSortedGene[tmp2-1];
+				crowdingSortedGene[tmp2-1]	= tmpGene;
+			}
 		}
 	}
 }
@@ -330,16 +347,59 @@ void GA::_sortRegardingObjective(const std::vector<std::vector<int> > &targetGen
 }
 
 /*
-	混雑度を計算する
+	指定した目的関数に対して混雑度を計算する
 	@param &objectiveSortedGene 目的関数ごとにソートされた個体群
-	@param &crowdingSortedGene 混雑度に関してソートされた個体群
+	@param numGene 個体の番号（境界個体は選択できない）
+	@param numObj 目的関数の番号
 */
-double GA::_culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > > &objectiveSortedGene, std::vector<std::vector<int> > crowdingSortedGene)
+double GA::_culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > > &objectiveSortedGene, int numGene, int numObj)
 {
-	double distance;
+	std::vector<double> tmpObjLeft(2);		// 目的関数の数
+	std::vector<double> tmpObjRight(2);	// 目的関数の数
+	std::vector<double> tmpObjMax(2);		// 目的関数の数
+	std::vector<double> tmpObjMin(2);		// 目的関数の数
 
+	// 境界個体を除いて個体を選択
+	double distance	= 0.;
+	this->_binary2ObjectiveFunc(objectiveSortedGene[numObj][numGene-1], tmpObjLeft);
+	this->_binary2ObjectiveFunc(objectiveSortedGene[numObj][numGene+1], tmpObjRight);
+	this->_binary2ObjectiveFunc(objectiveSortedGene[numObj][0], tmpObjMax);
+	this->_binary2ObjectiveFunc(objectiveSortedGene[numObj][objectiveSortedGene.front().size()-1], tmpObjMin);
+	distance	= (tmpObjLeft[numObj] - tmpObjRight[numObj])/(tmpObjMax[numObj] - tmpObjMin[numObj]);
+
+	return distance;
 }
 
+/*
+	指定した個体の総混雑度を計算する
+	@param &objectiveSortedGene 目的関数ごとにソートされた個体群
+	@param &individual 個体の遺伝子
+*/
+double GA::_culcCrowdingDistanseForIndividual(const std::vector<std::vector<std::vector<int> > > &objectiveSortedGene, const std::vector<int> &individual)
+{
+	int numObj, numGene;
+	std::vector<double> distance(2);	// 目的関数の数
+
+	for (numObj = 0; numObj < 2; ++numObj)	// 目的関数の数
+	{
+		for (numGene = 1; numGene < objectiveSortedGene.front().size()-1; ++numGene)
+		{
+			if (objectiveSortedGene[numObj][numGene] == individual)
+			{
+				distance[numObj]	= this->_culcCrowdingDistanse(objectiveSortedGene, numGene, numObj);
+				break;
+			}
+		}
+	}
+
+	double resultDistanse	= 0.;
+	for (numObj = 0; numObj < distance.size(); ++numObj)
+	{
+		resultDistanse	+= distance[numObj];
+	}
+
+	return  resultDistanse;
+}
 
 
 

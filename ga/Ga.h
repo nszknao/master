@@ -23,6 +23,8 @@ public:
 	void mutation(double mutationRate);
 	void selectRanking();
 
+	/*** NSGA-2—p ***/
+	void nsga2Run();
 private:
 	std::vector<std::vector<int> > allIndividual;
 	std::vector<double> fitness;
@@ -45,7 +47,9 @@ private:
 	void _nonSuperioritySort(const std::vector <std::vector<int> >, std::vector<std::vector<std::vector<int> > >);
 	void _binary2ObjectiveFunc(const std::vector<int>, std::vector<double>);
 	void _updateArchivePopulation(const std::vector<std::vector<std::vector<int> > >, std::vector<std::vector<int> >);
-	double _culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > >, std::vector<std::vector<int> >);
+	void _crowdingSort(const std::vector<std::vector<int > >, std::vector<std::vector<int> >);
+	double _culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > >, int, int);
+	double _culcCrowdingDistanseForIndividual(const std::vector<std::vector<std::vector<int> > > , const std::vector<int>);
 };
 
 #endif // !__GA_H_INCLUDE__
