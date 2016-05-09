@@ -50,6 +50,7 @@ private:
 	void _crowdingSort(const std::vector<std::vector<int > >, std::vector<std::vector<int> >);
 	double _culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > >, int, int);
 	double _culcCrowdingDistanseForIndividual(const std::vector<std::vector<std::vector<int> > > , const std::vector<int>);
+	void _insertIndividuals(std::vector<std::vector<int> >, const std::vector<std::vector<int> >)
 };
 
 #endif // !__GA_H_INCLUDE__

@@ -4,8 +4,7 @@
 class GaCommon
 {
 public:
-	static void joinGene(const std::vector <std::vector<int> >, const std::vector <std::vector<int> >, std::vector <std::vector<int> >);
-
+	static void joinPopulation(const std::vector <std::vector<int> >, const std::vector <std::vector<int> >, std::vector <std::vector<int> >);
 private:
 
 };

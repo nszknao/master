@@ -1,6 +1,8 @@
 /***********
 	GA.cpp
-	目的関数は_getObjectiveFuncに記述する
+
+	規約（2016/05/09）
+		- std::vector< std::vector<int> >の変数名は~Population
 ************/
 
 #include "Ga.h"
@@ -32,7 +34,7 @@ GA::~GA()
 void GA::initGene()
 {
 	this->_initSearchPopulation();
-	this->_archivePopulation	= std::vector< std::vector<int> >(this->_population, std::vector<int>(this->_geneLength));
+	this->_archivePopulation	= std::vector< std::vector<int> >(this->_population, std::vector<int>(this->_geneLength*this->_numVariable));
 }
 
 /*
@@ -205,79 +207,116 @@ void GA::_binary2ObjectiveFunc(const std::vector<int> &binary, std::vector<doubl
 	未テスト関数
 ***************/
 
+/*
+	NSGA2実行用メソッド
+*/
 void GA::nsga2Run()
 {
+	/*** Step1 ***/
+	this->_initGene();
+
+	/*** Step2 ***/
+	// TODO:評価方法の確立
+
+	/*** Step3 ***/
+	std::vector<std::vector<int> > margedPopulation;
+	GaCommon::joinPopulation(this->_archivePopulation, this->_searchPopulation, margedPopulation);
+	std::vector<std::vector<std::vector<int> > > classifiedByRankGene;
+	this->_nonSuperioritySort(margedPopulation, classifiedByRankGene);
+
+	/*** Step4 ***/
+	std::vector<std::vector<int> > newArchivePopulation, nextRankPopulation;
+	this->_updateArchivePopulation(classifiedByRankGene, newArchivePopulation, nextRankPopulation);
+
+	/*** Step5 ***/
+	std::vector<std::vector<int> > crowdingSortedPopulation;
+	this->_crowdingSort(nextRankPopulation, crowdingSortedPopulation);
+	this->_insertIndividuals(newArchivePopulation, nextRankPopulation);
+
+	/*** Step6 ***/
+	// TODO:終了条件を設定
+
+	/*** Step7 ***/
 	
+	/*** Step8 ***/
 }
 
 /*
 	母集団に対して非優越ソートを行う
-	２つ目の引数に結果をリストとして格納．
+	@param gene ソートを行う母集団
+	@param &classifiedByRankGene ランクごとにクラス分けした個体集団 
 */
-void GA::_nonSuperioritySort(std::vector <std::vector<int> > gene, std::vector<std::vector<std::vector<int> > > &sortedGene)
+void GA::_nonSuperioritySort(const std::vector <std::vector<int> > &targetPopulation, std::vector<std::vector<std::vector<int> > > &classifiedByRankGene)
 {
 	// カウント変数
-	int tmp, tmp_column, tmp_row;
+	int tmp, tmp_column;
 
-	int num, superiorityFlg;
-	std::vector<double> comparedObject(2);	// 目的関数の数
-	std::vector<double> targetObject(2);	// 目的関数の数
-	std::vector<std::vector<int> > tmpRankedGene;
+	int num, numObj, superiorityFlg;
+	std::vector<double> targetObject(2), comparedObject(2);	// 目的関数の数
+	std::vector<std::vector<int> > sortingPopulation, tmpRankedGene;
 
-	while(gene.size() > 0)
+	// 個体にランクを付けていき，ランク付けされた個体は除く
+	std::copy(targetPopulation.begin(), targetPopulation.end(), std::back_inserter(sortingPopulation));
+
+	while(sortingPopulation.size() > 0)
 	{
-		num		= 0;
-		while(num < gene.size())
+		num	= 0;
+		while(num < sortingPopulation.size())
 		{
 			superiorityFlg	= 1;
-			this->_binary2ObjectiveFunc(gene[num], targetObject);
+			this->_binary2ObjectiveFunc(sortingPopulation[num], targetObject);
 
 			for (tmp_column = 0; tmp_column < objValue.size(); ++tmp_column)
 			{
-				if (num == tmp_column) continue;
-				this->_binary2ObjectiveFunc(gene[tmp_column], comparedObject);
+				if (num == tmp_column)
+					continue;
+				this->_binary2ObjectiveFunc(sortingPopulation[tmp_column], comparedObject);
 
-				for (tmp_row = 0; tmp_row < 2; ++tmp_row)	// 目的関数の数
-					if (targetObject[tmp_row] < comparedObject[tmp_row])
+				for (numObj = 0; numObj < 2; ++numObj)	// 目的関数の数
+					if (targetObject[numObj] < comparedObject[numObj])
 						superiorityFlg	= 0;
 			}
 
 			if (superiorityFlg == 1)
-				tmpRankedGene.push_back(gene[num]);
+				tmpRankedGene.push_back(sortingPopulation[num]);
 			targetObject.clear();
 			num += 1;
 		}
 
 		// ランクごとに個体を保存し，個体群を更新
-		sortedGene.push_back(tmpRankedGene);
+		classifiedByRankGene.push_back(tmpRankedGene);
 		for (tmp = 0; tmp < tmpRankedGene.size(); ++tmp)
-			GaCommon::removeElement(gene, tmpRankedGene[tmp]);
+			GaCommon::removeElement(sortingPopulation, tmpRankedGene[tmp]);
 		tmpRankedGene.clear();
 	}
 }
 
 /*
 	新たなアーカイブ集団を生成
-	@param &sortedGene ランクごとの個体
+	@param &classifiedByRankGene ランクごとの個体
 	@param &newArchivePopulation ランク上位から取得した更新用アーカイブ母集団
+	@param &nextRankPopulation アーカイブ母集団に入りきらなかった最高ランクの個体集団
 */
-void GA::_updateArchivePopulation(const std::vector<std::vector<std::vector<int> > > &sortedGene, std::vector<std::vector<int> > &newArchivePopulation)
+void GA::_updateArchivePopulation(const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene, std::vector<std::vector<int> > &newArchivePopulation, std::vector<std::vector<int> > &nextRankPopulation)
 {
-	for (int rank = 0; rank < sortedGene.size(); ++rank)
+	for (int rank = 0; rank < classifiedByRankGene.size(); ++rank)
 	{
-		if (this->_population - newArchivePopulation.size() > sortedGene[rank].size())
-			newArchivePopulation.push_back(sortedGene[rank]);
+		if (this->_population - newArchivePopulation.size() > classifiedByRankGene[rank].size())
+			newArchivePopulation.push_back(classifiedByRankGene[rank]);
 		else
 			break;
 	}
+
+	// アーカイブ母集団に入りきらなかった最高ランクの個体集団を格納
+	std::copy(classifiedByRankGene[rank].begin(), classifiedByRankGene[rank].end(), std::back_inserter(nextRankPopulation));
 }
 
 /*
 	混雑度ソート
-	@param &sortedGene あるランクに関してソートされた個体群
-	@param &crowdingSortedGene 混雑度ごとにソートされた個体群
+	@param &certainRankPopulation あるランクの個体群
+	@param &crowdingSortedPopulation 混雑度ごとにソートされた個体群
 */
-void GA::_crowdingSort(const std::vector<std::vector<int > > &classifiedByRankGene, std::vector<std::vector<int> > &crowdingSortedGene)
+void GA::_crowdingSort(const std::vector<std::vector<int > > &certainRankPopulation, std::vector<std::vector<int> > &crowdingSortedPopulation)
 {
 	// カウント変数
 	int tmp1, tmp2;
@@ -290,24 +329,24 @@ void GA::_crowdingSort(const std::vector<std::vector<int > > &classifiedByRankGe
 	// 目的関数ごとに目的関数値が悪い順に並べる
 	for (numObj = 0; numObj < 2; ++numObj)	// 目的関数の数
 	{
-		this->_sortRegardingObjective(classifiedByRankGene, sortedObjectiveFunc[numObj], numObj);
+		this->_sortRegardingObjective(certainRankPopulation, sortedObjectiveFunc[numObj], numObj);
 		std::reverse(sortedObjectiveFunc[numObj].begin(), sortedObjectiveFunc[numObj].end());
 	}
 
 	// 混雑度が大きい順に固体をソート
-	std::copy(classifiedByRankGene.begin(), classifiedByRankGene.end(), std::back_inserter(crowdingSortedGene));
+	std::copy(certainRankPopulation.begin(), certainRankPopulation.end(), std::back_inserter(crowdingSortedPopulation));
 	double distance1 = 0., distance2 = 0.;
-	for (tmp1 = 1; tmp1 < classifiedByRankGene.size()-1; ++tmp1)
+	for (tmp1 = 1; tmp1 < certainRankPopulation.size()-1; ++tmp1)
 	{
-		for (tmp2 = classifiedByRankGene.size()-2;  tmp2 > tmp1; --tmp2)
+		for (tmp2 = certainRankPopulation.size()-2;  tmp2 > tmp1; --tmp2)
 		{
-			distance1	= this->_culcCrowdingDistanseForIndividual(sortedObjectiveFunc, crowdingSortedGene[tmp2]);
-			distance2	= this->_culcCrowdingDistanseForIndividual(sortedObjectiveFunc, crowdingSortedGene[tmp2-1]);
+			distance1	= this->_culcCrowdingDistanseForIndividual(sortedObjectiveFunc, crowdingSortedPopulation[tmp2]);
+			distance2	= this->_culcCrowdingDistanseForIndividual(sortedObjectiveFunc, crowdingSortedPopulation[tmp2-1]);
 			if (distance1 > distance2)
 			{
-				tmpGene	= crowdingSortedGene[tmp2];
-				crowdingSortedGene[tmp2]	= crowdingSortedGene[tmp2-1];
-				crowdingSortedGene[tmp2-1]	= tmpGene;
+				tmpGene	= crowdingSortedPopulation[tmp2];
+				crowdingSortedPopulation[tmp2]	= crowdingSortedPopulation[tmp2-1];
+				crowdingSortedPopulation[tmp2-1]	= tmpGene;
 			}
 		}
 	}
@@ -399,6 +438,25 @@ double GA::_culcCrowdingDistanseForIndividual(const std::vector<std::vector<std:
 	}
 
 	return  resultDistanse;
+}
+
+/*
+	個体数がNになるまで個体を追加する
+	@param &insertedPopulation 個体を追加される個体集団（個体数はN以下）
+	@param &insertPopulation 追加する個体を含む個体集団
+*/
+void GA::_insertIndividuals(std::vector<std::vector<int> > &insertedPopulation, const std::vector<std::vector<int> > &insertPopulation)
+{
+	if (insertedPopulation.size() >= this->_population)
+	{
+		std::cout << "ERROR:Excess individual!!" << std::endl;
+		return;
+	}
+
+	for (int tmp = 0; insertedPopulation.size() < this->_population; ++tmp)
+	{
+		insertedPopulation.push_back(insertPopulation[tmp]);
+	}
 }
 
 

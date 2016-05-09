@@ -2,9 +2,11 @@
 
 /*
 	２つの二次元配列の和集合をとる．
-	３つ目の引数に結果を格納．
+	@param &gene1 和する個体群１
+	@param &gene2 和する個体群２
+	@param &joinedGene 和集合した個体群
 */
-void GaCommon::joinGene(const std::vector<std::vector<int> > &gene1, const std::vector<std::vector<int> > &gene2, std::vector<std::vector<int> > &joinedGene)
+void GaCommon::joinPopulation(const std::vector<std::vector<int> > &gene1, const std::vector<std::vector<int> > &gene2, std::vector<std::vector<int> > &joinedGene)
 {
 	// gene1の遺伝子をすべてコピー
 	std::copy(gene1.begin(), gene1.end(), std::back_inserter(joinedGene));
