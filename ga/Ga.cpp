@@ -165,18 +165,18 @@ double GA::_binary2Phenotype(const std::vector<int> &binary)
 
 /*
 	目的関数を計算
-	@param &var 変数
-	@param &obj 目的関数の値（目的関数の数だけ領域を確保しておく）
+	@param &variable 変数
+	@param &objectiveValue 目的関数の値（目的関数の数だけ領域を確保しておく）
 */
-void GA::_getObjectiveFunc(const std::vector<double> &var, std::vector<double> &obj)
+void GA::_getObjectiveFunc(const std::vector<double> &variable, std::vector<double> &objectiveValue)
 {
-	obj.at(0)	= this->_f1(var);
-	obj.at(1)	= this->_f2(var);
+	objectiveValue.at(0)	= this->_f1(variable);
+	objectiveValue.at(1)	= this->_f2(variable);
 }
 
-double GA::_f1(const std::vector<double> &var)
+double GA::_f1(const std::vector<double> &variable)
 {
-	return 1. - exp(-4.*var[0])*pow(sin(6.*M_PI*var[0]),6);
+	return 1. - exp(-4.*variable[0])*pow(sin(6.*M_PI*variable[0]),6);
 }
 
 double GA::_f2(const std::vector<double> &var)
@@ -212,37 +212,51 @@ void GA::_binary2ObjectiveFunc(const std::vector<int> &binary, std::vector<doubl
 */
 void GA::nsga2Run()
 {
+	int generation = 0;
+	int maxGeneration	= 500;
+	std::vector<std::vector<int> > margedPopulation, nextRankPopulation, crowdingSortedPopulation;
+	std::vector<std::vector<std::vector<int> > > archivePopulation(maxGeneration), searchPopulation(maxGeneration), classifiedByRankGene;
+
+	std::copy(this->_archivePopulation.begin(), this->_archivePopulation.end(), std::back_inserter(archivePopulation[0]));
+	std::copy(this->_searchPopulation.begin(), this->_searchPopulation.end(), std::back_inserter(searchPopulation[0]));
+
 	/*** Step1 ***/
 	this->_initGene();
 
-	/*** Step2 ***/
-	// TODO:評価方法の確立
+	while(1)
+	{
+		/*** Step2 ***/
+		// TODO:評価方法の確立
+		this->_outputObjectiveValue(searchPopulation, generation);
 
-	/*** Step3 ***/
-	std::vector<std::vector<int> > margedPopulation;
-	GaCommon::joinPopulation(this->_archivePopulation, this->_searchPopulation, margedPopulation);
-	std::vector<std::vector<std::vector<int> > > classifiedByRankGene;
-	this->_nonSuperioritySort(margedPopulation, classifiedByRankGene);
+		/*** Step3 ***/
+		GaCommon::joinPopulation(archivePopulation[generation], searchPopulation[generation], margedPopulation);
+		this->_nonSuperioritySort(margedPopulation, classifiedByRankGene);
+		margedPopulation.clear();
 
-	/*** Step4 ***/
-	std::vector<std::vector<int> > newArchivePopulation, nextRankPopulation;
-	this->_updateArchivePopulation(classifiedByRankGene, newArchivePopulation, nextRankPopulation);
+		/*** Step4 ***/
+		this->_updateArchivePopulation(classifiedByRankGene, archivePopulation[generation+1], nextRankPopulation);
 
-	/*** Step5 ***/
-	std::vector<std::vector<int> > crowdingSortedPopulation;
-	this->_crowdingSort(nextRankPopulation, crowdingSortedPopulation);
-	this->_insertIndividuals(newArchivePopulation, nextRankPopulation);
+		/*** Step5 ***/
+		this->_crowdingSort(nextRankPopulation, crowdingSortedPopulation);
+		this->_insertIndividuals(archivePopulation[generation+1], nextRankPopulation);
+		nextRankPopulation.clear();
+		crowdingSortedPopulation.clear();
 
-	/*** Step6 ***/
-	// TODO:終了条件を設定
+		/*** Step6 ***/
+		if (generation < maxGeneration)
+			break;
 
-	/*** Step7 ***/
-	// 選択と交叉を同時に行っている
-	std::vector<std::vector<int> > newSearchPopulation;
-	this->_crowdedTournamentSelection(newArchivePopulation, newSearchPopulation, classifiedByRankGene);
+		/*** Step7 ***/
+		// 選択と交叉を同時に行っている
+		this->_crowdedTournamentSelection(archivePopulation[generation+1], searchPopulation[generation+1], classifiedByRankGene);
+		classifiedByRankGene.clear();
 
-	/*** Step8 ***/
-	this->_mutationGene(newSearchPopulation, 1/this->_geneLength*this->_numVariable);
+		/*** Step8 ***/
+		this->_mutationGene(searchPopulation[generation+1], 1/this->_geneLength*this->_numVariable);
+
+		generation	+= 1;
+	}
 }
 
 /*
@@ -250,7 +264,9 @@ void GA::nsga2Run()
 	@param gene ソートを行う母集団
 	@param &classifiedByRankGene ランクごとにクラス分けした個体集団 
 */
-void GA::_nonSuperioritySort(const std::vector <std::vector<int> > &targetPopulation, std::vector<std::vector<std::vector<int> > > &classifiedByRankGene)
+void GA::_nonSuperioritySort(
+	const std::vector <std::vector<int> > &targetPopulation,
+	std::vector<std::vector<std::vector<int> > > &classifiedByRankGene)
 {
 	// カウント変数
 	int tmp, tmp_column;
@@ -301,7 +317,10 @@ void GA::_nonSuperioritySort(const std::vector <std::vector<int> > &targetPopula
 	@param &newArchivePopulation ランク上位から取得した更新用アーカイブ母集団
 	@param &nextRankPopulation アーカイブ母集団に入りきらなかった最高ランクの個体集団
 */
-void GA::_updateArchivePopulation(const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene, std::vector<std::vector<int> > &newArchivePopulation, std::vector<std::vector<int> > &nextRankPopulation)
+void GA::_updateArchivePopulation(
+	const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene,
+	std::vector<std::vector<int> > &newArchivePopulation,
+	std::vector<std::vector<int> > &nextRankPopulation)
 {
 	for (int rank = 0; rank < classifiedByRankGene.size(); ++rank)
 	{
@@ -687,28 +706,32 @@ void GA::_mutationGene(std::vector<std::vector<int> > &targetPopulation, double 
 	}
 }
 
-
-
-
-
-/***************
-	古い関数
-***************/
-
 /*
-	指定した世代の個体集団のxと適応度を表示する。
+	指定した世代の個体集団のxと適応度を表示する
+	@param &targetPopulation 対象の個体郡
+	@param generation 現時点での世代
 */
-void GA::outputGeneration(int generation)
+void GA::_outputObjectiveValue(std::vector<std::vector<int> > targetPopulation, int generation)
 {
-	size_t tmp_column;
-
 	double x;
+	std::vector<std::vector<double> > objectiveVariable(targetPopulation.size(), 2);
+	std::vector<double> objectiveValue(2);
 
 	std::cout << generation << "-generation" << std::endl;
-	std::cout << "number\tx\tfitness" << std::endl;
-	for (tmp_column = 0; tmp_column < this->_geneLength*this->_numVariable; tmp_column++)
+	for (int numGene = 0; numGene < targetPopulation.size(); ++numGene)
 	{
-		x = this->_binary2Phenotype(allIndividual[tmp_column]);
-		std::cout << tmp_column << "\t" << x << "\t" << this->_getObjectiveFunc(x) << std::endl;
+		this->_binary2ObjectiveFunc(targetPopulation[numGene], objectiveParameter[numGene]);
+		this->_getObjectiveFunc(objectiveParameter[numGene], objectiveValue);
+
+		for (int numVar = 0; numVar < this->_numVariable; ++numVar)
+		{
+			std::cout << objectiveParameter[numVar] << ",";
+		}
+		std::cout << "\t";
+		for (int numObj = 0; numObj < 2; ++numObj)	// 目的関数の数
+		{
+			std::cout << objectiveValue[numObj] << ",";
+		}
 	}
+	std::cout << std::endl;
 }

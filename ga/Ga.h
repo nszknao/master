@@ -17,7 +17,6 @@ public:
 	GA(int numVariable);
 	~GA();
 	void initGene();
-	void outputGeneration(int generation);
 
 	/*** NSGA-2—p ***/
 	void nsga2Run();
@@ -53,6 +52,8 @@ private:
 	void _select2GenesFromPopulation(const std::vector<std::vector<int> >, std::vector<int>, std::vector<int>);
 	void _mutationGene(double mutationRate);
 	void _uniformCrossover(const std::vector<int>, const std::vector<int>, std::vector<int>, std::vector<int>);
+	void _outputObjectiveValue(int generation);
+
 };
 
 #endif // !__GA_H_INCLUDE__
