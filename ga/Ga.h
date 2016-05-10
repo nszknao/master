@@ -46,11 +46,14 @@ private:
 	void _initSearchPopulation();
 	void _nonSuperioritySort(const std::vector <std::vector<int> >, std::vector<std::vector<std::vector<int> > >);
 	void _binary2ObjectiveFunc(const std::vector<int>, std::vector<double>);
+	void _sortByObjectiveValue(const std::vector<std::vector<int> >, std::vector<std::vector<int> >, int num);
 	void _updateArchivePopulation(const std::vector<std::vector<std::vector<int> > >, std::vector<std::vector<int> >);
 	void _crowdingSort(const std::vector<std::vector<int > >, std::vector<std::vector<int> >);
 	double _culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > >, int, int);
 	double _culcCrowdingDistanseForIndividual(const std::vector<std::vector<std::vector<int> > > , const std::vector<int>);
-	void _insertIndividuals(std::vector<std::vector<int> >, const std::vector<std::vector<int> >)
+	void _insertIndividuals(std::vector<std::vector<int> >, const std::vector<std::vector<int> >);
+	void _crowdedTournamentSlection(const std::vector<std::vector<int> >, std::vector<std::vector<int> >, const std::vector<std::vector<std::vector<int> > >);
+	int _returnGeneRank(const std::vector<std::vector<std::vector<int> > >, const std::vector<std::vector<int> >);
 };
 
 #endif // !__GA_H_INCLUDE__
