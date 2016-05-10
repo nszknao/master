@@ -18,10 +18,6 @@ public:
 	~GA();
 	void initGene();
 	void outputGeneration(int generation);
-	void uniformCrossover();
-	int selectIndividual();
-	void mutation(double mutationRate);
-	void selectRanking();
 
 	/*** NSGA-2—p ***/
 	void nsga2Run();
@@ -52,8 +48,11 @@ private:
 	double _culcCrowdingDistanse(const std::vector<std::vector<std::vector<int> > >, int, int);
 	double _culcCrowdingDistanseForIndividual(const std::vector<std::vector<std::vector<int> > > , const std::vector<int>);
 	void _insertIndividuals(std::vector<std::vector<int> >, const std::vector<std::vector<int> >);
-	void _crowdedTournamentSlection(const std::vector<std::vector<int> >, std::vector<std::vector<int> >, const std::vector<std::vector<std::vector<int> > >);
-	int _returnGeneRank(const std::vector<std::vector<std::vector<int> > >, const std::vector<std::vector<int> >);
+	void _crowdedTournamentSelection(const std::vector<std::vector<int> >, std::vector<std::vector<int> >, const std::vector<std::vector<std::vector<int> > >);
+	int _returnGeneRank(const std::vector<std::vector<std::vector<int> > >, const std::vector<int>);
+	void _select2GenesFromPopulation(const std::vector<std::vector<int> >, std::vector<int>, std::vector<int>);
+	void _mutationGene(double mutationRate);
+	void _uniformCrossover(const std::vector<int>, const std::vector<int>, std::vector<int>, std::vector<int>);
 };
 
 #endif // !__GA_H_INCLUDE__

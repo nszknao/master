@@ -237,10 +237,12 @@ void GA::nsga2Run()
 	// TODO:終了条件を設定
 
 	/*** Step7 ***/
+	// 選択と交叉を同時に行っている
 	std::vector<std::vector<int> > newSearchPopulation;
-	this->_crowdedTournamentSlection(newArchivePopulation, newSearchPopulation, classifiedByRankGene);
+	this->_crowdedTournamentSelection(newArchivePopulation, newSearchPopulation, classifiedByRankGene);
 
 	/*** Step8 ***/
+	this->_mutationGene(newSearchPopulation, 1/this->_geneLength*this->_numVariable);
 }
 
 /*
@@ -490,70 +492,29 @@ void GA::_insertIndividuals(
 	@param &newSearchPopulation 新たな探索母集団
 	@param &classifiedByRankGene ランクごとにクラス分けされた個体
 */
-void GA::_crowdedTournamentSlection(
+void GA::_crowdedTournamentSelection(
 	const std::vector<std::vector<int> > &selectedPopulation,
 	std::vector<std::vector<int> > &newSearchPopulation,
 	const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene)
 {
-	int numGene, geneNum1, geneNum2, rankGene1, rankGene2;
-	double distanceGene1, distanceGene2;
-	std::vector<int> selectedGene1, selectedGene2;
-	std::vector<std::vector<std::vector<int> > > objectiveSortedGene(2);	// 目的関数の数	
-
-	// 個体を選択するためのランダム値を生成
-	std::random_device seedGen;
-	std::mt19937 mt(seedGen());
-	std::uniform_int_distribution<int> randomValue(0, selectedPopulation.size()-1);
+	std::vector<int> parentGene1, parentGene2, childGene1, childGene2;
+	std::vector<std::vector<int> > tmpSelectionPopulation, highRankPopulation;
 
 	// 個体数がNになるまで選択を実行
-	for (numGene = 0; newSearchPopulation.size() < this->_population; ++numGene)
+	// 親個体をランダムに選択し，一様交叉を実行
+	// 親×2と子×2のうちランクが上位の個体を1つ選択し，新たな探索母集団に追加する
+	for (int numGene = 0; newSearchPopulation.size() < this->_population; ++numGene)
 	{
-		// ランダムに個体を選択
-		do
-		{
-			geneNum1	= randomValue(mt);
-			geneNum2	= randomValue(mt);
-		} while (geneNum1 == geneNum2);
-		selectedGene1	= selectedPopulation[geneNum1];
-		selectedGene2	= selectedPopulation[geneNum2];
+		this->_select2GenesFromPopulation(selectedPopulation, parentGene1, parentGene2);
+		this->_uniformCrossover(parentGene1, parentGene2, childGene1, childGene2);
 
-		rankGene1	= this->_returnGeneRank(classifiedByRankGene, selectedGene1);
-		rankGene2	= this->_returnGeneRank(classifiedByRankGene, selectedGene2);
+		tmpSelectionPopulation.push_back(parentGene1);
+		tmpSelectionPopulation.push_back(parentGene2);
+		tmpSelectionPopulation.push_back(childGene1);
+		tmpSelectionPopulation.push_back(childGene2);
 
-		if (rankGene1 < rankGene2)
-		{
-			newSearchPopulation.push_back(selectedGene1);
-			GaCommon::removeElement(selectedPopulation, selectedGene1);
-		}
-		else if (rankGene1 > rankGene2)
-		{
-			newSearchPopulation.push_back(selectedGene2);
-			GaCommon::removeElement(selectedPopulation, selectedGene2);
-		}
-		else if (rankGene1 == rankGene2)
-		{
-			// 混雑距離の大きい個体を選択
-			this->_putObjectiveSortedGeneEveryObjectiveFunc(classifiedByRankGene[rankGene1], objectiveSortedGene);
-			distanceGene1	= this->_culcCrowdingDistanseForIndividual(objectiveSortedGene, selectedGene1);
-			distanceGene2	= this->_culcCrowdingDistanseForIndividual(objectiveSortedGene, selectedGene2);
-			if (distanceGene1 > distanceGene2)
-			{
-				newSearchPopulation.push_back(selectedGene1);
-				GaCommon::removeElement(selectedPopulation, selectedGene1);
-			}
-			else if (distanceGene1 < distanceGene2)
-			{
-				newSearchPopulation.push_back(selectedGene2);
-				GaCommon::removeElement(selectedPopulation, selectedGene2);
-			}
-			else if (distanceGene1 == distanceGene2)
-			{
-				// ランクも混雑距離も同じ場合は1を選択しておく
-				std::cout << "Notice:Every gene has same rank and crowding distance" << std::endl;
-				newSearchPopulation.push_back(selectedGene1);
-				GaCommon::removeElement(selectedPopulation, selectedGene1);
-			}
-		}
+		this->_highRankGeneSelection(classifiedByRankGene, tmpSelectionPopulation, highRankPopulation, 1);
+		newSearchPopulation.push_back(highRankPopulation[1]);
 	}
 }
 
@@ -564,7 +525,7 @@ void GA::_crowdedTournamentSlection(
 */
 int GA::_returnGeneRank(
 	const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene,
-	const std::vector<std::vector<int> > &targetGene)
+	const std::vector<int> &targetGene)
 {
 	int rank, numGene;
 
@@ -574,6 +535,154 @@ int GA::_returnGeneRank(
 		{
 			if (classifiedByRankGene[rank][numGene] == targetGene)
 				return rank;
+		}
+	}
+}
+
+/*
+	個体群からランダムに2個体を選択する
+	@param &targetPopulation 選択する個体群
+	@param &gene1 選択された個体1
+	@param &gene2 選択された個体2
+*/
+void GA::_select2GenesFromPopulation(
+	const std::vector<std::vector<int> > &targetPopulation,
+	std::vector<int> &gene1,
+	std::vector<int> &gene2)
+{
+	int geneNum1, geneNum2;
+
+	// 個体を選択するためのランダム値を生成
+	std::random_device seedGen;
+	std::mt19937 mt(seedGen());
+	std::uniform_int_distribution<int> randomValue(0, targetPopulation.size()-1);
+
+	// ランダムに個体を選択
+	do
+	{
+		geneNum1	= randomValue(mt);
+		geneNum2	= randomValue(mt);
+	} while (geneNum1 == geneNum2);
+
+	gene1	= targetPopulation[geneNum1];
+	gene2	= targetPopulation[geneNum2];
+}
+
+/*
+	一様交叉をおこなう
+	@param &parentGene1 親個体1
+	@param &parentGene2 親個体2
+	@param &childGene1 子個体1
+	@param &childGene2 子個体2
+*/
+void GA::_uniformCrossover(
+	const std::vector<int> &parentGene1,
+	const std::vector<int> &parentGene2,
+	std::vector<int> &childGene1,
+	std::vector<int> &childGene2)
+{
+	// マスクパターン用のランダム値生成器
+	std::random_device seedGen;
+	std::mt19937 mt(seedGen());
+	std::uniform_int_distribution<int> randomValue(0, 1);
+
+	// マスクパターンを生成
+	std::vector<int> maskPattern(this->_geneLength*this->_numVariable);
+	for (tmp = 0; tmp < this->_geneLength; tmp++)
+		maskPattern.push_back(randomValue(mt));
+
+	// 交叉
+	for (int tmp = 0; tmp < this->_geneLength*this->_numVariable; tmp++)
+	{
+		if (maskPattern[tmp] == 0)
+		{
+			childGene1.push_back(parentGene1[tmp]);
+			childGene2.push_back(parentGene2[tmp]);
+		}
+		else if (maskPattern[tmp] == 1)
+		{
+			childGene1.push_back(parentGene2[tmp]);
+			childGene2.push_back(parentGene1[tmp]);
+		}
+	}
+}
+
+/*
+	指定した個体から上位ランク個体を選択
+	@param &classifiedByRankGene ランクごとにクラス分けされた個体
+	@param &targetPopulation 選択する個体群
+	@param &highRankPopulation 上位ランクの個体群
+	@param num 選択する個体数
+*/
+void GA::_highRankGeneSelection(
+	const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene,
+	const std::vector<std::vector<int> > &targetPopulation,
+	std::vector<std::vector<int> > &highRankPopulation,
+	int num)
+{
+	int geneRank;
+	double geneDistance, longestDistance = 0.;
+	std::vector<int> tmpHighRankGene(this->_geneLength*this->_numVariable);
+	std::vector<std::vector<std::vector<int> > > objectiveSortedGene(2);	// 目的関数の数	
+
+	// 対象の個体群をランクごとに分ける
+	std::vector<std::vector<std::vector<int> > > tmpClassifiedByRankGene;
+	this->_nonSuperioritySort(targetGene, tmpClassifiedByRankGene);
+
+	// 上位ランクの個体をnum個選択する
+	for (int rank = 0; highRankPopulation.size() < num; ++rank)
+	{
+		if (tmpClassifiedByRankGene[rank].size() == 1)
+			highRankPopulation.push_back();
+		else if (tmpClassifiedByRankGene.size() > 1)
+		{
+			// 同ランクに複数個体が存在した場合
+			// 最も混雑距離が長い個体を選択して追加する
+			for (int tmp = 0; tmp < tmpClassifiedByRankGene[rank].size(); ++tmp)
+			{
+				// 全個体中のランクから混雑度距離を求める
+				geneRank	= this->_returnGeneRank(classifiedByRankGene, tmpClassifiedByRankGene[rank][tmp]);
+				this->_putObjectiveSortedGeneEveryObjectiveFunc(classifiedByRankGene[geneRank], objectiveSortedGene);
+				geneDistance	= this->_culcCrowdingDistanseForIndividual(objectiveSortedGene, tmpClassifiedByRankGene[rank][tmp]);
+				if (longestDistance < geneDistance)
+				{
+					longestDistance = geneDistance;
+					tmpHighRankGene	= tmpClassifiedByRankGene[rank][tmp];
+				}
+			}
+
+			highRankPopulation.push_back(tmpHighRankGene);
+		}
+	}
+}
+
+/*
+	5番目の個体に突然変異を行う．
+	適応度計算前の個体の遺伝子(0 or 1)をランダムに入れ替える
+	@param &targetPopulation 対象の個体群
+	@param mutationRate 突然変異率
+*/
+void GA::_mutationGene(std::vector<std::vector<int> > &targetPopulation, double mutationRate)
+{
+	int geneNum = 5;
+
+	std::random_device seedGen;
+	std::mt19937 mt(seedGen());
+	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
+
+	for (int tmp = 0; tmp < this->_geneLength*this->_numVariable; tmp++)
+	{
+		if (mutationRate > randomValue(mt))
+		{
+			switch (targetPopulation[geneNum][tmp])
+			{
+			case 0:
+				this->allIndividual[geneNum][tmp] = 1;
+			case 1:
+				this->allIndividual[geneNum][tmp] = 0;
+			default:
+				break;
+			}
 		}
 	}
 }
@@ -601,187 +710,5 @@ void GA::outputGeneration(int generation)
 	{
 		x = this->_binary2Phenotype(allIndividual[tmp_column]);
 		std::cout << tmp_column << "\t" << x << "\t" << this->_getObjectiveFunc(x) << std::endl;
-	}
-}
-
-void GA::uniformCrossover()
-{
-	// カウント変数
-	int tmp;
-
-	int parent1, parent2;
-	std::vector<int> maskPattern, parent1Individual, parent2Individual, child1Individual, child2Individual;
-
-	// 親を選択
-	do
-	{
-		parent1 = this->selectIndividual();
-		parent2 = this->selectIndividual();
-		if (parent1 == -1 || parent2 == -1)
-		{
-			std::cout << "Couldn't select individual." << std::endl;
-			return;
-		}
-	} while (parent1 == parent2);
-
-	return;
-	
-	for (tmp = 0; tmp < this->_geneLength; tmp++)
-	{
-		parent1Individual.push_back(this->allIndividual[parent1][tmp]);
-		parent2Individual.push_back(this->allIndividual[parent2][tmp]);
-	}
-
-	// マスクパターンを生成
-	std::random_device seedGen;
-	std::mt19937 mt(seedGen());
-	std::uniform_int_distribution<int> randomValue(0, 1);
-	for (tmp = 0; tmp < this->_geneLength; tmp++)
-	{
-		maskPattern.push_back(randomValue(mt));
-	}
-
-	// 交叉
-	for (tmp = 0; tmp < this->_geneLength; tmp++)
-	{
-		if (maskPattern[tmp] == 0)
-		{
-			child1Individual.push_back(parent1Individual[tmp]);
-			child2Individual.push_back(parent2Individual[tmp]);
-		}
-		else if (maskPattern[tmp] == 1)
-		{
-			child1Individual.push_back(parent2Individual[tmp]);
-			child2Individual.push_back(parent1Individual[tmp]);
-		}
-	}
-
-	// 世代交代
-	this->allIndividual[parent1].swap(child1Individual);
-	this->allIndividual[parent2].swap(child2Individual);
-}
-
-/*
-	適応度比例戦略から固体を選択し，その番号を返す．
-	失敗した場合は-1を返す．
-*/
-int GA::selectIndividual()
-{
-	// カウント変数
-	int tmp_column;
-
-	std::vector<double> shuffledFitness, fitnessRatio, selectedIndividual;
-
-	// 固体集団をシャッフルして順番を変えずに適応度を求める
-	double sumFitness = 0.0, x;
-	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-	std::shuffle(this->allIndividual.begin(), this->allIndividual.end(), std::mt19937(seed));
-	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
-	{
-		x = this->_binary2Phenotype(this->allIndividual[tmp_column]);
-		shuffledFitness.push_back(this->_getObjectiveFunc(x));
-		sumFitness += this->_getObjectiveFunc(x);
-	}
-
-	// 適応度の比
-	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
-	{
-		fitnessRatio.push_back(shuffledFitness[tmp_column] / sumFitness);
-	}
-
-	// 適応度から確率的に固体を選択
-	std::random_device seedGen;
-	std::mt19937 mt(seedGen());
-	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
-	int selectedFlg = 0, individualNum = 0;
-	do
-	{
-		for (individualNum = 0; individualNum < fitnessRatio.size(); individualNum++)
-		{
-			if (fitnessRatio[individualNum] > randomValue(mt))	// 毎回ランダム値が生成される	
-			{
-				return individualNum;
-			}
-		}
-	} while (selectedFlg == 0);
-
-	return -1;	// 固体が存在しなかった場合
-}
-
-/*
-	ランキング法をもとに選択淘汰を行う．
-*/
-void GA::selectRanking()
-{
-	// カウント変数
-	int tmp, tmp1, tmp2;
-
-	// ソート順を記憶するためのキー
-	std::vector<int> key;
-	key.resize(this->_population);
-	for (tmp = 0; tmp < this->_population; tmp++)
-		key[tmp] = tmp;
-
-	// 適応度を降順にソート．その順番をkeyに保存．
-	double tmpVar;
-	int tmpKey;
-	for (tmp1 = 0; tmp1 < this->fitness.size(); ++tmp1)
-	{
-		for (tmp2 = tmp1+1; tmp2 < this->fitness.size(); ++tmp2)
-		{
-			if (this->fitness[tmp1] < this->fitness[tmp2])
-			{
-				tmpVar = this->fitness[tmp1];
-				this->fitness[tmp1] = this->fitness[tmp2];
-				this->fitness[tmp2] = tmpVar;
-
-				tmpKey		= key[tmp1];
-				key[tmp1]	= key[tmp2];
-				key[tmp2]	= tmpKey;
-			}
-		}
-	}
-
-	// 個体集団を適応度の降順に並べる
-	for (tmp = 0; tmp < this->_geneLength; tmp++)
-	{
-		this->allIndividual[tmp] = this->allIndividual[key[tmp]];
-	}
-
-	// 適応度が上位2つの個体をコピーし，下位2つを淘汰する．
-	this->allIndividual[this->_geneLength - 1]	= this->allIndividual[0];
-	this->allIndividual[this->_geneLength - 2]	= this->allIndividual[0];
-}
-
-/*
-	5番目の個体に突然変異を行う．
-	適応度計算前の個体の遺伝子(0 or 1)をランダムに入れ替える
-	@param mutationRate 突然変異率
-*/
-void GA::mutation(double mutationRate)
-{
-	// カウント変数
-	size_t tmp_row;
-
-	int column = 5;
-
-	std::random_device seedGen;
-	std::mt19937 mt(seedGen());
-	std::uniform_real_distribution<double> randomValue(0.0, 1.0);
-
-	for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
-	{
-		if (mutationRate > randomValue(mt))
-		{
-			switch (this->allIndividual[column][tmp_row])
-			{
-			case 0:
-				this->allIndividual[column][tmp_row] = 1;
-			case 1:
-				this->allIndividual[column][tmp_row] = 0;
-			default:
-				break;
-			}
-		}
 	}
 }
