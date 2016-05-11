@@ -5,8 +5,8 @@
 		- std::vector< std::vector<int> >の変数名は~Population
 ************/
 
-#include "Ga.h"
-#include "GaCommon.h"
+#include "../include/Ga.h"
+#include "../include/GaCommon.h"
 
 
 GA::GA(int numVariable)
@@ -14,14 +14,13 @@ GA::GA(int numVariable)
 	std::cout << "Calls constructor." << std::endl;
 
 	int geneLength	= 20;	// 遺伝子長
-	int population	= 120;	// 個体数
+	int population		= 120;	// 個体数
 
 	this->_population	= population;
 	this->_geneLength	= geneLength;
 	this->_numVariable	= numVariable;
 
 	this->_searchPopulation	= std::vector< std::vector<int> >(population, std::vector<int>(geneLength));
-	this->fitness			= std::vector<int>(population);
 }
 
 GA::~GA()
@@ -117,22 +116,18 @@ bool GA::_isDuplicatedGene(std::vector<std::vector<int>> &gene, int column)
 
 /*
 	1個体の2進数データを表現型に変換
-	2つ目の引数に結果を格納
 	@param &binary 1個体の遺伝子
 	@param &phenotype 遺伝子型を表現型に変換したもの
 */
 void GA::_convertPhenotype(const std::vector<int> &binary, std::vector<double> &phenotype)
 {
-	// カウント変数
-	int tmp_var, tmp_cnt;
+	std::vector<int> tmpGene(this->_geneLength*this->_numVariable);
 
-	std::vector<int> tmpGene(this->geneLength);
-
-	for (tmp_cnt = 0; tmp_cnt < this->_numVariable; ++tmp_cnt)
+	for (int numVar = 0; numVar < this->_numVariable; ++numVar)
 	{
-		for (tmp_var = 0; tmp_var < this->_geneLength; ++tmp_var)
+		for (int numBinary = 0; numBinary < this->_geneLength; ++numBinary)
 		{
-			tmpGene.push_back(binary[tmp_column][tmp_cnt*this->_geneLength + tmp_var]);
+			tmpGene.push_back(binary[numVar*this->_geneLength + numBinary]);
 		}
 		phenotype.push_back(this->_binary2Phenotype(tmpGene));
 		tmpGene.clear();
@@ -221,13 +216,13 @@ void GA::nsga2Run()
 	std::copy(this->_searchPopulation.begin(), this->_searchPopulation.end(), std::back_inserter(searchPopulation[0]));
 
 	/*** Step1 ***/
-	this->_initGene();
+	this->initGene();
 
 	while(1)
 	{
 		/*** Step2 ***/
 		// TODO:評価方法の確立
-		this->_outputObjectiveValue(searchPopulation, generation);
+		this->_outputObjectiveValue(searchPopulation[generation], generation);
 
 		/*** Step3 ***/
 		GaCommon::joinPopulation(archivePopulation[generation], searchPopulation[generation], margedPopulation);
@@ -271,24 +266,23 @@ void GA::_nonSuperioritySort(
 	// カウント変数
 	int tmp, tmp_column;
 
-	int num, numObj, superiorityFlg;
+	int numGene, numObj, superiorityFlg;
 	std::vector<double> targetObject(2), comparedObject(2);	// 目的関数の数
 	std::vector<std::vector<int> > sortingPopulation, tmpRankedGene;
 
 	// 個体にランクを付けていき，ランク付けされた個体は除く
 	std::copy(targetPopulation.begin(), targetPopulation.end(), std::back_inserter(sortingPopulation));
-
 	while(sortingPopulation.size() > 0)
 	{
-		num	= 0;
-		while(num < sortingPopulation.size())
+		numGene	= 0;
+		while(numGene < sortingPopulation.size())
 		{
 			superiorityFlg	= 1;
-			this->_binary2ObjectiveFunc(sortingPopulation[num], targetObject);
+			this->_binary2ObjectiveFunc(sortingPopulation[numGene], targetObject);
 
-			for (tmp_column = 0; tmp_column < objValue.size(); ++tmp_column)
+			for (tmp_column = 0; tmp_column < sortingPopulation.size(); ++tmp_column)
 			{
-				if (num == tmp_column)
+				if (numGene == tmp_column)
 					continue;
 				this->_binary2ObjectiveFunc(sortingPopulation[tmp_column], comparedObject);
 
@@ -298,15 +292,15 @@ void GA::_nonSuperioritySort(
 			}
 
 			if (superiorityFlg == 1)
-				tmpRankedGene.push_back(sortingPopulation[num]);
+				tmpRankedGene.push_back(sortingPopulation[numGene]);
 			targetObject.clear();
-			num += 1;
+			numGene += 1;
 		}
 
 		// ランクごとに個体を保存し，個体群を更新
 		classifiedByRankGene.push_back(tmpRankedGene);
 		for (tmp = 0; tmp < tmpRankedGene.size(); ++tmp)
-			GaCommon::removeElement(sortingPopulation, tmpRankedGene[tmp]);
+			GaCommonTemp<int>::removeElement(sortingPopulation, tmpRankedGene[tmp]);
 		tmpRankedGene.clear();
 	}
 }
@@ -322,10 +316,12 @@ void GA::_updateArchivePopulation(
 	std::vector<std::vector<int> > &newArchivePopulation,
 	std::vector<std::vector<int> > &nextRankPopulation)
 {
-	for (int rank = 0; rank < classifiedByRankGene.size(); ++rank)
+	int rank;
+
+	for (rank = 0; rank < classifiedByRankGene.size(); ++rank)
 	{
 		if (this->_population - newArchivePopulation.size() > classifiedByRankGene[rank].size())
-			newArchivePopulation.push_back(classifiedByRankGene[rank]);
+			GaCommon::pushBackAll(newArchivePopulation, classifiedByRankGene[rank]);
 		else
 			break;
 	}
@@ -600,6 +596,9 @@ void GA::_uniformCrossover(
 	std::vector<int> &childGene1,
 	std::vector<int> &childGene2)
 {
+	// カウント変数
+	int tmp;
+
 	// マスクパターン用のランダム値生成器
 	std::random_device seedGen;
 	std::mt19937 mt(seedGen());
@@ -611,7 +610,7 @@ void GA::_uniformCrossover(
 		maskPattern.push_back(randomValue(mt));
 
 	// 交叉
-	for (int tmp = 0; tmp < this->_geneLength*this->_numVariable; tmp++)
+	for (tmp = 0; tmp < this->_geneLength*this->_numVariable; tmp++)
 	{
 		if (maskPattern[tmp] == 0)
 		{
@@ -646,13 +645,13 @@ void GA::_highRankGeneSelection(
 
 	// 対象の個体群をランクごとに分ける
 	std::vector<std::vector<std::vector<int> > > tmpClassifiedByRankGene;
-	this->_nonSuperioritySort(targetGene, tmpClassifiedByRankGene);
+	this->_nonSuperioritySort(targetPopulation, tmpClassifiedByRankGene);
 
 	// 上位ランクの個体をnum個選択する
 	for (int rank = 0; highRankPopulation.size() < num; ++rank)
 	{
 		if (tmpClassifiedByRankGene[rank].size() == 1)
-			highRankPopulation.push_back();
+			highRankPopulation.push_back(tmpClassifiedByRankGene[rank][0]);
 		else if (tmpClassifiedByRankGene.size() > 1)
 		{
 			// 同ランクに複数個体が存在した場合
@@ -681,7 +680,9 @@ void GA::_highRankGeneSelection(
 	@param &targetPopulation 対象の個体群
 	@param mutationRate 突然変異率
 */
-void GA::_mutationGene(std::vector<std::vector<int> > &targetPopulation, double mutationRate)
+void GA::_mutationGene(
+	std::vector<std::vector<int> > &targetPopulation,
+	double mutationRate)
 {
 	int geneNum = 5;
 
@@ -696,9 +697,9 @@ void GA::_mutationGene(std::vector<std::vector<int> > &targetPopulation, double 
 			switch (targetPopulation[geneNum][tmp])
 			{
 			case 0:
-				this->allIndividual[geneNum][tmp] = 1;
+				targetPopulation[geneNum][tmp] = 1;
 			case 1:
-				this->allIndividual[geneNum][tmp] = 0;
+				targetPopulation[geneNum][tmp] = 0;
 			default:
 				break;
 			}
@@ -711,10 +712,12 @@ void GA::_mutationGene(std::vector<std::vector<int> > &targetPopulation, double 
 	@param &targetPopulation 対象の個体郡
 	@param generation 現時点での世代
 */
-void GA::_outputObjectiveValue(std::vector<std::vector<int> > targetPopulation, int generation)
+void GA::_outputObjectiveValue(
+	std::vector<std::vector<int> > targetPopulation,
+	int generation)
 {
 	double x;
-	std::vector<std::vector<double> > objectiveVariable(targetPopulation.size(), 2);
+	std::vector<std::vector<double> > objectiveParameter(targetPopulation.size(), std::vector<double>(2));
 	std::vector<double> objectiveValue(2);
 
 	std::cout << generation << "-generation" << std::endl;
@@ -725,7 +728,7 @@ void GA::_outputObjectiveValue(std::vector<std::vector<int> > targetPopulation, 
 
 		for (int numVar = 0; numVar < this->_numVariable; ++numVar)
 		{
-			std::cout << objectiveParameter[numVar] << ",";
+			std::cout << objectiveParameter[numGene][numVar] << ",";
 		}
 		std::cout << "\t";
 		for (int numObj = 0; numObj < 2; ++numObj)	// 目的関数の数

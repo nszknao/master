@@ -1,4 +1,4 @@
-#include "GaCommon.h"
+#include "../include/GaCommon.h"
 
 /*
 	２つの二次元配列の和集合をとる．
@@ -6,7 +6,10 @@
 	@param &gene2 和する個体群２
 	@param &joinedGene 和集合した個体群
 */
-void GaCommon::joinPopulation(const std::vector<std::vector<int> > &gene1, const std::vector<std::vector<int> > &gene2, std::vector<std::vector<int> > &joinedGene)
+void GaCommon::joinPopulation(
+	const std::vector<std::vector<int> > &gene1,
+	const std::vector<std::vector<int> > &gene2,
+	std::vector<std::vector<int> > &joinedGene)
 {
 	// gene1の遺伝子をすべてコピー
 	std::copy(gene1.begin(), gene1.end(), std::back_inserter(joinedGene));
@@ -22,3 +25,15 @@ void GaCommon::joinPopulation(const std::vector<std::vector<int> > &gene1, const
 	}
 }
 
+/*
+	2次元配列の要素をもう一方の2次元配列にすべて格納する
+	@param &targetPopulation 追加する対象の個体群
+	@param &pushedPopulation 追加する要素を含む個体群
+*/
+void GaCommon::pushBackAll(
+	std::vector<std::vector<int> > &targetPopulation,
+	const std::vector<std::vector<int> > &pushedPopulation)
+{
+	for (int tmp = 0; tmp < pushedPopulation.size(); ++tmp)
+		targetPopulation.push_back(pushedPopulation[tmp]);
+}

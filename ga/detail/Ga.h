@@ -1,3 +1,4 @@
+#include "../GaCommon.h"
 #include <vector>
 
 /*
@@ -6,7 +7,7 @@
 	“¯‚¶—v‘f‚Í‚·‚×‚Äíœ‚³‚ê‚é
 */
 template<typename T>
-static void removeElement(std::vector<std::vector<T> > &population, const std::vector<T> &element)
+void GaCommonTemp<T>::removeElement(std::vector<std::vector<T> > &population, const std::vector<T> &element)
 {
 	for (int tmp = 0; tmp < population.size(); ++tmp)
 	{

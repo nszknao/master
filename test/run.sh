@@ -7,7 +7,7 @@ if [ -e gatest.exe ]; then
         rm gatest.exe
 fi
 ############ Compile-force #############################################
-g++ -lstdc++ ../ga/GA.cpp main.cpp -o gatest.exe -lm -lgsl -lgslcblas -std=c++11
+g++ -lstdc++ ./src/Ga.cpp ./src/GaCommon.cpp -o gatest.exe -lm -lgsl -lgslcblas -std=c++11
 
 if [ -e gatest.exe ]; then
         ./gatest.exe
