@@ -20,7 +20,7 @@ GA::GA(int numVariable)
 	this->_geneLength	= geneLength;
 	this->_numVariable	= numVariable;
 
-	this->_searchPopulation	= std::vector< std::vector<int> >(population, std::vector<int>(geneLength));
+	this->_searchPopulation	= std::vector< std::vector<int> >(population, std::vector<int>(geneLength*numVariable));
 }
 
 GA::~GA()
@@ -231,6 +231,7 @@ void GA::nsga2Run()
 
 		/*** Step4 ***/
 		this->_updateArchivePopulation(classifiedByRankGene, archivePopulation[generation+1], nextRankPopulation);
+		return;
 
 		/*** Step5 ***/
 		this->_crowdingSort(nextRankPopulation, crowdingSortedPopulation);
