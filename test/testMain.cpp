@@ -1,4 +1,4 @@
-#include "../ga/GA.h"
+#include "../ga/include/Ga.h"
 
 
 int main(int argc, char *argv[])
@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
         int generation = 0, numVarience = 10;
 
         GA ga(numVarience);
-        ga->nsga2Run();
+        ga.nsga2Run();
 
         return 0;
 }
