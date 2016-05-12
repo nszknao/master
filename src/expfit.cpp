@@ -3,17 +3,27 @@
  * m_：マトリクス，v_：ベクトル，cf_：係数
  */
 #include "../include/expfit.h"
-#include "../include/ParamData.h"
+
+// パラメータをセットするためのコンストラクタ
+ParamData::ParamData(int arg_n, int arg_p, double* arg_y, double arg_zeta, double arg_epsilon, double* arg_dG)
+{
+	this->n = arg_n;
+	this->p = arg_p;
+	this->y = arg_y;
+	this->zeta = arg_zeta;
+	this->epsilon = arg_epsilon;
+	this->dG = arg_dG;
+}
 
 int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
-	ParamData* paramData	= static_cast<ParamData*>(params);
-	int NUM_OF_MOMENT_EQUATION		= paramData->n;
-	int NUM_OF_PARAMETER			= paramData->p;
-	double *y						= paramData->y;
-	double zeta						= paramData->zeta;
-	double epi						= paramData->epsilon;
-	double *dG						= paramData->dG;
+	ParamData* paramData		= static_cast<ParamData*>(params);
+	int NUM_OF_MOMENT_EQUATION	= paramData->n;
+	int NUM_OF_PARAMETER		= paramData->p;
+	double *y				= paramData->y;
+	double zeta				= paramData->zeta;
+	double epi				= paramData->epsilon;
+	double *dG				= paramData->dG;
 
 	double cf_moment_eq[] =						// モーメント方程式 係数行列 15x21
 	{
