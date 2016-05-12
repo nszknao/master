@@ -1,57 +1,11 @@
-#include <iostream>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <cmath>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit_nlin.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_sf.h>
-#include "../include/expfit.h"
-#include "../include/ParamData.h"
-
-#define N 15
-#define P 10
-#define PI M_PI
-#define NUM_GAUSS 3	// 足しあわせるガウス分布の数
-
-/************ 系の係数・入力条件（不変）*******************/
-#define S0 1./(2.*PI)
-#define ZETA 0.2
-#define EPSILON 0.3
-#define GGD_KAPPA 2.	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
-
-
-class Analysis
-{
-private:
-	// 混合ガウス分布のパラメータ
-	double prm_a[NUM_GAUSS], prm_mu1[NUM_GAUSS], prm_mu2[NUM_GAUSS], prm_sigma1[NUM_GAUSS], prm_sigma2[NUM_GAUSS], prm_kappa[NUM_GAUSS];
-	double _createGaussianPdf(double a[], double mu[], double sigma[], double x);
-	double _culcLevelCrossing(double pp_xi, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[]);
-	void _culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy);
-
-public:
-	// TODO:グローバル変数はアンスコから始める．
-	double lambda, beta2, alpha, mu1, mu2;
-	Analysis(double lambda, double beta2, double alpha, double mu1, double mu2);
-	std::string leastSquareMethod();
-	void createDispPdf();
-	void createVelPdf();
-	void culcDispVarience();
-	void culcVelVarience();
-	void createLevelCrossing();
-};
+#include "../include/analysis.h"
 
 // コンストラクタ
 Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, double arg_m2)
 {
-	this->lambda	= arg_l;
-	this->beta2	= arg_b;
-	this->alpha	= arg_a;
+	this->_lambda	= arg_l;
+	this->_beta2	= arg_b;
+	this->_alpha	= arg_a;
 	this->mu1	= arg_m1;
 	this->mu2	= arg_m2;
 }
@@ -65,16 +19,16 @@ std::string Analysis::leastSquareMethod()
 	int tmp;
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*beta2);
+	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
 
 	// 入力に関するモーメント
 	double dF[6];
 	dF[0] = 0;
-	dF[1] = this->alpha*S0 + this->lambda*(1. - this->alpha)*this->beta2;
+	dF[1] = this->_alpha*S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
 	dF[2] = 0;
-	dF[3] = this->lambda*pow((1. - alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 	dF[4] = 0;
-	dF[5] = this->lambda*pow((1. - alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 
 	/* 近似対象となる観測データを生成 */
 	double y[N];
@@ -306,7 +260,7 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 		a[2*num+0]	= 0.;	a[2*num+1]	= 2.*ke;	a[2*num+2]	= 4.*ZETA;
 		b[0]	= 0.;
 		b[1]	= 0.;
-		b[2]	= this->alpha*2.*PI*S0 + (1.-this->alpha)*this->lambda*this->beta2;
+		b[2]	= this->_alpha*2.*PI*S0 + (1.-this->_alpha)*this->_lambda*this->_beta2;
 		
 		// LU分解の方法でモーメント方程式を解く
 		gsl_matrix_view m	= gsl_matrix_view_array(a, num, num);
@@ -378,25 +332,4 @@ double Analysis::_culcLevelCrossing(double pp_xi, double a[], double mu1[], doub
 	}
 
 	return prob_pass;
-}
-
-int main(int argc, char *argv[])
-{
-	char *ends;
-	Analysis *ana;
-	ana = new Analysis(strtod(argv[1], &ends), strtod(argv[2], &ends), strtod(argv[3], &ends), strtod(argv[4], &ends), strtod(argv[4], &ends));
-
-	std::cout << "--------------------------\n" << std::endl;
-	std::cout << "lsm.cpp started.\n" << std::endl;
-
-	std::string result = ana->leastSquareMethod();
-	if (result == "success")
-	{
-		ana->createDispPdf();
-	}
-
-	std::cout << "lsm.cpp has done.\n" << std::endl;
-	std::cout << "--------------------------\n" << std::endl;
-
-	return 0;
 }

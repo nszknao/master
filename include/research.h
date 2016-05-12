@@ -31,8 +31,9 @@ using namespace std;
 class Simulation
 {
 private:
+	double _lambda, _beta2, _alpha, _sigma;
 	// 入力標本
-	double force[SAMPLE_LENGTH];
+	double _force[SAMPLE_LENGTH];
 	// pdf作成時のバッファー
 	double y1_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES];
 	double y2_buffer[SAMPLE_LENGTH][NUM_OF_SAMPLES];
@@ -44,7 +45,7 @@ private:
 	static double _f2(double force, double y1, double y2);
 
 public:
-	double lambda, beta2, alpha, sigma;
+	Simulation(double lambda, double beta2, double alpha);
 	void culcRungeKutta();
 	void culcDisplacementPdf();
 	void culcVelocityPdf();

@@ -1,5 +1,13 @@
 #include "../include/research.h"
 
+Simulation::Simulation(double lambda, double beta2, double alpha)
+{
+	this->_lambda	= lambda;
+	this->_beta2	= beta2;
+	this->_alpha	= alpha;
+	this->_sigma	= sqrt(2.*M_PI*S0 / dt);
+}
+
 /* 入力を生成する */
 void Simulation::_createExcitation()
 {
@@ -16,8 +24,8 @@ void Simulation::_createExcitation()
 	gsl_rng* rp = gsl_rng_alloc(gsl_rng_default);
 
 	// 入力強度
-	double wSt = sqrt(this->alpha);
-	double pSt = sqrt(1 - this->alpha);
+	double wSt = sqrt(this->_alpha);
+	double pSt = sqrt(1 - this->_alpha);
 
 	for (tmp_num = 0; tmp_num < NUM_OF_SAMPLES; tmp_num++)
 	{
@@ -27,10 +35,10 @@ void Simulation::_createExcitation()
 		/********** 入力を生成（ホワイトノイズ＋不規則パルス） **********/
 		for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 		{
-			this->force[tmp_lng] = wSt*gsl_ran_gaussian(r, this->sigma) + pSt*gsl_ran_bernoulli(r, dt*this->lambda)*gsl_ran_gaussian(rp, sqrt(this->beta2)) / dt;
+			this->_force[tmp_lng] = wSt*gsl_ran_gaussian(r, this->_sigma) + pSt*gsl_ran_bernoulli(r, dt*this->_lambda)*gsl_ran_gaussian(rp, sqrt(this->_beta2)) / dt;
 
 			// 入力の記録
-			if (tmp_num == 0) fprintf(t_force, "%lf %lf\n", tmp_lng*dt, this->force[tmp_lng]);
+			if (tmp_num == 0) fprintf(t_force, "%lf %lf\n", tmp_lng*dt, this->_force[tmp_lng]);
 		}
 	}
 
@@ -61,17 +69,17 @@ void Simulation::culcRungeKutta()
 
 		for (tmp_lng = 0; tmp_lng < SAMPLE_LENGTH; tmp_lng++)
 		{
-			DY1[0] = dt*this->_f1(force[tmp_lng], y1, y2);
-			DY2[0] = dt*this->_f2(force[tmp_lng], y1, y2);
+			DY1[0] = dt*this->_f1(this->_force[tmp_lng], y1, y2);
+			DY2[0] = dt*this->_f2(this->_force[tmp_lng], y1, y2);
 
-			DY1[1] = dt*this->_f1(force[tmp_lng], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
-			DY2[1] = dt*this->_f2(force[tmp_lng], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
+			DY1[1] = dt*this->_f1(this->_force[tmp_lng], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
+			DY2[1] = dt*this->_f2(this->_force[tmp_lng], y1 + DY1[0] / 2.0, y2 + DY2[0] / 2.0);
 
-			DY1[2] = dt*this->_f1(force[tmp_lng], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
-			DY2[2] = dt*this->_f2(force[tmp_lng], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
+			DY1[2] = dt*this->_f1(this->_force[tmp_lng], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
+			DY2[2] = dt*this->_f2(this->_force[tmp_lng], y1 + DY1[1] / 2.0, y2 + DY2[1] / 2.0);
 
-			DY1[3] = dt*this->_f1(force[tmp_lng], y1 + DY1[2], y2 + DY2[2]);
-			DY2[3] = dt*this->_f2(force[tmp_lng], y1 + DY1[2], y2 + DY2[2]);
+			DY1[3] = dt*this->_f1(this->_force[tmp_lng], y1 + DY1[2], y2 + DY2[2]);
+			DY2[3] = dt*this->_f2(this->_force[tmp_lng], y1 + DY1[2], y2 + DY2[2]);
 
 			y1 = y1 + (DY1[0] + 2.*DY1[1] + 2.*DY1[2] + DY1[3]) / 6.0;
 			y2 = y2 + (DY2[0] + 2.*DY2[1] + 2.*DY2[2] + DY2[3]) / 6.0;
@@ -281,28 +289,4 @@ double Simulation::_f1(double force, double y1, double y2)
 double Simulation::_f2(double force, double y1, double y2)
 {
 	return force - 2*ZETA*y2 - y1 - EPSILON*y1*y1*y1;
-}
-
-int main (int argc, char *argv[]) {
-
-	Simulation *sim;
-	sim = new Simulation;
-
-	// 入力パラメータ
-	char *ends;
-	sim->lambda = strtod(argv[1], &ends);
-	sim->beta2 = strtod(argv[2], &ends);
-	sim->alpha = strtod(argv[3], &ends);
-	sim->sigma = sqrt(2.*M_PI*S0 / dt);
-
-	cout << "--------------------------\n" << endl;
-	cout << "research.cpp started.\n" << endl;
-
-	sim->culcRungeKutta();
-	sim->culcDisplacementPdf();
-	sim->exactSolutionOfGaussianWhiteNoise();
-
-	cout << "research.cpp has done.\n" << endl;
-	cout << "--------------------------\n" << endl;
-	return 0;
 }
