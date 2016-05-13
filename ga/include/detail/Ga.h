@@ -14,3 +14,6 @@ void GaCommonTemp<T>::removeElement(std::vector<std::vector<T> > &population, co
 		if (population[tmp] == element) population.erase(population.begin() + tmp);
 	}
 }
+
+template<typename T>
+void GaCommonTemp<T>::outputAllElement

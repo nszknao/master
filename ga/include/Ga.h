@@ -17,7 +17,6 @@ class GA
 public:
 	GA(int numVariable);
 	~GA();
-	void initGene();
 
 	/*** NSGA-2—p ***/
 	void nsga2Run();
@@ -28,16 +27,15 @@ private:
 
 	double _binary2Phenotype(const std::vector<int>&);
 	void _convertPhenotype(const std::vector<int>&, std::vector<double>&);
-	bool _isDuplicatedGene(std::vector <std::vector<int> >&, int);
-	void _outputIndividuals(std::vector <std::vector<int> >&);
+	bool _isDuplicatedGene(std::vector <std::vector<int> >&, const std::vector<int> &);
+	void _outputGene(const std::vector<int>&);
+	void _outputPopulation(const std::vector <std::vector<int> >&);
 	void _getObjectiveFunc(const std::vector<double>&, std::vector<double>&);
 	double _f1(const std::vector<double>&);
 	double _f2(const std::vector<double>&);
 
 	/*** NSGA-2—p ***/
-	std::vector< std::vector<int> > _searchPopulation;
-	std::vector< std::vector<int> > _archivePopulation;
-	void _initSearchPopulation();
+	void _initSearchPopulation(std::vector<std::vector<int> >&);
 	void _nonSuperioritySort(const std::vector <std::vector<int> >&, std::vector<std::vector<std::vector<int> > >&);
 	void _binary2ObjectiveFunc(const std::vector<int>&, std::vector<double>&);
 	void _sortByObjectiveValue(const std::vector<std::vector<int> >&, std::vector<std::vector<int> >&, int num);
@@ -54,7 +52,8 @@ private:
 	void _uniformCrossover(const std::vector<int>&, const std::vector<int>&, std::vector<int>&, std::vector<int>&);
 	void _highRankGeneSelection(const std::vector<std::vector<std::vector<int> > >&, const std::vector<std::vector<int> >&, std::vector<std::vector<int> >&, int num);
 	void _outputObjectiveValue(std::vector<std::vector<int> >, int generation);
-
+	bool _isSuperior(const std::vector<int>&, const std::vector<std::vector<int> >&);
+	void _createRandomlyIndividual(std::vector<int>&);
 };
 
 #endif // !__GA_H_INCLUDE__

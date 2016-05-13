@@ -1,8 +1,8 @@
 /***********
 	GA.cpp
 
-	�K��i2016/05/09�j
-		- std::vector< std::vector<int> >�̕ϐ�����~Population
+	‹K–ñi2016/05/09j
+		- std::vector< std::vector<int> >‚Ì•Ï”–¼‚Í~Population
 ************/
 
 #include "../include/Ga.h"
@@ -13,14 +13,12 @@ GA::GA(int numVariable)
 {
 	std::cout << "Calls constructor." << std::endl;
 
-	int geneLength	= 20;	// ��`�q��
-	int population		= 120;	// �̐�
+	int geneLength		= 20;	// ˆâ“`Žq’·
+	int population		= 120;	// ŒÂ‘Ì”
 
 	this->_population	= population;
 	this->_geneLength	= geneLength;
 	this->_numVariable	= numVariable;
-
-	this->_searchPopulation	= std::vector< std::vector<int> >(population, std::vector<int>(geneLength*numVariable));
 }
 
 GA::~GA()
@@ -28,96 +26,85 @@ GA::~GA()
 }
 
 /*
-	����������
+	’Tõ•êW’c‚ð‰Šú‰»‚·‚éD
+	@param &searchPopulation
 */
-void GA::initGene()
+void GA::_initSearchPopulation(std::vector<std::vector<int> > &searchPopulation)
 {
-	this->_initSearchPopulation();
-	this->_archivePopulation	= std::vector< std::vector<int> >(this->_population, std::vector<int>(this->_geneLength*this->_numVariable));
+	while (searchPopulation.size() < this->_population)
+	{
+		std::vector<int> tmpGene(this->_geneLength*this->_numVariable);
+		this->_createRandomlyIndividual(tmpGene);
+
+		if (!this->_isDuplicatedGene(searchPopulation, tmpGene))
+			searchPopulation.push_back(tmpGene);
+	}
 }
 
 /*
-	�T����W�c������������D
+	ƒ‰ƒ“ƒ_ƒ€‚ÉŒÂ‘Ì‚ð1‚Â¶¬‚·‚é
+	@param &individual ¶¬‚³‚ê‚éŒÂ‘Ìi—v‘f‚Ì—Ìˆæ‚ÍŠm•Û‚µ‚Ä‚¨‚­j
 */
-void GA::_initSearchPopulation()
+void GA::_createRandomlyIndividual(std::vector<int> &individual)
 {
-	// �J�E���g�ϐ�
-	int tmp_column, tmp_row;
-
-	int duplicateFlg;
-
-	// [0.0, 1.0]�̃����_���l���쐬
+	// [0.0, 1.0]‚Ìƒ‰ƒ“ƒ_ƒ€’l‚ðì¬
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<> randomValue(0.0, 1.0);
 
-	do {
-		duplicateFlg = 0;
-		for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
-		{
-			// ��`�q�̍쐬
-			for (tmp_row = 0; tmp_row < this->_geneLength*this->_numVariable; tmp_row++)
-			{
-				this->_searchPopulation.at(tmp_column).at(tmp_row) = (randomValue(mt) > 0.5) ? 1 : 0;
-			}
-
-			if (this->_isDuplicatedGene(this->_searchPopulation, tmp_column))
-				duplicateFlg = 1;
-		}
-	} while (duplicateFlg == 1);	
+	for (int numBinary = 0; numBinary < this->_geneLength*this->_numVariable; ++numBinary)
+		individual[numBinary]	= (randomValue(mt) > 0.5) ? 1 : 0;
 }
 
 /*
-	�̏W�c��\������D
-	�e�X�g�p
+	1ŒÂ‘Ì‚ð•\Ž¦‚·‚é
+	@param &individual ŒÂ‘Ì
 */
-void GA::_outputIndividuals(std::vector<std::vector<int>> &individuals)
+void GA::_outputGene(const std::vector<int> &individual)
 {
-	// �J�E���g�ϐ�
-	int tmp_column, tmp_row;
+	int numBinary;
 
-	for (tmp_column = 0; tmp_column < this->_population; tmp_column++)
-	{
-		for (tmp_row = 0; tmp_row < this->_geneLength*this->_numVariable; tmp_row++)
-		{
-			std::cout << individuals[tmp_column][tmp_row];
-		}
-		std::cout << std::endl;
-	}
+	for (numBinary = 0; numBinary < this->_geneLength*this->_numVariable; ++numBinary)
+		std::cout << individual[numBinary];
+
+	std::cout << std::endl;
 }
 
 /*
-	@param gene �̏W�c��2�����z��
+	ŒÂ‘ÌW’c‚ð•\Ž¦‚·‚éD
+	@param &targetPopulation ŒÂ‘ÌŒQ
 */
-bool GA::_isDuplicatedGene(std::vector<std::vector<int>> &gene, int column)
+void GA::_outputPopulation(const std::vector<std::vector<int>> &targetPopulation)
 {
-	// �J�E���g�ϐ�
-	int tmp_column, tmp_row;
+	int numIndividual;
 
-	int duplicateFlg;
-	bool result = false;
-
-	for (tmp_column = 0; tmp_column < column; tmp_column++)
-	{
-		duplicateFlg = 1;
-		for (tmp_row = 0; tmp_row < this->_geneLength; tmp_row++)
-		{
-			// 1�ł���`�q���قȂ�΃t���O�����
-			if (gene[column][tmp_row] != gene[tmp_column][tmp_row])
-				duplicateFlg = 0;
-		}
-
-		if (duplicateFlg == 1)
-			result = true;
-	}
-
-	return result;
+	for (numIndividual = 0; numIndividual < targetPopulation.size(); ++numIndividual)
+		this->_outputGene(targetPopulation[numIndividual]);
 }
 
 /*
-	1�̂�2�i���f�[�^��\���^�ɕϊ�
-	@param &binary 1�̂̈�`�q
-	@param &phenotype ��`�q�^��\���^�ɕϊ���������
+	ŒÂ‘ÌŒQ‚Ì’†‚É“¯ŒÂ‘Ì‚ª‘¶Ý‚µ‚Ä‚¢‚é‚©ƒ`ƒFƒbƒN
+	@param &searchPopulation ŒÂ‘ÌW’c‚Ì2ŽŸŒ³”z—ñ
+	@param &targetGene ŒŸõŒÂ‘Ì
+*/
+bool GA::_isDuplicatedGene(std::vector<std::vector<int>> &searchPopulation, const std::vector<int> &targetGene)
+{
+	// ’TõŒÂ‘Ì‚ª‘¶Ý‚µ‚È‚¢ê‡
+	if (searchPopulation.size() == 0)
+		return false;
+
+	int numGene;
+	for (numGene = 0; numGene < searchPopulation.size(); ++numGene)
+		if (searchPopulation[numGene] == targetGene)
+			return true;
+
+	return false;
+}
+
+/*
+	1ŒÂ‘Ì‚Ì2i”ƒf[ƒ^‚ð•\Œ»Œ^‚É•ÏŠ·
+	@param &binary 1ŒÂ‘Ì‚Ìˆâ“`Žq
+	@param &phenotype ˆâ“`ŽqŒ^‚ð•\Œ»Œ^‚É•ÏŠ·‚µ‚½‚à‚Ì
 */
 void GA::_convertPhenotype(const std::vector<int> &binary, std::vector<double> &phenotype)
 {
@@ -126,29 +113,25 @@ void GA::_convertPhenotype(const std::vector<int> &binary, std::vector<double> &
 	for (int numVar = 0; numVar < this->_numVariable; ++numVar)
 	{
 		for (int numBinary = 0; numBinary < this->_geneLength; ++numBinary)
-		{
 			tmpGene.push_back(binary[numVar*this->_geneLength + numBinary]);
-		}
+
 		phenotype.push_back(this->_binary2Phenotype(tmpGene));
 		tmpGene.clear();
 	}
 }
 
 /*
-	1��`�q��2�i���f�[�^��\���^�ɕϊ�
-	@param &binary 1��`�q���̒���������2�i���f�[�^
+	1ˆâ“`Žq‚Ì2i”ƒf[ƒ^‚ð•\Œ»Œ^‚É•ÏŠ·
+	@param &binary 1ˆâ“`Žq’·‚Ì’·‚³‚ðŽ‚Â2i”ƒf[ƒ^
 */
 double GA::_binary2Phenotype(const std::vector<int> &binary)
 {
-	// �J�E���g�ϐ�
-	int tmp;
-
+	int numGene, place	= 0;
 	double decimal	= 0.;
-	int place	= 0;
 
-	for (tmp = this->_geneLength - 1; tmp >= 0 ; --tmp)
+	for (numGene = this->_geneLength - 1; numGene >= 0 ; --numGene)
 	{
-		if (binary[tmp] == 1)
+		if (binary[numGene] == 1)
 		{
 			decimal	+= pow(2.0, (double)place);
 			place	+= 1;
@@ -159,9 +142,9 @@ double GA::_binary2Phenotype(const std::vector<int> &binary)
 }
 
 /*
-	�ړI�֐����v�Z
-	@param &variable �ϐ�
-	@param &objectiveValue �ړI�֐��̒l�i�ړI�֐��̐������̈���m�ۂ��Ă����j
+	–Ú“IŠÖ”‚ðŒvŽZ
+	@param &variable •Ï”
+	@param &objectiveValue –Ú“IŠÖ”‚Ì’li–Ú“IŠÖ”‚Ì”‚¾‚¯—Ìˆæ‚ðŠm•Û‚µ‚Ä‚¨‚­j
 */
 void GA::_getObjectiveFunc(const std::vector<double> &variable, std::vector<double> &objectiveValue)
 {
@@ -185,25 +168,21 @@ double GA::_f2(const std::vector<double> &var)
 }
 
 /*
-	1�̂���ړI�֐��l���v�Z
-	@param &binary 1�̂̈�`�q
-	@param &obj �ړI�֐��̒l�i�ړI�֐��̐������̈���m�ۂ��Ă����j
+	1ŒÂ‘Ì‚©‚ç–Ú“IŠÖ”’l‚ðŒvŽZ
+	@param &binary 1ŒÂ‘Ì‚Ìˆâ“`Žq
+	@param &obj –Ú“IŠÖ”‚Ì’li–Ú“IŠÖ”‚Ì”‚¾‚¯—Ìˆæ‚ðŠm•Û‚µ‚Ä‚¨‚­j
 */
 void GA::_binary2ObjectiveFunc(const std::vector<int> &binary, std::vector<double> &obj)
 {
-	// �\���^���ꎞ�I�ɕۑ�
+	// •\Œ»Œ^‚ðˆêŽž“I‚É•Û‘¶
 	std::vector<double> tmpPhenotype(this->_numVariable);
 
 	this->_convertPhenotype(binary, tmpPhenotype);
 	this->_getObjectiveFunc(tmpPhenotype, obj);
 }
 
-/***************
-	���e�X�g�֐�
-***************/
-
 /*
-	NSGA2���s�p���\�b�h
+	NSGA2ŽÀs—pƒƒ\ƒbƒh
 */
 void GA::nsga2Run()
 {
@@ -212,26 +191,25 @@ void GA::nsga2Run()
 	std::vector<std::vector<int> > margedPopulation, nextRankPopulation, crowdingSortedPopulation;
 	std::vector<std::vector<std::vector<int> > > archivePopulation(maxGeneration), searchPopulation(maxGeneration), classifiedByRankGene;
 
-	std::copy(this->_archivePopulation.begin(), this->_archivePopulation.end(), std::back_inserter(archivePopulation[0]));
-	std::copy(this->_searchPopulation.begin(), this->_searchPopulation.end(), std::back_inserter(searchPopulation[0]));
-
 	/*** Step1 ***/
-	this->initGene();
+	this->_initSearchPopulation(searchPopulation[generation]);
 
 	while(1)
 	{
 		/*** Step2 ***/
-		// TODO:�]�����@�̊m��
-		this->_outputObjectiveValue(searchPopulation[generation], generation);
+		// TODO:•]‰¿•û–@‚ÌŠm—§
+//		this->_outputObjectiveValue(searchPopulation[generation], generation);
 
 		/*** Step3 ***/
 		GaCommon::joinPopulation(archivePopulation[generation], searchPopulation[generation], margedPopulation);
 		this->_nonSuperioritySort(margedPopulation, classifiedByRankGene);
 		margedPopulation.clear();
 
+		std::cout << classifiedByRankGene[0].size() << std::endl;
+		return;
+
 		/*** Step4 ***/
 		this->_updateArchivePopulation(classifiedByRankGene, archivePopulation[generation+1], nextRankPopulation);
-		return;
 
 		/*** Step5 ***/
 		this->_crowdingSort(nextRankPopulation, crowdingSortedPopulation);
@@ -244,7 +222,7 @@ void GA::nsga2Run()
 			break;
 
 		/*** Step7 ***/
-		// �I���ƌ����𓯎��ɍs���Ă���
+		// ‘I‘ð‚ÆŒð³‚ð“¯Žž‚És‚Á‚Ä‚¢‚é
 		this->_crowdedTournamentSelection(archivePopulation[generation+1], searchPopulation[generation+1], classifiedByRankGene);
 		classifiedByRankGene.clear();
 
@@ -256,49 +234,26 @@ void GA::nsga2Run()
 }
 
 /*
-	��W�c�ɑ΂��Ĕ�D�z�\�[�g���s��
-	@param gene �\�[�g���s����W�c
-	@param &classifiedByRankGene �����N���ƂɃN���X���������̏W�c 
+	•êW’c‚É‘Î‚µ‚Ä”ñ—D‰zƒ\[ƒg‚ðs‚¤
+	@param gene ƒ\[ƒg‚ðs‚¤•êW’c
+	@param &classifiedByRankGene ƒ‰ƒ“ƒN‚²‚Æ‚ÉƒNƒ‰ƒX•ª‚¯‚µ‚½ŒÂ‘ÌW’c 
 */
 void GA::_nonSuperioritySort(
 	const std::vector <std::vector<int> > &targetPopulation,
 	std::vector<std::vector<std::vector<int> > > &classifiedByRankGene)
 {
-	// �J�E���g�ϐ�
-	int tmp, tmp_column;
-
-	int numGene, numObj, superiorityFlg;
-	std::vector<double> targetObject(2), comparedObject(2);	// �ړI�֐��̐�
+	int tmp, numGene;
 	std::vector<std::vector<int> > sortingPopulation, tmpRankedGene;
 
-	// �̂Ƀ����N��t���Ă����C�����N�t�����ꂽ�̂͏���
+	// ŒÂ‘Ì‚Éƒ‰ƒ“ƒN‚ð•t‚¯‚Ä‚¢‚«Cƒ‰ƒ“ƒN•t‚¯‚³‚ê‚½ŒÂ‘Ì‚Íœ‚­
 	std::copy(targetPopulation.begin(), targetPopulation.end(), std::back_inserter(sortingPopulation));
 	while(sortingPopulation.size() > 0)
 	{
-		numGene	= 0;
-		while(numGene < sortingPopulation.size())
-		{
-			superiorityFlg	= 1;
-			this->_binary2ObjectiveFunc(sortingPopulation[numGene], targetObject);
-
-			for (tmp_column = 0; tmp_column < sortingPopulation.size(); ++tmp_column)
-			{
-				if (numGene == tmp_column)
-					continue;
-				this->_binary2ObjectiveFunc(sortingPopulation[tmp_column], comparedObject);
-
-				for (numObj = 0; numObj < 2; ++numObj)	// �ړI�֐��̐�
-					if (targetObject[numObj] < comparedObject[numObj])
-						superiorityFlg	= 0;
-			}
-
-			if (superiorityFlg == 1)
+		for (numGene = 0; numGene < sortingPopulation.size(); ++numGene)
+			if (this->_isSuperior(sortingPopulation[numGene], sortingPopulation))
 				tmpRankedGene.push_back(sortingPopulation[numGene]);
-			targetObject.clear();
-			numGene += 1;
-		}
 
-		// �����N���ƂɌ̂�ۑ����C�̌Q���X�V
+		// ƒ‰ƒ“ƒN‚²‚Æ‚ÉŒÂ‘Ì‚ð•Û‘¶‚µCŒÂ‘ÌŒQ‚ðXV
 		classifiedByRankGene.push_back(tmpRankedGene);
 		for (tmp = 0; tmp < tmpRankedGene.size(); ++tmp)
 			GaCommonTemp<int>::removeElement(sortingPopulation, tmpRankedGene[tmp]);
@@ -307,10 +262,42 @@ void GA::_nonSuperioritySort(
 }
 
 /*
-	�V���ȃA�[�J�C�u�W�c�𐶐�
-	@param &classifiedByRankGene �����N���Ƃ̌�
-	@param &newArchivePopulation �����N��ʂ���擾�����X�V�p�A�[�J�C�u��W�c
-	@param &nextRankPopulation �A�[�J�C�u��W�c�ɓ��肫��Ȃ������ō������N�̌̏W�c
+	Žw’è‚µ‚½ŒÂ‘Ì‚ª—D‰z‚µ‚Ä‚¢‚é‚©”»’è
+	@param &targetGene —D‰z‚µ‚Ä‚¢‚é‚©”»’è‚µ‚½‚¢ŒÂ‘Ì
+	@param &comparedPopulation targetGene‚ª‘®‚µ‚Ä‚¢‚éŒÂ‘ÌŒQ
+*/
+bool GA::_isSuperior(
+	const std::vector<int> &targetGene,
+	const std::vector<std::vector<int> > &comparedPopulation)
+{
+	int numGene, numObj;
+	bool isSuperior;
+	std::vector<double> targetObjeciveValue(2), comparedObjectiveValue(2);	// –Ú“IŠÖ”‚Ì”
+
+	isSuperior	= true;
+	this->_binary2ObjectiveFunc(targetGene, targetObjeciveValue);
+
+	for (numGene = 0; numGene < comparedPopulation.size(); ++numGene)
+	{
+		if (comparedPopulation[numGene] == targetGene)
+			continue;
+
+		this->_binary2ObjectiveFunc(comparedPopulation[numGene], comparedObjectiveValue);
+		for (numObj = 0; numObj < 2; ++numObj)	// –Ú“IŠÖ”‚Ì”
+		{
+			if (targetObjeciveValue[numObj] < comparedObjectiveValue[numObj])
+				isSuperior	= false;
+		}
+	}
+
+	return isSuperior;
+}
+
+/*
+	V‚½‚ÈƒA[ƒJƒCƒuW’c‚ð¶¬
+	@param &classifiedByRankGene ƒ‰ƒ“ƒN‚²‚Æ‚ÌŒÂ‘Ì
+	@param &newArchivePopulation ƒ‰ƒ“ƒNãˆÊ‚©‚çŽæ“¾‚µ‚½XV—pƒA[ƒJƒCƒu•êW’c
+	@param &nextRankPopulation ƒA[ƒJƒCƒu•êW’c‚É“ü‚è‚«‚ç‚È‚©‚Á‚½Å‚ƒ‰ƒ“ƒN‚ÌŒÂ‘ÌW’c
 */
 void GA::_updateArchivePopulation(
 	const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene,
@@ -319,6 +306,7 @@ void GA::_updateArchivePopulation(
 {
 	int rank;
 
+	std::cout << classifiedByRankGene.size() << std::endl;
 	for (rank = 0; rank < classifiedByRankGene.size(); ++rank)
 	{
 		if (this->_population - newArchivePopulation.size() > classifiedByRankGene[rank].size())
@@ -327,31 +315,31 @@ void GA::_updateArchivePopulation(
 			break;
 	}
 
-	// �A�[�J�C�u��W�c�ɓ��肫��Ȃ������ō������N�̌̏W�c���i�[
+	// ƒA[ƒJƒCƒu•êW’c‚É“ü‚è‚«‚ç‚È‚©‚Á‚½Å‚ƒ‰ƒ“ƒN‚ÌŒÂ‘ÌW’c‚ðŠi”[
 	std::copy(classifiedByRankGene[rank].begin(), classifiedByRankGene[rank].end(), std::back_inserter(nextRankPopulation));
 }
 
 /*
-	���G�x�\�[�g
-	@param &certainRankPopulation ���郉���N�̌̌Q
-	@param &crowdingSortedPopulation ���G�x���ƂɃ\�[�g���ꂽ�̌Q
+	¬ŽG“xƒ\[ƒg
+	@param &certainRankPopulation ‚ ‚éƒ‰ƒ“ƒN‚ÌŒÂ‘ÌŒQ
+	@param &crowdingSortedPopulation ¬ŽG“x‚²‚Æ‚Éƒ\[ƒg‚³‚ê‚½ŒÂ‘ÌŒQ
 */
 void GA::_crowdingSort(
 	const std::vector<std::vector<int > > &certainRankPopulation,
 	std::vector<std::vector<int> > &crowdingSortedPopulation)
 {
-	// �J�E���g�ϐ�
+	// ƒJƒEƒ“ƒg•Ï”
 	int tmp1, tmp2;
 
 	int numObj;
 	std::vector<int> tmpGene(this->_geneLength*this->_numVariable);
-	std::vector<double> tmpObjectFunc(2);	// �ړI�֐��̐�
-	std::vector<std::vector<std::vector<int> > > objectiveSortedGene(2);	// �ړI�֐��̐�	
+	std::vector<double> tmpObjectFunc(2);	// –Ú“IŠÖ”‚Ì”
+	std::vector<std::vector<std::vector<int> > > objectiveSortedGene(2);	// –Ú“IŠÖ”‚Ì”	
 
-	// �ړI�֐����ƂɖړI�֐��l���������ɕ��ׂ�
+	// –Ú“IŠÖ”‚²‚Æ‚É–Ú“IŠÖ”’l‚ªˆ«‚¢‡‚É•À‚×‚é
 	this->_putObjectiveSortedGeneEveryObjectiveFunc(certainRankPopulation, objectiveSortedGene);
 
-	// ���G�x���傫�����Ɍ̂��\�[�g
+	// ¬ŽG“x‚ª‘å‚«‚¢‡‚ÉŒÂ‘Ì‚ðƒ\[ƒg
 	std::copy(certainRankPopulation.begin(), certainRankPopulation.end(), std::back_inserter(crowdingSortedPopulation));
 	double distance1 = 0., distance2 = 0.;
 	for (tmp1 = 1; tmp1 < certainRankPopulation.size()-1; ++tmp1)
@@ -371,16 +359,16 @@ void GA::_crowdingSort(
 }
 
 /*
-	�ړI�֐����ƂɖړI�֐��l���������ɕ��ׂ�
-	@param &targetPopulation �\�[�g�������̌Q
-	@param &objectiveSortedGene �ړI�֐����ƂɃ\�[�g���ꂽ�́i�ړI�֐��̐������̈���m�ۂ��Ă����j
+	–Ú“IŠÖ”‚²‚Æ‚É–Ú“IŠÖ”’l‚ªˆ«‚¢‡‚É•À‚×‚é
+	@param &targetPopulation ƒ\[ƒg‚µ‚½‚¢ŒÂ‘ÌŒQ
+	@param &objectiveSortedGene –Ú“IŠÖ”‚²‚Æ‚Éƒ\[ƒg‚³‚ê‚½ŒÂ‘Ìi–Ú“IŠÖ”‚Ì”‚¾‚¯—Ìˆæ‚ðŠm•Û‚µ‚Ä‚¨‚­j
 */
 void GA::_putObjectiveSortedGeneEveryObjectiveFunc(
 	const std::vector<std::vector<int> > &targetPopulation,
 	std::vector<std::vector<std::vector<int> > > &objectiveSortedGene)
 {
 	int numObj;
-	for (numObj = 0; numObj < 2; ++numObj)	// �ړI�֐��̐�
+	for (numObj = 0; numObj < 2; ++numObj)	// –Ú“IŠÖ”‚Ì”
 	{
 		this->_sortByObjectiveValue(targetPopulation, objectiveSortedGene[numObj], numObj);
 		std::reverse(objectiveSortedGene[numObj].begin(), objectiveSortedGene[numObj].end());
@@ -388,21 +376,21 @@ void GA::_putObjectiveSortedGeneEveryObjectiveFunc(
 }
 
 /*
-	�w�肵���ړI�֐��l�����������Ɍ̂��o�u���\�[�g����
-	@param &targetGene �\�[�g�������̌Q
-	@param &objectiveSortedGene �\�[�g��̌̌Q
-	@param num �ΏۂƂ���ړI�֐��̔ԍ�
+	Žw’è‚µ‚½–Ú“IŠÖ”’l‚ª¬‚³‚¢‡‚ÉŒÂ‘Ì‚ðƒoƒuƒ‹ƒ\[ƒg‚·‚é
+	@param &targetGene ƒ\[ƒg‚µ‚½‚¢ŒÂ‘ÌŒQ
+	@param &objectiveSortedGene ƒ\[ƒgŒã‚ÌŒÂ‘ÌŒQ
+	@param num ‘ÎÛ‚Æ‚·‚é–Ú“IŠÖ”‚Ì”Ô†
 */
 void GA::_sortByObjectiveValue(
 	const std::vector<std::vector<int> > &targetGene,
 	std::vector<std::vector<int> > &objectiveSortedPopulation,
 	int num)
 {
-	// �J�E���g�ϐ�
+	// ƒJƒEƒ“ƒg•Ï”
 	int tmp1, tmp2;
 
-	std::vector<double> tmpObject1(2);	// �ړI�֐��̐�
-	std::vector<double> tmpObject2(2);	// �ړI�֐��̐�
+	std::vector<double> tmpObject1(2);	// –Ú“IŠÖ”‚Ì”
+	std::vector<double> tmpObject2(2);	// –Ú“IŠÖ”‚Ì”
 	std::vector<int> tmpGene(this->_geneLength*this->_numVariable);
 
 	std::copy(targetGene.begin(), targetGene.end(), std::back_inserter(objectiveSortedPopulation));
@@ -424,22 +412,22 @@ void GA::_sortByObjectiveValue(
 }
 
 /*
-	�w�肵���ړI�֐��ɑ΂��č��G�x���v�Z����
-	@param &objectiveSortedGene �ړI�֐����ƂɃ\�[�g���ꂽ�̌Q
-	@param numGene �̂̔ԍ��i���E�̂͑I���ł��Ȃ��j
-	@param numObj �ړI�֐��̔ԍ�
+	Žw’è‚µ‚½–Ú“IŠÖ”‚É‘Î‚µ‚Ä¬ŽG“x‚ðŒvŽZ‚·‚é
+	@param &objectiveSortedGene –Ú“IŠÖ”‚²‚Æ‚Éƒ\[ƒg‚³‚ê‚½ŒÂ‘ÌŒQ
+	@param numGene ŒÂ‘Ì‚Ì”Ô†i‹«ŠEŒÂ‘Ì‚Í‘I‘ð‚Å‚«‚È‚¢j
+	@param numObj –Ú“IŠÖ”‚Ì”Ô†
 */
 double GA::_culcCrowdingDistanse(
 	const std::vector<std::vector<std::vector<int> > > &objectiveSortedGene,
 	int numGene,
 	int numObj)
 {
-	std::vector<double> tmpObjLeft(2);		// �ړI�֐��̐�
-	std::vector<double> tmpObjRight(2);	// �ړI�֐��̐�
-	std::vector<double> tmpObjMax(2);		// �ړI�֐��̐�
-	std::vector<double> tmpObjMin(2);		// �ړI�֐��̐�
+	std::vector<double> tmpObjLeft(2);		// –Ú“IŠÖ”‚Ì”
+	std::vector<double> tmpObjRight(2);	// –Ú“IŠÖ”‚Ì”
+	std::vector<double> tmpObjMax(2);		// –Ú“IŠÖ”‚Ì”
+	std::vector<double> tmpObjMin(2);		// –Ú“IŠÖ”‚Ì”
 
-	// ���E�̂������Č̂�I��
+	// ‹«ŠEŒÂ‘Ì‚ðœ‚¢‚ÄŒÂ‘Ì‚ð‘I‘ð
 	double distance	= 0.;
 	this->_binary2ObjectiveFunc(objectiveSortedGene[numObj][numGene-1], tmpObjLeft);
 	this->_binary2ObjectiveFunc(objectiveSortedGene[numObj][numGene+1], tmpObjRight);
@@ -451,18 +439,18 @@ double GA::_culcCrowdingDistanse(
 }
 
 /*
-	�w�肵���̂̑����G�x���v�Z����
-	@param &objectiveSortedGene �ړI�֐����ƂɖړI�֐��n���������Ƀ\�[�g���ꂽ�̌Q
-	@param &individual �̂̈�`�q
+	Žw’è‚µ‚½ŒÂ‘Ì‚Ì‘¬ŽG“x‚ðŒvŽZ‚·‚é
+	@param &objectiveSortedGene –Ú“IŠÖ”‚²‚Æ‚É–Ú“IŠÖ”’n‚ªˆ«‚¢‡‚Éƒ\[ƒg‚³‚ê‚½ŒÂ‘ÌŒQ
+	@param &individual ŒÂ‘Ì‚Ìˆâ“`Žq
 */
 double GA::_culcCrowdingDistanseForIndividual(
 	const std::vector<std::vector<std::vector<int> > > &objectiveSortedGene,
 	const std::vector<int> &individual)
 {
 	int numObj, numGene;
-	std::vector<double> distance(2);	// �ړI�֐��̐�
+	std::vector<double> distance(2);	// –Ú“IŠÖ”‚Ì”
 
-	for (numObj = 0; numObj < 2; ++numObj)	// �ړI�֐��̐�
+	for (numObj = 0; numObj < 2; ++numObj)	// –Ú“IŠÖ”‚Ì”
 	{
 		for (numGene = 1; numGene < objectiveSortedGene.front().size()-1; ++numGene)
 		{
@@ -484,9 +472,9 @@ double GA::_culcCrowdingDistanseForIndividual(
 }
 
 /*
-	�̐���N�ɂȂ�܂Ō̂�ǉ�����
-	@param &insertedPopulation �̂�ǉ������̏W�c�i�̐���N�ȉ��j
-	@param &insertPopulation �ǉ�����̂��܂ތ̏W�c
+	ŒÂ‘Ì”‚ªN‚É‚È‚é‚Ü‚ÅŒÂ‘Ì‚ð’Ç‰Á‚·‚é
+	@param &insertedPopulation ŒÂ‘Ì‚ð’Ç‰Á‚³‚ê‚éŒÂ‘ÌW’ciŒÂ‘Ì”‚ÍNˆÈ‰ºj
+	@param &insertPopulation ’Ç‰Á‚·‚éŒÂ‘Ì‚ðŠÜ‚ÞŒÂ‘ÌW’c
 */
 void GA::_insertIndividuals(
 	std::vector<std::vector<int> > &insertedPopulation,
@@ -503,10 +491,10 @@ void GA::_insertIndividuals(
 }
 
 /*
-	���G�x�g�[�i�����g�I��
-	@param &selectedPopulation �I�������̏W�c
-	@param &newSearchPopulation �V���ȒT����W�c
-	@param &classifiedByRankGene �����N���ƂɃN���X�������ꂽ��
+	¬ŽG“xƒg[ƒiƒƒ“ƒg‘I‘ð
+	@param &selectedPopulation ‘I‘ð‚³‚ê‚éŒÂ‘ÌW’c
+	@param &newSearchPopulation V‚½‚È’Tõ•êW’c
+	@param &classifiedByRankGene ƒ‰ƒ“ƒN‚²‚Æ‚ÉƒNƒ‰ƒX•ª‚¯‚³‚ê‚½ŒÂ‘Ì
 */
 void GA::_crowdedTournamentSelection(
 	const std::vector<std::vector<int> > &selectedPopulation,
@@ -516,9 +504,9 @@ void GA::_crowdedTournamentSelection(
 	std::vector<int> parentGene1, parentGene2, childGene1, childGene2;
 	std::vector<std::vector<int> > tmpSelectionPopulation, highRankPopulation;
 
-	// �̐���N�ɂȂ�܂őI�������s
-	// �e�̂������_���ɑI�����C��l���������s
-	// �e�~2�Ǝq�~2�̂��������N����ʂ̌̂�1�I�����C�V���ȒT����W�c�ɒǉ�����
+	// ŒÂ‘Ì”‚ªN‚É‚È‚é‚Ü‚Å‘I‘ð‚ðŽÀs
+	// eŒÂ‘Ì‚ðƒ‰ƒ“ƒ_ƒ€‚É‘I‘ð‚µCˆê—lŒð³‚ðŽÀs
+	// e~2‚ÆŽq~2‚Ì‚¤‚¿ƒ‰ƒ“ƒN‚ªãˆÊ‚ÌŒÂ‘Ì‚ð1‚Â‘I‘ð‚µCV‚½‚È’Tõ•êW’c‚É’Ç‰Á‚·‚é
 	for (int numGene = 0; newSearchPopulation.size() < this->_population; ++numGene)
 	{
 		this->_select2GenesFromPopulation(selectedPopulation, parentGene1, parentGene2);
@@ -535,9 +523,9 @@ void GA::_crowdedTournamentSelection(
 }
 
 /*
-	�̂̃����N��Ԃ�
-	@param &classifiedByRankGene �����N���ƂɃN���X�������ꂽ��
-	@param &targetGene �����N��m�肽����
+	ŒÂ‘Ì‚Ìƒ‰ƒ“ƒN‚ð•Ô‚·
+	@param &classifiedByRankGene ƒ‰ƒ“ƒN‚²‚Æ‚ÉƒNƒ‰ƒX•ª‚¯‚³‚ê‚½ŒÂ‘Ì
+	@param &targetGene ƒ‰ƒ“ƒN‚ð’m‚è‚½‚¢ŒÂ‘Ì
 */
 int GA::_returnGeneRank(
 	const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene,
@@ -556,10 +544,10 @@ int GA::_returnGeneRank(
 }
 
 /*
-	�̌Q���烉���_����2�̂�I������
-	@param &targetPopulation �I������̌Q
-	@param &gene1 �I�����ꂽ��1
-	@param &gene2 �I�����ꂽ��2
+	ŒÂ‘ÌŒQ‚©‚çƒ‰ƒ“ƒ_ƒ€‚É2ŒÂ‘Ì‚ð‘I‘ð‚·‚é
+	@param &targetPopulation ‘I‘ð‚·‚éŒÂ‘ÌŒQ
+	@param &gene1 ‘I‘ð‚³‚ê‚½ŒÂ‘Ì1
+	@param &gene2 ‘I‘ð‚³‚ê‚½ŒÂ‘Ì2
 */
 void GA::_select2GenesFromPopulation(
 	const std::vector<std::vector<int> > &targetPopulation,
@@ -568,12 +556,12 @@ void GA::_select2GenesFromPopulation(
 {
 	int geneNum1, geneNum2;
 
-	// �̂�I�����邽�߂̃����_���l�𐶐�
+	// ŒÂ‘Ì‚ð‘I‘ð‚·‚é‚½‚ß‚Ìƒ‰ƒ“ƒ_ƒ€’l‚ð¶¬
 	std::random_device seedGen;
 	std::mt19937 mt(seedGen());
 	std::uniform_int_distribution<int> randomValue(0, targetPopulation.size()-1);
 
-	// �����_���Ɍ̂�I��
+	// ƒ‰ƒ“ƒ_ƒ€‚ÉŒÂ‘Ì‚ð‘I‘ð
 	do
 	{
 		geneNum1	= randomValue(mt);
@@ -585,11 +573,11 @@ void GA::_select2GenesFromPopulation(
 }
 
 /*
-	��l�����������Ȃ�
-	@param &parentGene1 �e��1
-	@param &parentGene2 �e��2
-	@param &childGene1 �q��1
-	@param &childGene2 �q��2
+	ˆê—lŒð³‚ð‚¨‚±‚È‚¤
+	@param &parentGene1 eŒÂ‘Ì1
+	@param &parentGene2 eŒÂ‘Ì2
+	@param &childGene1 ŽqŒÂ‘Ì1
+	@param &childGene2 ŽqŒÂ‘Ì2
 */
 void GA::_uniformCrossover(
 	const std::vector<int> &parentGene1,
@@ -597,20 +585,20 @@ void GA::_uniformCrossover(
 	std::vector<int> &childGene1,
 	std::vector<int> &childGene2)
 {
-	// �J�E���g�ϐ�
+	// ƒJƒEƒ“ƒg•Ï”
 	int tmp;
 
-	// �}�X�N�p�^�[���p�̃����_���l������
+	// ƒ}ƒXƒNƒpƒ^[ƒ“—p‚Ìƒ‰ƒ“ƒ_ƒ€’l¶¬Ší
 	std::random_device seedGen;
 	std::mt19937 mt(seedGen());
 	std::uniform_int_distribution<int> randomValue(0, 1);
 
-	// �}�X�N�p�^�[���𐶐�
+	// ƒ}ƒXƒNƒpƒ^[ƒ“‚ð¶¬
 	std::vector<int> maskPattern(this->_geneLength*this->_numVariable);
 	for (tmp = 0; tmp < this->_geneLength; tmp++)
 		maskPattern.push_back(randomValue(mt));
 
-	// ����
+	// Œð³
 	for (tmp = 0; tmp < this->_geneLength*this->_numVariable; tmp++)
 	{
 		if (maskPattern[tmp] == 0)
@@ -627,11 +615,11 @@ void GA::_uniformCrossover(
 }
 
 /*
-	�w�肵���̂����ʃ����N�̂�I��
-	@param &classifiedByRankGene �����N���ƂɃN���X�������ꂽ��
-	@param &targetPopulation �I������̌Q
-	@param &highRankPopulation ��ʃ����N�̌̌Q
-	@param num �I������̐�
+	Žw’è‚µ‚½ŒÂ‘Ì‚©‚çãˆÊƒ‰ƒ“ƒNŒÂ‘Ì‚ð‘I‘ð
+	@param &classifiedByRankGene ƒ‰ƒ“ƒN‚²‚Æ‚ÉƒNƒ‰ƒX•ª‚¯‚³‚ê‚½ŒÂ‘Ì
+	@param &targetPopulation ‘I‘ð‚·‚éŒÂ‘ÌŒQ
+	@param &highRankPopulation ãˆÊƒ‰ƒ“ƒN‚ÌŒÂ‘ÌŒQ
+	@param num ‘I‘ð‚·‚éŒÂ‘Ì”
 */
 void GA::_highRankGeneSelection(
 	const std::vector<std::vector<std::vector<int> > > &classifiedByRankGene,
@@ -642,24 +630,24 @@ void GA::_highRankGeneSelection(
 	int geneRank;
 	double geneDistance, longestDistance = 0.;
 	std::vector<int> tmpHighRankGene(this->_geneLength*this->_numVariable);
-	std::vector<std::vector<std::vector<int> > > objectiveSortedGene(2);	// �ړI�֐��̐�	
+	std::vector<std::vector<std::vector<int> > > objectiveSortedGene(2);	// –Ú“IŠÖ”‚Ì”	
 
-	// �Ώۂ̌̌Q�������N���Ƃɕ�����
+	// ‘ÎÛ‚ÌŒÂ‘ÌŒQ‚ðƒ‰ƒ“ƒN‚²‚Æ‚É•ª‚¯‚é
 	std::vector<std::vector<std::vector<int> > > tmpClassifiedByRankGene;
 	this->_nonSuperioritySort(targetPopulation, tmpClassifiedByRankGene);
 
-	// ��ʃ����N�̌̂�num�I������
+	// ãˆÊƒ‰ƒ“ƒN‚ÌŒÂ‘Ì‚ðnumŒÂ‘I‘ð‚·‚é
 	for (int rank = 0; highRankPopulation.size() < num; ++rank)
 	{
 		if (tmpClassifiedByRankGene[rank].size() == 1)
 			highRankPopulation.push_back(tmpClassifiedByRankGene[rank][0]);
 		else if (tmpClassifiedByRankGene.size() > 1)
 		{
-			// �������N�ɕ����̂����݂����ꍇ
-			// �ł����G�����������̂�I�����Ēǉ�����
+			// “¯ƒ‰ƒ“ƒN‚É•¡”ŒÂ‘Ì‚ª‘¶Ý‚µ‚½ê‡
+			// Å‚à¬ŽG‹——£‚ª’·‚¢ŒÂ‘Ì‚ð‘I‘ð‚µ‚Ä’Ç‰Á‚·‚é
 			for (int tmp = 0; tmp < tmpClassifiedByRankGene[rank].size(); ++tmp)
 			{
-				// �S�̒��̃����N���獬�G�x���������߂�
+				// ‘SŒÂ‘Ì’†‚Ìƒ‰ƒ“ƒN‚©‚ç¬ŽG“x‹——£‚ð‹‚ß‚é
 				geneRank	= this->_returnGeneRank(classifiedByRankGene, tmpClassifiedByRankGene[rank][tmp]);
 				this->_putObjectiveSortedGeneEveryObjectiveFunc(classifiedByRankGene[geneRank], objectiveSortedGene);
 				geneDistance	= this->_culcCrowdingDistanseForIndividual(objectiveSortedGene, tmpClassifiedByRankGene[rank][tmp]);
@@ -676,10 +664,10 @@ void GA::_highRankGeneSelection(
 }
 
 /*
-	5�Ԗڂ̌̂ɓˑR�ψق��s���D
-	�K���x�v�Z�O�̌̂̈�`�q(0 or 1)�������_���ɓ���ւ���
-	@param &targetPopulation �Ώۂ̌̌Q
-	@param mutationRate �ˑR�ψٗ�
+	5”Ô–Ú‚ÌŒÂ‘Ì‚É“Ë‘R•ÏˆÙ‚ðs‚¤D
+	“K‰ž“xŒvŽZ‘O‚ÌŒÂ‘Ì‚Ìˆâ“`Žq(0 or 1)‚ðƒ‰ƒ“ƒ_ƒ€‚É“ü‚ê‘Ö‚¦‚é
+	@param &targetPopulation ‘ÎÛ‚ÌŒÂ‘ÌŒQ
+	@param mutationRate “Ë‘R•ÏˆÙ—¦
 */
 void GA::_mutationGene(
 	std::vector<std::vector<int> > &targetPopulation,
@@ -709,9 +697,9 @@ void GA::_mutationGene(
 }
 
 /*
-	�w�肵������̌̏W�c��x�ƓK���x��\������
-	@param &targetPopulation �Ώۂ̌̌S
-	@param generation �����_�ł̐���
+	Žw’è‚µ‚½¢‘ã‚ÌŒÂ‘ÌW’c‚Ìx‚Æ“K‰ž“x‚ð•\Ž¦‚·‚é
+	@param &targetPopulation ‘ÎÛ‚ÌŒÂ‘ÌŒS
+	@param generation Œ»Žž“_‚Å‚Ì¢‘ã
 */
 void GA::_outputObjectiveValue(
 	std::vector<std::vector<int> > targetPopulation,
@@ -732,7 +720,7 @@ void GA::_outputObjectiveValue(
 			std::cout << objectiveParameter[numGene][numVar] << ",";
 		}
 		std::cout << "\t";
-		for (int numObj = 0; numObj < 2; ++numObj)	// �ړI�֐��̐�
+		for (int numObj = 0; numObj < 2; ++numObj)	// –Ú“IŠÖ”‚Ì”
 		{
 			std::cout << objectiveValue[numObj] << ",";
 		}
