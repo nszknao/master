@@ -54,6 +54,7 @@ private:
 	void _outputObjectiveValue(std::vector<std::vector<int> >, int generation);
 	bool _isSuperior(const std::vector<int>&, const std::vector<std::vector<int> >&);
 	void _createRandomlyIndividual(std::vector<int>&);
+	int _numOfSuperior(const std::vector<double>&, const std::vector<double>&);
 };
 
 #endif // !__GA_H_INCLUDE__

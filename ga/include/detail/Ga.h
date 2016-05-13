@@ -27,7 +27,7 @@ void GaCommonTemp<T>::outputAllElement(const std::vector<T> &individual)
 	{
 		std::cout << individual[tmp];
 		if (tmp != individual.size()-1)
-			std::cout << "\t";
+			std::cout << " ";
 	}
 	std::cout << std::endl;
 }
