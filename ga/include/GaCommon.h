@@ -18,6 +18,7 @@ class GaCommonTemp
 {
 public:
 	static void removeElement(std::vector<std::vector<T> >&, const std::vector<T>&);
+	static void outputAllElement(const std::vector<T>&);
 private:
 
 };

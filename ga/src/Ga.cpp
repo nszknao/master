@@ -107,15 +107,15 @@ bool GA::_isDuplicatedGene(std::vector<std::vector<int>> &searchPopulation, cons
 */
 void GA::_convertPhenotype(const std::vector<int> &binary, std::vector<double> &phenotype)
 {
-	std::vector<int> tmpGene(this->_geneLength*this->_numVariable);
 
 	for (int numVar = 0; numVar < this->_numVariable; ++numVar)
 	{
+		std::vector<int> tmpGene(this->_geneLength);
+
 		for (int numBinary = 0; numBinary < this->_geneLength; ++numBinary)
 			tmpGene.push_back(binary[numVar*this->_geneLength + numBinary]);
 
 		phenotype.push_back(this->_binary2Phenotype(tmpGene));
-		tmpGene.clear();
 	}
 }
 
@@ -125,12 +125,12 @@ void GA::_convertPhenotype(const std::vector<int> &binary, std::vector<double> &
 */
 double GA::_binary2Phenotype(const std::vector<int> &binary)
 {
-	int numGene, place	= 0;
+	int place		= 0;
 	double decimal	= 0.;
 
-	for (numGene = this->_geneLength - 1; numGene >= 0 ; --numGene)
+	for (int numBinary = this->_geneLength - 1; numBinary >= 0 ; --numBinary)
 	{
-		if (binary[numGene] == 1)
+		if (binary[numBinary] == 1)
 		{
 			decimal	+= pow(2.0, (double)place);
 			place	+= 1;
@@ -147,8 +147,8 @@ double GA::_binary2Phenotype(const std::vector<int> &binary)
 */
 void GA::_getObjectiveFunc(const std::vector<double> &variable, std::vector<double> &objectiveValue)
 {
-	objectiveValue.at(0)	= this->_f1(variable);
-	objectiveValue.at(1)	= this->_f2(variable);
+	objectiveValue[0]	= this->_f1(variable);
+	objectiveValue[1]	= this->_f2(variable);
 }
 
 double GA::_f1(const std::vector<double> &variable)
@@ -177,6 +177,9 @@ void GA::_binary2ObjectiveFunc(const std::vector<int> &binary, std::vector<doubl
 	std::vector<double> tmpPhenotype(this->_numVariable);
 
 	this->_convertPhenotype(binary, tmpPhenotype);
+
+	GaCommonTemp<double>::outputAllElement(tmpPhenotype);
+
 	this->_getObjectiveFunc(tmpPhenotype, obj);
 }
 
@@ -201,6 +204,7 @@ void GA::nsga2Run()
 
 		/*** Step3 ***/
 		GaCommon::joinPopulation(archivePopulation[generation], searchPopulation[generation], margedPopulation);
+//		std::cout << margedPopulation.size() << std::endl;
 		this->_nonSuperioritySort(margedPopulation, classifiedByRankGene);
 		margedPopulation.clear();
 
