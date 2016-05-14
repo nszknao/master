@@ -152,6 +152,7 @@ void GA::_getObjectiveFunc(const std::vector<double> &variable, std::vector<doub
 double GA::_f1(const std::vector<double> &variable)
 {
 	return 1. - exp(-4.*variable[0])*pow(sin(6.*M_PI*variable[0]),6);
+	// return -(sin(3.*variable[0])+0.5*sin(9.*variable[0])+sin(15.*variable[0]+50.));
 }
 
 double GA::_f2(const std::vector<double> &var)
@@ -533,7 +534,7 @@ void GA::_crowdedTournamentSelection(
 		std::vector<std::vector<int> > tmpSelectionPopulation(4), highRankPopulation;
 
 		this->_select2GenesFromPopulation(selectedPopulation, parentGene1, parentGene2);
-		this->_uniformCrossover(parentGene1, parentGene2, childGene1, childGene2);
+		this->_2pointCrossover(parentGene1, parentGene2, childGene1, childGene2);
 
 		tmpSelectionPopulation[0]	= parentGene1;
 		tmpSelectionPopulation[1]	= parentGene2;
@@ -639,6 +640,63 @@ void GA::_uniformCrossover(
 }
 
 /*
+	2点交叉を行う
+	@param &parentGene1 親個体1
+	@param &parentGene2 親個体2
+	@param &childGene1 子個体1（領域確保済み）
+	@param &childGene2 子個体2（領域確保済み）
+*/
+void GA::_2pointCrossover(
+	const std::vector<int> &parentGene1,
+	const std::vector<int> &parentGene2,
+	std::vector<int> &childGene1,
+	std::vector<int> &childGene2)
+{
+	// ランダム値生成器
+	std::random_device seedGen;
+	std::mt19937 mt(seedGen());
+	std::uniform_int_distribution<int> randomValue(0, this->_geneLength-1);
+
+	int point1, point2;
+	do
+	{
+		point1	= randomValue(mt);
+		point2	= randomValue(mt);
+	} while (point1 == point2);
+
+	// 交叉点を決める
+	int start, end;
+	if (point1 < point2)
+	{
+		start	= point1;
+		end	= point2;
+	} else if (point1 > point2)
+	{
+		start	= point2;
+		end	= point1;
+	}
+
+	this->_copyGene(parentGene1, childGene1);
+	this->_copyGene(parentGene2, childGene2);
+	for (int tmp = start; tmp <= end; ++tmp)
+	{
+		childGene1[tmp]	= parentGene2[tmp];
+		childGene2[tmp]	= parentGene1[tmp];
+	}
+}
+
+/*
+	遺伝子をコピーする
+	@param &targetGene コピーする遺伝子
+	@param &copiedGene コピーされる遺伝子（領域確保済み）
+*/
+void GA::_copyGene(const std::vector<int> &targetGene, std::vector<int> &copiedGene)
+{
+	for (int tmp; tmp < targetGene.size(); ++tmp)
+		copiedGene[tmp]	= targetGene[tmp];
+}
+
+/*
 	指定した個体から上位ランク個体を選択
 	@param &classifiedByRankGene ランクごとにクラス分けされた個体
 	@param &targetPopulation 選択する個体群
@@ -722,7 +780,7 @@ void GA::_mutationGene(
 }
 
 /*
-	指定した世代の個体集団のxと適応度を表示する
+	指定した世代の個体集団の目的関数値を表示する
 	@param &targetPopulation 対象の個体郡
 	@param generation 現時点での世代
 */
@@ -731,14 +789,12 @@ void GA::_outputObjectiveValue(
 	int generation)
 {
 	double x;
-	std::vector<std::vector<double> > objectiveParameter(targetPopulation.size(), std::vector<double>(2));
 	std::vector<double> objectiveValue(2);
 
 	std::cout << generation << "-generation" << std::endl;
 	for (int numGene = 0; numGene < targetPopulation.size(); ++numGene)
 	{
-		this->_binary2ObjectiveFunc(targetPopulation[numGene], objectiveParameter[numGene]);
-		this->_getObjectiveFunc(objectiveParameter[numGene], objectiveValue);
+		this->_binary2ObjectiveFunc(targetPopulation[numGene], objectiveValue);
 
 		for (int numObj = 0; numObj < 2; ++numObj)	// 目的関数の数
 		{
@@ -750,3 +806,18 @@ void GA::_outputObjectiveValue(
 	}
 	std::cout << std::endl;
 }
+
+/*
+	指定した世代の個体集団のxを表示する
+	@param &targetPopulation 対象の個体群
+	@param generation 現時点での世代
+*/
+// void GA::_outputParameterValue(
+// 	const std::vector<std::vector<int> > &targetPopulation,
+// 	int generation)
+// {
+// 	for (int numGene = 0; numGene < targetPopulation.size(); ++numGene)
+// 	{
+// 		this->_binary2ObjectiveFunc
+// 	}
+// }

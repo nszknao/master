@@ -50,11 +50,13 @@ private:
 	void _select2GenesFromPopulation(const std::vector<std::vector<int> >&, std::vector<int>&, std::vector<int>&);
 	void _mutationGene(std::vector<std::vector<int> >&, double);
 	void _uniformCrossover(const std::vector<int>&, const std::vector<int>&, std::vector<int>&, std::vector<int>&);
+	void _2pointCrossover(const std::vector<int>&, const std::vector<int>&, std::vector<int>&, std::vector<int>&);
 	void _highRankGeneSelection(const std::vector<std::vector<std::vector<int> > >&, const std::vector<std::vector<int> >&, std::vector<std::vector<int> >&, int num);
-	void _outputObjectiveValue(std::vector<std::vector<int> >, int generation);
+	void _outputObjectiveValue(std::vector<std::vector<int> >, int);
 	bool _isSuperior(const std::vector<int>&, const std::vector<std::vector<int> >&);
 	void _createRandomlyIndividual(std::vector<int>&);
 	int _numOfSuperior(const std::vector<double>&, const std::vector<double>&);
+	void _copyGene(const std::vector<int>&, std::vector<int>&);
 };
 
 #endif // !__GA_H_INCLUDE__
