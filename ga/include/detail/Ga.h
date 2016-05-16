@@ -11,9 +11,7 @@ template<typename T>
 void GaCommonTemp<T>::removeElement(std::vector<std::vector<T> > &population, const std::vector<T> &element)
 {
 	for (int tmp = 0; tmp < population.size(); ++tmp)
-	{
 		if (population[tmp] == element) population.erase(population.begin() + tmp);
-	}
 }
 
 /*

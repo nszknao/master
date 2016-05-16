@@ -12,16 +12,14 @@ void GaCommon::joinPopulation(
 	std::vector<std::vector<int> > &joinedGene)
 {
 	// gene1の遺伝子をすべてコピー
-	std::copy(gene1.begin(), gene1.end(), std::back_inserter(joinedGene));
+	GaCommon::pushBackAll(joinedGene, gene1);
 
 	for (auto match = gene2.begin(); match != gene2.end(); ++match)
 	{
 		auto obj	= std::find(joinedGene.begin(), joinedGene.end(), *match);
 		if (obj == joinedGene.end())
-		{
 			// gene2にのみ存在する遺伝子を追加
 			joinedGene.push_back(*match);
-		}
 	}
 }
 
@@ -34,6 +32,7 @@ void GaCommon::pushBackAll(
 	std::vector<std::vector<int> > &targetPopulation,
 	const std::vector<std::vector<int> > &pushedPopulation)
 {
+	targetPopulation.reserve(pushedPopulation.size());
 	for (int tmp = 0; tmp < pushedPopulation.size(); ++tmp)
 		targetPopulation.push_back(pushedPopulation[tmp]);
 }

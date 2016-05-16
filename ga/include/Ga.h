@@ -38,7 +38,7 @@ private:
 	void _initSearchPopulation(std::vector<std::vector<int> >&);
 	void _nonSuperioritySort(const std::vector <std::vector<int> >&, std::vector<std::vector<std::vector<int> > >&);
 	void _binary2ObjectiveFunc(const std::vector<int>&, std::vector<double>&);
-	void _sortByObjectiveValue(const std::vector<std::vector<int> >&, std::vector<std::vector<int> >&, int num);
+	void _orderBySmallObjectiveValueUsingBubbleSort(const std::vector<std::vector<int> >&, std::vector<std::vector<int> >&, int num);
 	void _updateArchivePopulation(const std::vector<std::vector<std::vector<int> > >&, std::vector<std::vector<int> >&, std::vector<std::vector<int> >&);
 	void _crowdingSort(const std::vector<std::vector<int > >&, std::vector<std::vector<int> >&);
 	void _putObjectiveSortedGeneEveryObjectiveFunc(const std::vector<std::vector<int> >&, std::vector<std::vector<std::vector<int> > >&);
@@ -57,6 +57,7 @@ private:
 	void _createRandomlyIndividual(std::vector<int>&);
 	int _numOfSuperior(const std::vector<double>&, const std::vector<double>&);
 	void _copyGene(const std::vector<int>&, std::vector<int>&);
+	void _orderByCrowdingDistanceUsingBubbleSort(std::vector<std::vector<int> >&, const std::vector<std::vector<std::vector<int> > >&);
 };
 
 #endif // !__GA_H_INCLUDE__
