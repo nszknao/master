@@ -13,7 +13,7 @@ GA::GA(int numVariable)
 	std::cout << "Calls constructor." << std::endl;
 
 	int geneLength	= 20;	// ˆâ“`Žq’·
-	int population		= 120;	// ŒÂ‘Ì”
+	int population		= 50;	// ŒÂ‘Ì”
 
 	this->_population	= population;
 	this->_geneLength	= geneLength;
@@ -552,7 +552,7 @@ void GA::_crowdedTournamentSelection(
 		std::vector<std::vector<int> > tmpSelectionPopulation(4), highRankPopulation;
 
 		this->_select2GenesFromPopulation(selectedPopulation, parentGene1, parentGene2);
-		this->_2pointCrossover(parentGene1, parentGene2, childGene1, childGene2);
+		this->_uniformCrossover(parentGene1, parentGene2, childGene1, childGene2);
 
 		tmpSelectionPopulation[0]	= parentGene1;
 		tmpSelectionPopulation[1]	= parentGene2;
@@ -818,10 +818,14 @@ void GA::_outputObjectiveValue(
 	double x;
 	std::vector<double> objectiveValue(2);
 
+	double tmp;
 	std::cout << generation << "-generation" << std::endl;
 	for (int numGene = 0; numGene < targetPopulation.size(); ++numGene)
 	{
 		this->_binary2ObjectiveFunc(targetPopulation[numGene], objectiveValue);
+
+		// tmp	= 1. - pow(objectiveValue[0],2);
+		// std::cout << objectiveValue[0] << " " << tmp << std::endl;
 
 		for (int numObj = 0; numObj < 2; ++numObj)	// –Ú“IŠÖ”‚Ì”
 		{
