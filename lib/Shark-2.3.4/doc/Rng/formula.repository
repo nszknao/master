@@ -1,0 +1,146 @@
+\form#0:$1 - p$
+\form#1:$p$
+\form#2:$ p_x^{(n)} = P(X = x) = {n \choose x} \cdot p^x \cdot q^{n-x} $
+\form#3:$n$
+\form#4:$x$
+\form#5:$p_x^{(n)}$
+\form#6:$q = 1 -p$
+\form#7:$ {n \choose x} = \frac{n \cdot (n-1) \cdot (n-2) \cdot \dots \cdot (n-x+1)}{1 \cdot 2 \cdot \dots \cdot x} = \prod_{i=1}^x \frac{n+1-i}{i} $
+\form#8:${n \choose x}$
+\form#9:$ tt! = tt \cdot (tt - 1) \cdot (tt - 2) \cdot \dots \cdot 2 \cdot 1 = \prod_{i=1}^{tt} i $
+\form#10:$tt!$
+\form#11:$rn$
+\form#12:$\leq rn \leq$
+\form#13:$p = \frac{1}{\mbox{interval length}}$
+\form#14:$\mu$
+\form#15:$\sigma^2$
+\form#16:$k$
+\form#17:$k = \frac{\mu^2}{\sigma^2+0.5}$
+\form#18:$\alpha$
+\form#19:$\alpha = \frac{k}{\mu}$
+\form#20:$\geq 1$
+\form#21:$> 0$
+\form#22:$k = 1$
+\form#23:$\alpha = 0.5$
+\form#24:$\mu \leq 0$
+\form#25:$p = \frac{N_1}{N}$
+\form#26:$p = \frac{1}{2} \cdot (1 - \sqrt{\frac{\sigma^2 / \mu^2 - 1}{\sigma^2 / \mu^2 + 1}})$
+\form#27:$\geq 0$
+\form#28:$p = 0.$
+\form#29:$\sqrt{e}$
+\form#30:$e(e-1)$
+\form#31:$V(X)=\sigma^2$
+\form#32:$x > 0$
+\form#33:$x \leq 0$
+\form#34:$\lambda$
+\form#35:$\lambda = $
+\form#36:$x < 0$
+\form#37:$pStdDev = \sqrt{\mbox{variance}}$
+\form#38:$\lambda = \mbox{mean}$
+\form#39:$\leq rn <$
+\form#40:$\beta$
+\form#41:$alpha$
+\form#42:$1 - pP$
+\form#43:$p_x^{(n)} = P(X = x) = {n \choose x} \cdot p^x \cdot q^{n-x}$
+\form#44:$q = 1 - p$
+\form#45:$n = 8$
+\form#46:$p = 0.3$
+\form#47:$p = 0.5$
+\form#48:$ f(x) = \frac{1}{\pi (1 + x^2)} $
+\form#49:$ f(x) = ( p \cdot (1 - p)^{|x|} ) / (2 - p) $
+\form#50:$p = 0.2$
+\form#51:$p = 0.8$
+\form#52:$K-1$
+\form#53:$K$
+\form#54:$\alpha_1,\dots,\alpha_K$
+\form#55:$ f(x_1,\dots,x_K)\propto \prod_{i=1}^K x_i^{\alpha_i-1}$
+\form#56:$x_i$
+\form#57:$[$
+\form#58:$lo \leq rn \leq hi$
+\form#59:$]$
+\form#60:$k = 1,2,3,...$
+\form#61:$k=1,2,3$
+\form#62:$ f(x) = (k \cdot \alpha)^k \cdot x^{(k - 1)} \cdot e^{-k \alpha x} $
+\form#63:$\alpha > 0$
+\form#64:$k > 0$
+\form#65:$k = 1, 2, 3$
+\form#66:$\theta$
+\form#67:$ f(x)=x^{k-1} \frac{\exp{\left(-x/\theta\right)}}{\Gamma(k)\,\theta^k} $
+\form#68:$\theta k$
+\form#69:$\theta^2 k$
+\form#70:$k \theta$
+\form#71:$ k\theta^2$
+\form#72:$(1-p)$
+\form#73:$x-1$
+\form#74:$ f(x) = p \cdot (1-p)^{x-1} $
+\form#75:$x = 0$
+\form#76:$f(x) = 0$
+\form#77:$T_1$
+\form#78:$N_1$
+\form#79:$T_2$
+\form#80:$N_2$
+\form#81:$N = N_1 + N_2$
+\form#82:$ P(k) = {pN \choose k} {N(1 - p) \choose n - k} / {N \choose k} $
+\form#83:$p \cdot N$
+\form#84:$N \cdot (1 - p)$
+\form#85:$P(k)$
+\form#86:$n \leq N$
+\form#87:$ f_{log}(x) = \frac{1}{\sqrt{2 \pi \sigma^2 x}} \cdot exp \left(- \frac{(ln x - \mu)^2}{2 \sigma^2}\right) $
+\form#88:$f_n(x)$
+\form#89:$f_{log}(x) = \frac{1}{x}f_n(ln x)$
+\form#90:$\sigma$
+\form#91:$V(x) = \sigma^2$
+\form#92:$\mbox{mean} = \sqrt{e}$
+\form#93:$\mbox{standard deviation} = e(e-1)$
+\form#94:$ f(x) = \lambda \cdot e^{- \lambda x} $
+\form#95:$x \geq 0$
+\form#96:$\lambda > 0$
+\form#97:$\lambda = 1.0$
+\form#98:$\lambda = 2.0$
+\form#99:$\lambda = 4.0$
+\form#100:$ f(x) = \frac{1}{\sqrt{2 \pi \sigma^2}} \cdot exp \left(- \frac{(x- \mu)^2}{2 \sigma^2}\right) $
+\form#101:$0$
+\form#102:$1$
+\form#103:$\mu = 0$
+\form#104:$\sigma = 1$
+\form#105:$V(X)$
+\form#106:$ V(X) = \sigma^2 $
+\form#107:$\sigma = \sqrt{V(X)}$
+\form#108:$ p_x^{(n)} = P(X = x) = ( \lambda^x \cdot e^{- \lambda} ) / x! $
+\form#109:$\lambda = n \cdot p$
+\form#110:$\lambda = 5.0$
+\form#111:$F(X)$
+\form#112:$p = \{p(x): x \in \chi\}$
+\form#113:$H(p)$
+\form#114:$ H(p) = - \sum_{x \in \chi} p(x) \cdot \log {p(x)} = E_p [- \log {p(X)}] $
+\form#115:$q = \{q(x): x \in \chi\}$
+\form#116:$q$
+\form#117:$ D(p,q) = \sum_{x \in \chi} p(x) \cdot \log {\frac{p(x)}{q(x)}} = E_p \big[ \log {\frac{p(X)}{q(X)}}\big] = E_p [ \mbox{log likelihood ratio} ] $
+\form#118:$l$
+\form#119:$ l = \sum_{i=1}^k \log {P( x_i )} $
+\form#120:$P( x_i )$
+\form#121:$ n_i \equiv ( a \cdot n_{i-1} ) \pmod m $
+\form#122:$n_i$
+\form#123:$m$
+\form#124:$n_0$
+\form#125:$a$
+\form#126:$ \mbox{\ }\\ \noindent n_{1,i} \equiv ( a_1 \cdot n_{1, i-1} ) \pmod {m_1}\\ n_{2,i} \equiv ( a_2 \cdot n_{2, i-1} ) \pmod {m_2}\\ n_{3,i} \equiv ( a_3 \cdot n_{3, i-1} ) \pmod {m_3} $
+\form#127:$U_i$
+\form#128:$ U_i \equiv (\frac{n_{1,i}}{m_1} + \frac{n_{2,i}}{m_2} + \frac{n_{3,i}}{m_3}) \pmod {1.0} $
+\form#129:$a_i$
+\form#130:$m_i$
+\form#131:$i = 1, 2, 3$
+\form#132:$6953607871644$
+\form#133:$z_i$
+\form#134:$F$
+\form#135:$ x_i = F^{-1}(z_i) $
+\form#136:$n_{0,1},\mbox{\ }n_{0,2},\mbox{\ }n_{0,3}$
+\form#137:$n_{i,1},\mbox{\ }n_{i,2},\mbox{\ }n_{i,3}$
+\form#138:$n_{i,1}$
+\form#139:$n_{i,2}$
+\form#140:$n_{i,3}$
+\form#141:$lo \leq rn < hi$
+\form#142:$ f(x) = \frac{\alpha}{\beta} \cdot e^{-\frac{1}{\beta} \cdot x^\alpha} \cdot x^{\alpha - 1} $
+\form#143:$\alpha = 1\mbox{,\ } \beta = 2$
+\form#144:$\alpha = 2\mbox{,\ } \beta = 1$
+\form#145:$\alpha = 2\mbox{,\ } \beta = 3$
