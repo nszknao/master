@@ -7,5 +7,5 @@ export DESTPATH=/Users/Naoto/git/master
 export PEMPATH=~/.ssh/chrp_l
 
 rsync -rlptvu -e "ssh -i ${PEMPATH}" --delete ${DESTPATH}/* vagrant@${TARGET_HOST}:${SRCPATH}/
-ssh -i ${PEMPATH} vagrant@${TARGET_HOST} sudo chmod 777 -R /usr/local/src/master/
+ssh -i ${PEMPATH} vagrant@${TARGET_HOST} sudo chmod 777 -R ${SRCPATH}/
 
