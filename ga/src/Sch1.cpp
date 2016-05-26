@@ -40,10 +40,16 @@
 #include <es/eoRealInitBounded.h>
 #include <es/eoRealOp.h>
 
+#include <math.h>
+
 using namespace std;
 
 
-// the moeoObjectiveVectorTraits : minimizing 2 objectives
+/*
+    １．目的関数の数を定義
+    ２．最小化or最大化を指定
+    moeoObjectiveVectorTritsを継承している必要がある．
+*/
 class Sch1ObjectiveVectorTraits : public moeoObjectiveVectorTraits
 {
 public:
@@ -57,25 +63,36 @@ public:
     }
     static unsigned int nObjectives ()
     {
-        return 2;
+        return 3;
     }
 };
 
 
-// objective vector of real values
+/*
+    目的関数ベクトルを定義
+    実数値として目的関数ベクトルを用いる．
+*/
 typedef moeoRealObjectiveVector < Sch1ObjectiveVectorTraits > Sch1ObjectiveVector;
 
 
 // multi-objective evolving object for the Sch1 problem
+/*
+    解の定義
+    実数値の遺伝子型を変数の数だけ用意する．
+*/
 class Sch1 : public moeoRealVector < Sch1ObjectiveVector >
 {
 public:
-    Sch1() : moeoRealVector < Sch1ObjectiveVector > (1)
+    Sch1() : moeoRealVector < Sch1ObjectiveVector > (10)
     {}
 };
 
 
 // evaluation of objective functions
+/*
+    評価する目的関数を定義
+    Sch1でテンプレート化されたmoeoEvalFuncを継承している必要がある．
+*/
 class Sch1Eval : public moeoEvalFunc < Sch1 >
 {
 public:
@@ -84,37 +101,64 @@ public:
         if (_sch1.invalidObjectiveVector())
         {
             Sch1ObjectiveVector objVec;
-            double x = _sch1[0];
-            objVec[0] = x * x;
-            objVec[1] = (x - 2.0) * (x - 2.0);
+            double x1 = _sch1[0], x2 = _sch1[1], x3 = _sch1[2], x4 = _sch1[3], x5 = _sch1[4];
+            double x6 = _sch1[5], x7 = _sch1[6], x8 = _sch1[7], x9 = _sch1[8], x10 = _sch1[9];
+            // 不等式の制約条件
+            double c1, c2, c3, c4, c5, c6, c7, c8, c9, c10;
+            (0 <= x1 && x1 <= 1) ? c1 = 0. : c1 = x1;     (-5 <= x2 && x2 <= 5) ? c2 = 0. : c2 = x2;
+            (-5 <= x3 && x3 <= 5) ? c3 = 0. : c3 = x3;     (-5 <= x4 && x4 <= 5) ? c4 = 0. : c4 = x4;
+            (-5 <= x5 && x5 <= 5) ? c5 = 0. : c5 = x5;     (-5 <= x6 && x6 <= 5) ? c6 = 0. : c6 = x6;
+            (-5 <= x7 && x7 <= 5) ? c7 = 0. : c7 = x7;     (-5 <= x8 && x8 <= 5) ? c8 = 0. : c8 = x8;
+            (-5 <= x9 && x9 <= 5) ? c9 = 0. : c9 = x9;     (-5 <= x10 && x10 <= 5) ? c10 = 0. : c10 = x10;
+            double g, h, N = 10.;
+            g = 1. + 10.*(N-1.)
+                    + pow(x2,2)-10.*cos(4.*M_PI*x2) + pow(x3,2)-10.*cos(4.*M_PI*x3)
+                    + pow(x4,2)-10.*cos(4.*M_PI*x4) + pow(x5,2)-10.*cos(4.*M_PI*x5)
+                    + pow(x6,2)-10.*cos(4.*M_PI*x6) + pow(x7,2)-10.*cos(4.*M_PI*x7)
+                    + pow(x8,2)-10.*cos(4.*M_PI*x8) + pow(x9,2)-10.*cos(4.*M_PI*x9)
+                    + pow(x10,2)-10.*cos(4.*M_PI*x10);
+            h = 1. - pow(x1/g, 0.5);
+            cout << x1 << " " << x2 << " " << x3 << " " << x4 << "\t" << h << endl;
+            objVec[0] = x1;
+            objVec[1] = g*h;
+            objVec[2] = pow(c1,2) + pow(c2,2) + pow(c3,2) + pow(c4,2) + pow(c5,2)
+                                + pow(c6,2) + pow(c7,2) + pow(c8,2) + pow(c9,2) + pow(c10,2);
+            // double x = _sch1[0];
+            // objVec[0] = pow(x,2);
+            // objVec[1] = pow(x-2.,2);
             _sch1.objectiveVector(objVec);
         }
     }
 };
 
 
-// main
 int main (int argc, char *argv[])
 {
     eoParser parser(argc, argv);  // for user-parameter reading
     eoState state;                // to keep all things allocated
 
-    // parameters
+    /* 各種パラメータの定義 */
+    // 個体数
     unsigned int POP_SIZE = parser.createParam((unsigned int)(100), "popSize", "Population size",'P',"Param").value();
-    unsigned int MAX_GEN = parser.createParam((unsigned int)(100), "maxGen", "Maximum number of generations",'G',"Param").value();
+    // 最大の世代数
+    unsigned int MAX_GEN = parser.createParam((unsigned int)(200), "maxGen", "Maximum number of generations",'G',"Param").value();
+    // ??（rangeとは）
     double M_EPSILON = parser.createParam(0.01, "mutEpsilon", "epsilon for mutation",'e',"Param").value();
+    // ??（交叉確率）
     double P_CROSS = parser.createParam(0.25, "pCross", "Crossover probability",'C',"Param").value();
+    // 突然変異率
     double P_MUT = parser.createParam(0.35, "pMut", "Mutation probability",'M',"Param").value();
 
     // objective functions evaluation
     Sch1Eval eval;
 
-    // crossover and mutation
+    /* 交叉と突然変異（種類が多く用意されている） */
     eoQuadCloneOp < Sch1 > xover;
     eoUniformMutation < Sch1 > mutation (M_EPSILON);
 
-    // generate initial population
-    eoRealVectorBounds bounds (1, 0.0, 2.0);	// [0, 2]
+    /* 初期個体の生成 */
+    // 境界値の指定（引数は，（変数の数）（最小値）（最大値））
+    eoRealVectorBounds bounds (10, 0.0, 5.0);
     eoRealInitBounded < Sch1 > init (bounds);
     eoPop < Sch1 > pop (POP_SIZE, init);
 
@@ -128,10 +172,13 @@ int main (int argc, char *argv[])
     nsgaII (pop);
 
     // extract first front of the final population using an moeoArchive (this is the output of nsgaII)
+    /*  */
     moeoUnboundedArchive < Sch1 > arch;
     arch(pop);
 
     // printing of the final archive
+    /* 結果を表示 */
+    // 表示形式は，（目的関数1の値）（目的関数2の値）・・・（変数の数）（変数1の値）（変数2の値）・・・
     cout << "Final Archive" << endl;
     arch.sortedPrintOn (cout);
     cout << endl;
