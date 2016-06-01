@@ -105,24 +105,25 @@ public:
             double x6 = _sch1[5], x7 = _sch1[6], x8 = _sch1[7], x9 = _sch1[8], x10 = _sch1[9];
             // 不等式の制約条件
             double c1, c2, c3, c4, c5, c6, c7, c8, c9, c10;
-            (0 <= x1 && x1 <= 1) ? c1 = 0. : c1 = x1;     (-5 <= x2 && x2 <= 5) ? c2 = 0. : c2 = x2;
-            (-5 <= x3 && x3 <= 5) ? c3 = 0. : c3 = x3;     (-5 <= x4 && x4 <= 5) ? c4 = 0. : c4 = x4;
-            (-5 <= x5 && x5 <= 5) ? c5 = 0. : c5 = x5;     (-5 <= x6 && x6 <= 5) ? c6 = 0. : c6 = x6;
-            (-5 <= x7 && x7 <= 5) ? c7 = 0. : c7 = x7;     (-5 <= x8 && x8 <= 5) ? c8 = 0. : c8 = x8;
-            (-5 <= x9 && x9 <= 5) ? c9 = 0. : c9 = x9;     (-5 <= x10 && x10 <= 5) ? c10 = 0. : c10 = x10;
-            double g, h, N = 10.;
-            g = 1. + 10.*(N-1.)
-                    + pow(x2,2)-10.*cos(4.*M_PI*x2) + pow(x3,2)-10.*cos(4.*M_PI*x3)
-                    + pow(x4,2)-10.*cos(4.*M_PI*x4) + pow(x5,2)-10.*cos(4.*M_PI*x5)
-                    + pow(x6,2)-10.*cos(4.*M_PI*x6) + pow(x7,2)-10.*cos(4.*M_PI*x7)
-                    + pow(x8,2)-10.*cos(4.*M_PI*x8) + pow(x9,2)-10.*cos(4.*M_PI*x9)
-                    + pow(x10,2)-10.*cos(4.*M_PI*x10);
-            h = 1. - pow(x1/g, 0.5);
-            cout << x1 << " " << x2 << " " << x3 << " " << x4 << "\t" << h << endl;
-            objVec[0] = x1;
-            objVec[1] = g*h;
-            objVec[2] = pow(c1,2) + pow(c2,2) + pow(c3,2) + pow(c4,2) + pow(c5,2)
+            (0 <= x1 && x1 <= 1) ? c1 = 0. : c1 = x1;     (0 <= x2 && x2 <= 1) ? c2 = 0. : c2 = x2;
+            (0 <= x3 && x3 <= 1) ? c3 = 0. : c3 = x3;     (0 <= x4 && x4 <= 1) ? c4 = 0. : c4 = x4;
+            (0 <= x5 && x5 <= 1) ? c5 = 0. : c5 = x5;     (0 <= x6 && x6 <= 1) ? c6 = 0. : c6 = x6;
+            (0 <= x7 && x7 <= 1) ? c7 = 0. : c7 = x7;     (0 <= x8 && x8 <= 1) ? c8 = 0. : c8 = x8;
+            (0 <= x9 && x9 <= 1) ? c9 = 0. : c9 = x9;     (0 <= x10 && x10 <= 1) ? c10 = 0. : c10 = x10;
+            double g, h, f1, f2, N = 10.;
+
+
+            f1 = x1;
+            g = 1. + 10.*(x2+x3+x4+x5+x6+x7+x8+x9+x10)/((double)N-1.);
+            h = 1. - pow(f1/g,0.25) - f1/g*sin(10.*M_PI*f1);
+            f2 = g*h;
+
+
+            objVec[0] = f1;
+            objVec[1] = f2;
+            objVec[2] = 1000000.*pow(c1,2) + pow(c2,2) + pow(c3,2) + pow(c4,2) + pow(c5,2)
                                 + pow(c6,2) + pow(c7,2) + pow(c8,2) + pow(c9,2) + pow(c10,2);
+            cout << objVec[0] << " " << objVec[1] << endl;
             // double x = _sch1[0];
             // objVec[0] = pow(x,2);
             // objVec[1] = pow(x-2.,2);
@@ -139,26 +140,30 @@ int main (int argc, char *argv[])
 
     /* 各種パラメータの定義 */
     // 個体数
-    unsigned int POP_SIZE = parser.createParam((unsigned int)(100), "popSize", "Population size",'P',"Param").value();
+    unsigned int POP_SIZE = parser.createParam((unsigned int)(120), "popSize", "Population size",'P',"Param").value();
     // 最大の世代数
-    unsigned int MAX_GEN = parser.createParam((unsigned int)(200), "maxGen", "Maximum number of generations",'G',"Param").value();
+    unsigned int MAX_GEN = parser.createParam((unsigned int)(250), "maxGen", "Maximum number of generations",'G',"Param").value();
     // ??（rangeとは）
     double M_EPSILON = parser.createParam(0.01, "mutEpsilon", "epsilon for mutation",'e',"Param").value();
     // ??（交叉確率）
-    double P_CROSS = parser.createParam(0.25, "pCross", "Crossover probability",'C',"Param").value();
+    double P_CROSS = parser.createParam(0.5, "pCross", "Crossover probability",'C',"Param").value();
     // 突然変異率
-    double P_MUT = parser.createParam(0.35, "pMut", "Mutation probability",'M',"Param").value();
+    double P_MUT = parser.createParam(0.01, "pMut", "Mutation probability",'M',"Param").value();
 
     // objective functions evaluation
     Sch1Eval eval;
 
     /* 交叉と突然変異（種類が多く用意されている） */
-    eoQuadCloneOp < Sch1 > xover;
+    eoHypercubeCrossover < Sch1 > xover;
+    // eoSegmentCrossover < Sch1 > xover;
+    // eoQuadCloneOp < Sch1 > xover;
     eoUniformMutation < Sch1 > mutation (M_EPSILON);
 
     /* 初期個体の生成 */
     // 境界値の指定（引数は，（変数の数）（最小値）（最大値））
-    eoRealVectorBounds bounds (10, 0.0, 5.0);
+    vector<double> minBounds{0,0,0,0,0,0,0,0,0,0};
+    vector<double> maxBounds{1,1,1,1,1,1,1,1,1,1};
+    eoRealVectorBounds bounds (minBounds, maxBounds);
     eoRealInitBounded < Sch1 > init (bounds);
     eoPop < Sch1 > pop (POP_SIZE, init);
 

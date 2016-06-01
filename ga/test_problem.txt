@@ -1,0 +1,73 @@
+----- Multi-modal MOP（多峰性のある問題） -----
+
+f1 = x1;
+g = 1 + 10.*((double)N-1.) + pow(x2,2)-10*cos(2.*M_PI*x2) + pow(x3,2)-10*cos(2.*M_PI*x3)
+						 + pow(x4,2)-10*cos(2.*M_PI*x4) + pow(x5,2)-10*cos(2.*M_PI*x5)
+						 + pow(x6,2)-10*cos(2.*M_PI*x6) + pow(x7,2)-10*cos(2.*M_PI*x7)
+						 + pow(x8,2)-10*cos(2.*M_PI*x8) + pow(x9,2)-10*cos(2.*M_PI*x9)
+						 + pow(x10,2)-10*cos(2.*M_PI*x10);
+(f1 <= g) ? h = 1. - pow(f1/g,0.5) : h = 0.;
+f2 = g*h;
+
+制約条件
+0 <= xn <= 1 (n=1)
+-30 <= xn <= 30 (n=2,3,...)
+
+
+----- Biased Pareto-optimal front（偏重パレートフロント） -----
+
+f1 = 1 - exp(-4.*x1)*pow(sin(5.*M_PI*x1),6);
+g = 1 + 10*pow((x2+x3+x4+x5+x6+x7+x8+x9+x10)/((double)N-1.),0.25);
+(f1 <= g) ? h = 1. - pow(f1/g,2) : h = 0.;
+f2 = g*h;
+
+制約条件
+0 <= xn <= 1 (n=1,2,...)
+
+
+----- Concave Pareto-optimal front（くぼみのあるパレートフロント） -----
+
+double alpha = 0.5;
+
+f1 = x1;
+g = 1 + 10*(x2+x3+x4+x5+x6+x7+x8+x9+x10)/((double)N-1.);
+(f1 <= g) ? h = 1. - pow(f1/g,alpha) : h = 0.;
+
+制約条件
+0 <= xn <= 1 (n=1,2,...)
+
+
+----- Discontinuous Pareto-optimal front（不連続なパレートフロント） -----
+
+f1 = x1;
+g = 1. + 10.*(x2+x3+x4+x5+x6+x7+x8+x9+x10)/((double)N-1.);
+h = 1. - pow(f1/g,0.25) - f1/g*sin(10.*M_PI*f1);
+f2 = g*h;
+
+制約条件
+0 <= xn <= 1 (n=1,2,...)
+
+
+----- ZDT4 -----
+
+f1 = x1;
+g = 1 + 10.*((double)N-1.) + pow(x2,2)-10*cos(4.*M_PI*x2) + pow(x3,2)-10*cos(4.*M_PI*x3)
+						 + pow(x4,2)-10*cos(4.*M_PI*x4) + pow(x5,2)-10*cos(4.*M_PI*x5)
+						 + pow(x6,2)-10*cos(4.*M_PI*x6) + pow(x7,2)-10*cos(4.*M_PI*x7)
+						 + pow(x8,2)-10*cos(4.*M_PI*x8) + pow(x9,2)-10*cos(4.*M_PI*x9)
+						 + pow(x10,2)-10*cos(4.*M_PI*x10);
+h = 1. - pow(f1/g,0.5);
+f2 = g*h;
+
+制約条件
+0 <= xn <= 1 (n=1)
+-5 <= xn <= 5 (n=2,3,...,10)
+
+
+----- ZDT6 -----
+
+f1 = 1. - exp(-4.*x1)*pow(sin(6.*M_PI*x1),6);
+g = 1. + 9.*pow((x2+x3+x4+x5+x6+x7+x8+x9+x10)/((double)N-1.),0.25);
+f2 = g*(1. - pow(f1/g,2));
+
+0 <= xn <= 1 (n=1,2,...,10)
