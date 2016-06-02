@@ -1,0 +1,115 @@
+\form#0:$ f' $
+\form#1:$ f $
+\form#2:$ x $
+\form#3:$ x' $
+\form#4:$ f(x) $
+\form#5:$ f'(x) $
+\form#6:$ x_{min} $
+\form#7:$ x_{old} $
+\form#8:$ p $
+\form#9:$ x_{new} $
+\form#10:$ x_{new} = x_{old} + \lambda p, \hspace{2em} 0 < \lambda \leq 1 $
+\form#11:$ f(x_{new})$
+\form#12:$ f(x_{new}) \leq f(x_{old}) + \alpha \nabla f \cdot (x_{new} - x_{old}) $
+\form#13:$ 0 < \alpha < 1 $
+\form#14:$ \nabla f \cdot p $
+\form#15:$ F(x) = 0 $
+\form#16:$ 0.25 $
+\form#17:$ x_j $
+\form#18:$ \prod_{j=1}^n x_j $
+\form#19:$ n \times n $
+\form#20:$ N $
+\form#21:$ P $
+\form#22:$ n $
+\form#23:$ \lambda $
+\form#24:$ f(P + \lambda n) $
+\form#25:$ P + \lambda n $
+\form#26:$ \lambda n $
+\form#27:$ Ax = \lambda x $
+\form#28:$ \sqrt{\sum_{i=0}^n \left(\sum_{j=0}^n A(i,j) \ast x(j,c) - x(i,c) \ast \lambda(c) \right)^2} $
+\form#29:$ \begin{array}{*{3}{r}} v_{11} & v_{21} & v_{31}\\ v_{12} & v_{22} & v_{32}\\ v_{13} & v_{23} & v_{33}\\ & & \\ v_1 & v_2 & v_3\\ \end{array} $
+\form#30:$ v_1 $
+\form#31:$ ( v_{11}\ v_{12}\ v_{13} ) $
+\form#32:$ v_1 > v_2 > v_3 $
+\form#33:$ P_{pq} = \left( \begin{array}{*{7}{c}} 1 \\ & \dots \\ & & c & \dots & s \\ & & \vdots & 1 & \vdots \\ & & -s & \dots & c \\ & & & & & \dots \\ & & & & & & 1 \\ \end{array} \right) $
+\form#34:$ \Phi $
+\form#35:$ c^2 + s^2 = 1$
+\form#36:$h$
+\form#37:$t$
+\form#38:$h(t)$
+\form#39:$H$
+\form#40:$f$
+\form#41:$H(f)$
+\form#42:$- \infty < f < \infty$
+\form#43:$ H(f) = \int_{- \infty}^{\infty} h(t)e^{2\pi i f t} dt$
+\form#44:$h(t) = \int_{- \infty}^{\infty} H(f)e^{-2\pi i f t} df$
+\form#45:$N$
+\form#46:$h_k$
+\form#47:$H_n \equiv \sum_{k=0}^{N-1} h_k e^{2 \pi i k n / N}$
+\form#48:$h_k = \frac{1}{N} \sum_{n=0}^{N-1} H_n e^{-2 \pi i k n / N}$
+\form#49:$O(N^2)$
+\form#50:$\frac{N}{2}$
+\form#51:$O(N log_2 N)$
+\form#52:$H_n \equiv \sum_{k=0}^{N-1} data_k e^{2 \pi i k n / N}$
+\form#53:$h_k = \frac{1}{N} \sum_{n=0}^{N-1} data_k e^{-2 \pi i k n / N}$
+\form#54:$ X $
+\form#55:$ X' $
+\form#56:$ XX'X = X $
+\form#57:$ det(X) = 0 $
+\form#58:$ m \times n $
+\form#59:$ n \times m $
+\form#60:$ A^T A $
+\form#61:\[ mean_j = \frac{1}{N1} \sum_{i=1}^{N1} x_{i,j} \]
+\form#62:\[ \left( \begin{array}{*{4}{c}} 1 & 2 & 3 & 4\\ 5 & 6 & 7 & 8\\ 9 & 10 & 11 & 12\\ \end{array} \right) \longrightarrow \frac{1}{3} \left( \begin{array}{*{4}{c}} 1+5+9 & 2+6+10 & 3+7+11 & 4+8+12\\ \end{array} \right) \longrightarrow \left( \begin{array}{*{4}{c}} 5 & 6 & 7 & 8\\ \end{array} \right) \]
+\form#63:\[ variance = \frac{1}{N1} \sum_{i=1}^{N1} (x_i - m_i)^2 \]
+\form#64:\[ angle = \frac{\sum_{i=1}^{N} (x_i * y_i)}{\sum_{i=1}^{N} x_i * \sum_{i=1}^{N} y_i} \]
+\form#65:$x$
+\form#66:$y$
+\form#67:$n$
+\form#68:$ r := \frac{cov(x, y)}{\Delta x \Delta y} $
+\form#69:$cov(x, y)$
+\form#70:$\Delta x$
+\form#71:$\Delta y$
+\form#72:$-1 \leq r \leq 1$
+\form#73:$r^2$
+\form#74:$X = (x_{ij})$
+\form#75:$ r := (r_{kl}) \mbox{,\ } r_{kl} = \frac{c_{kl}}{\Delta x_k \Delta x_l}\mbox{,\ } k,l = 1, \dots, N $
+\form#76:$c_{kl}$
+\form#77:$\Delta x_k$
+\form#78:$\Delta x_l$
+\form#79:$x_k$
+\form#80:$x_l$
+\form#81:$n \times N$
+\form#82:$N \times N$
+\form#83:$(x_i, y_i)$
+\form#84:$i = 1, \dots, n$
+\form#85:$ cov = \frac{1}{n - 1} \sum_{i = 1}^n (x_i - \overline{x}) (y_i - \overline{y}) $
+\form#86:$\overline{x}$
+\form#87:$\overline{y}$
+\form#88:$ Cov = (c_{kl}) \mbox{,\ } c_{kl} = \frac{1}{n - 1} \sum_{i=1}^n (x_{ik} - \overline{x_k})(x_{il} - \overline{x_l})\mbox{,\ } k,l = 1, \dots, N $
+\form#89:$\overline{x_j} = \frac{1}{n} \sum_{i = 1}^n x_{ij}$
+\form#90:$x_j \mbox{,\ }j = 1, \dots, N$
+\form#91:$n\times l$
+\form#92:$k\times l$
+\form#93:$n\times n$
+\form#94:$ A = B C_i $
+\form#95:$ C_i $
+\form#96:$A_iBC_j$
+\form#97:$A_i$
+\form#98:$C_j$
+\form#99:$m$
+\form#100:$B$
+\form#101:$n \times m$
+\form#102:$ m \times m $
+\form#103:$M$
+\form#104:$C$
+\form#105:$ M=CC^T $
+\form#106:$ \frac{1}{\sqrt{\lambda_j}} $
+\form#107:$ A = UWV^T $
+\form#108:$ UU^T = VV^T = V^TV = 1 $
+\form#109:$ m \geq n $
+\form#110:\[ \left( \begin{array}{*{4}{c}} 1 & 2 & 3 & 4\\ 5 & 6 & 7 & 8\\ 9 & 10 & 11 & 12\\ 13 & 14 & 15 & 16\\ \end{array} \right) \longrightarrow \left( \begin{array}{*{4}{c}} 1 & 5 & 9 & 13\\ 2 & 6 & 10 & 14\\ 3 & 7 & 11 & 15\\ 4 & 8 & 12 & 16\\ \end{array} \right) \]
+\form#111:\[ \left( \begin{array}{*{4}{c}} 1 \\ 2 \\ 3 \\ 4 \\ \end{array} \right) \longrightarrow \left( \begin{array}{*{4}{c}} 1 & 0 & 0 & 0\\ 0 & 2 & 0 & 0\\ 0 & 0 & 3 & 0\\ 0 & 0 & 0 & 4\\ \end{array} \right) \]
+\form#112:\[ \left( \begin{array}{*{4}{c}} {\bf 1} & 5 & 9 & 13\\ 2 & {\bf 6} & 10 & 14\\ 3 & 7 & {\bf 11} & 15\\ 4 & 8 & 12 & {\bf 16}\\ \end{array} \right) \longrightarrow 1 + 6 + 11 + 16 = 34 \]
+\form#113:$ A_i B C_j $
+\form#114:$ A $
