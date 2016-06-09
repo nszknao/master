@@ -1,4 +1,5 @@
 #include "../include/analysis.h"
+#include "../include/paramdata.h"
 
 // コンストラクタ
 Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, double arg_m2)

@@ -18,16 +18,4 @@ public:
 	static int expb_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *J);
 };
 
-class ParamData
-{
-public:
-	int n, p;
-	double* y;
-	double* dG;
-	double zeta, epsilon;
-
-	ParamData(int arg_n, int arg_p, double* arg_y, double arg_zeta, double arg_epsilon, double* arg_dG);
-};
-
-
 #endif // !__EXPFIT_H_INCLUDE_

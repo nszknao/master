@@ -3,17 +3,7 @@
  * m_：マトリクス，v_：ベクトル，cf_：係数
  */
 #include "../include/expfit.h"
-
-// パラメータをセットするためのコンストラクタ
-ParamData::ParamData(int arg_n, int arg_p, double* arg_y, double arg_zeta, double arg_epsilon, double* arg_dG)
-{
-	this->n		= arg_n;
-	this->p		= arg_p;
-	this->y		= arg_y;
-	this->zeta	= arg_zeta;
-	this->epsilon	= arg_epsilon;
-	this->dG	= arg_dG;
-}
+#include "../include/paramdata.h"
 
 int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
