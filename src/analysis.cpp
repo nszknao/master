@@ -1,5 +1,6 @@
 #include "../include/analysis.h"
 #include "../include/paramdata.h"
+#include "../include/nsga2.h"
 
 // コンストラクタ
 Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, double arg_m2)
@@ -44,6 +45,15 @@ std::string Analysis::leastSquareMethod()
 	
 	// 最小二乗法で使うパラメータ
 	ParamData* setData = new ParamData(N, P, y, ZETA, EPSILON, dF);
+
+
+	// nsga2
+	NSGA2 n2	= new NSGA2(120, 20, true, 500);
+	nsga2_function n2f;
+	n2f.n	= N;
+	n2f.p	= P;
+	n2f.params	= setData;
+	n2->run(&n2f);
 
 	// 最小二乗法を解くための関数をセット
 	gsl_multifit_function_fdf f;

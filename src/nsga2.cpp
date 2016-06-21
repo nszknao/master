@@ -1,18 +1,19 @@
 #include "../include/nsga2.h"
+#include "../include/expfit.h"
 
 
 /*
     NSGA2を実行する
 */
-int run()
+int run(nsga2_function * function)
 {
-    unsigned i, ii, k, t;
+    unsigned i, ii, k, t, ret;
 
     unsigned seed   = 0;
 
     // 突然変異と交叉のパラメータ
     double crossProb = 0.9;            // crossover probability
-    double flipProb = 1. / this->_dimension; // mutation probability
+    double flipProb = 1. / f->n; // mutation probability
 
     // 変数の定義域を設定
     // TODO:各パラメータで設定できるように
@@ -20,44 +21,54 @@ int run()
     double f1 = 0., f2 = 0.;
 
     // 親個体と子個体
-    double *PF1 = new double[this->_popSize];
-    double *PF2 = new double[this->_popSize];
-    double *OF1 = new double[this->_popSize];
-    double *OF2 = new double[this->_popSize];
+    std::vector< std::vector<double> > PF(function->n, std::vector<double>(this->_popSize));
+    std::vector< std::vector<double> > OF(function->n, std::vector<double>(this->_popSize));
 
     // ランダム値生成器
     Rng::seed(seed);
 
     // 親子の個体群を定義
-    PopulationMOO parents(this->_popSize, ChromosomeT< bool >(this->_dimension*this->_numOfBits));
-    PopulationMOO offsprings(this->_popSize, ChromosomeT< bool >(this->_dimension*this->_numOfBits));
+    PopulationMOO parents(this->_popSize, ChromosomeT< bool >(function->n*this->_numOfBits));
+    PopulationMOO offsprings(this->_popSize, ChromosomeT< bool >(function->n*this->_numOfBits));
 
     // 最小化のタスク
     parents   .setMinimize();
     offsprings.setMinimize();
 
     // 目的関数の個数をセット
-    parents   .setNoOfObj(2);
-    offsprings.setNoOfObj(2);
+    parents   .setNoOfObj(function->n);
+    offsprings.setNoOfObj(function->n);
 
     // 遺伝子型を表現型にデコードした時の一時保存用
     ChromosomeT< double > dblchrom;
 
     // 親個体群の初期化
+    // TODO:初期値は自分で指定
     for (i = 0; i < parents.size(); ++i)
        dynamic_cast< ChromosomeT< bool >& >( parents[ i ][ 0 ] ).initialize();
+
+    // 目的関数値を保存する
+    std::vector<double> func(function->n);
     
+    gsl_vector *x, *f;
     // 個体群の評価
     for (i = 0; i < parents.size(); ++i) {
         dblchrom.decodeBinary(parents[ i ][ 0 ], rangeOfValues, this->_numOfBits, this->_useGrayCode);
 
+        // 変数をgsl_vectorにセット
+        for (ii = 0; ii < f->p; ++ii)
+            gsl_vector_set(x, t, dblchrom[ ii ]);
+        // 方程式
+        ret = MomentEq::expb_f(x, function->param, f);
+        for (ii = 0; ii < function->n; ++i)
+            func[ ii ]    = gsl_vector_get(f, ii);
+
         // 目的関数
-        f1 = ZDT4FF1(dblchrom);
-        f2 = ZDT4FF2(dblchrom);
-        
-        parents[ i ].setMOOFitnessValues(f1, f2);
-        PF1[ i ] = f1;
-        PF2[ i ] = f2;
+        parents[ i ].setMOOFitnessValues(func);
+
+        // 親個体
+        for (ii = 0; ii < function->n; ++ii)
+            PF[ i ][ ii ] = func[ ii ];
     }
 
     // iterate
@@ -80,20 +91,28 @@ int run()
         for (i = 0; i < parents.size(); ++i) {
             dblchrom.decodeBinary(offsprings[ i ][ 0 ], rangeOfValues, this->_numOfBits, this->_useGrayCode);
 
+            // 変数をgsl_vectorにセット
+            for (ii = 0; ii < f->p; ++ii)
+                gsl_vector_set(x, t, dblchrom[ ii ]);
+            // 方程式
+            ret = MomentEq::expb_f(x, function->param, f);
+            for (ii = 0; ii < function->n; ++ii)
+                func[ ii ]    = gsl_vector_get(f, ii);
+
             // 目的関数
-            f1 = ZDT4FF1(dblchrom);
-            f2 = ZDT4FF2(dblchrom);
-        
-            offsprings[ i ].setMOOFitnessValues(f1, f2);
-            OF1[ i ] = f1;
-            OF2[ i ] = f2;
+            offsprings[ i ].setMOOFitnessValues(func);
+
+            // 子個体
+            for (ii = 0; ii < function->n; ++ii)
+                OF[ i ][ ii ] = func[ ii ];
         }
 
         // 選択
         parents.selectCrowdedMuPlusLambda(offsprings);
         for (k = 0; k < parents.size(); k++) {
-            PF1[ k ] = parents[ k ].getMOOFitness(0);
-            PF2[ k ] = parents[ k ].getMOOFitness(1);
+            for (ii = 0; ii < function->n; ++ii) {
+                PF[ k ][ ii ]   = parents[ k ].getMOOFitness(ii);
+            }
         }
     } // 繰り返し
 
@@ -111,11 +130,6 @@ int run()
 
     cout    << "size of the archive: "  << archive.size()
     << ", filename of archive: " << filename << endl << endl;
-
-    delete [] PF1;
-    delete [] PF2;
-    delete [] OF1;
-    delete [] OF2;
 
     return EXIT_SUCCESS;
 }

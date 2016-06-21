@@ -9,6 +9,9 @@
 #include <MOO-EALib/TestFunction.h>
 #include <MOO-EALib/PopulationMOO.h>
 #include <MOO-EALib/ArchiveMOO.h>
+
+#include <gsl/gsl_vector.h>
+
 #include "../include/momenteq.h"
 
 using namespace std;
@@ -24,20 +27,25 @@ private:
 
 public:
 	// コンストラクタ
-	NSGA2(unsigned dimension, unsigned pop, unsigned bits, bool gray, unsigned iter)
-	{
+	NSGA2(unsigned pop, unsigned bits, bool gray, unsigned iter) {
 	    // 境界値
 	    _max  = 0;
 	    _min  = 1;
 
-	    _dimension    = dimension;
 	    _popSize      = pop;  // 120
 	    _numOfBits    = bits; // 20
 	    _useGrayCode  = gray; // true
 	    _iterations   = iter  // 500
 	}
-	run();
+	run(nsga2_function * f);
+};
 
+class nsga2_function
+{
+public:
+	size_t n;       /* number of functions */
+	size_t p;       /* number of independent variables */
+	void * params;  /* user parameters */
 };
 
 #endif // !__NSGA2_H_INCLUDE_

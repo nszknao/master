@@ -5,6 +5,12 @@
 #include "../include/expfit.h"
 #include "../include/paramdata.h"
 
+
+
+/**
+ * @fn
+ * GSLの非線形最小二乗法で使うモーメント方程式の関数値ベクトル
+ */
 int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
 	ParamData* paramData		= static_cast<ParamData*>(params);
@@ -193,7 +199,10 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	return GSL_SUCCESS;
 }
 
-/* ヤコビ行列を定義 */
+/**
+ * @fn
+ * GSLの非線形最小自乗法で使うモーメント方程式のヤコビアン
+ */
 int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 {
 	ParamData* paramData = static_cast<ParamData*>(params);
