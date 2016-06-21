@@ -14,8 +14,8 @@
 int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
 	ParamData* paramData		= static_cast<ParamData*>(params);
-	int NUM_OF_MOMENT_EQUATION	= paramData->n;
-	int NUM_OF_PARAMETER		= paramData->p;
+	unsigned NUM_OF_MOMENT_EQUATION	= paramData->n;
+	unsigned NUM_OF_PARAMETER		= paramData->p;
 	double *y				= paramData->y;
 	double zeta				= paramData->zeta;
 	double epi				= paramData->epsilon;
@@ -61,7 +61,7 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	keisu[14] = 24. / 216;
 
 	// カウント変数
-	size_t tmp;
+	unsigned tmp;
 	
 	double param[NUM_OF_PARAMETER];	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
 
@@ -206,8 +206,8 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 {
 	ParamData* paramData = static_cast<ParamData*>(params);
-	int NUM_OF_MOMENT_EQUATION	= paramData->n;
-	int NUM_OF_PARAMETER		= paramData->p;
+	unsigned NUM_OF_MOMENT_EQUATION	= paramData->n;
+	unsigned NUM_OF_PARAMETER		= paramData->p;
 	double *y					= paramData->y;
 	double zeta					= paramData->zeta;
 	double epi					= paramData->epsilon;
@@ -254,7 +254,7 @@ int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 	keisu[14] = 24. / 216;
 
 	// カウント変数
-	size_t tmp, tmp_param, tmp_moment;
+	unsigned tmp, tmp_param, tmp_moment;
 
 	double param[NUM_OF_PARAMETER];
 	for(tmp=0; tmp<NUM_OF_PARAMETER; tmp++)

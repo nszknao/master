@@ -6,15 +6,23 @@
 
 #include <Array/Array.h>
 #include <FileUtil/Params.h>
-#include <MOO-EALib/TestFunction.h>
 #include <MOO-EALib/PopulationMOO.h>
 #include <MOO-EALib/ArchiveMOO.h>
 
 #include <gsl/gsl_vector.h>
 
-#include "../include/momenteq.h"
+#include "expfit.h"
 
 using namespace std;
+
+
+class nsga2_function
+{
+public:
+	size_t n;       /* number of functions */
+	size_t p;       /* number of independent variables */
+	void * params;  /* user parameters */
+};
 
 class NSGA2
 {
@@ -26,26 +34,8 @@ private:
 	void _saveArchiveInFile(char *filename, ArchiveMOO &archive);
 
 public:
-	// コンストラクタ
-	NSGA2(unsigned pop, unsigned bits, bool gray, unsigned iter) {
-	    // 境界値
-	    _max  = 0;
-	    _min  = 1;
-
-	    _popSize      = pop;  // 120
-	    _numOfBits    = bits; // 20
-	    _useGrayCode  = gray; // true
-	    _iterations   = iter  // 500
-	}
-	run(nsga2_function * f);
-};
-
-class nsga2_function
-{
-public:
-	size_t n;       /* number of functions */
-	size_t p;       /* number of independent variables */
-	void * params;  /* user parameters */
+	NSGA2(int pop, int bits, bool gray, int iter);
+	int run(nsga2_function * f);
 };
 
 #endif // !__NSGA2_H_INCLUDE_

@@ -33,25 +33,25 @@ std::string Analysis::leastSquareMethod()
 	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 
 	/* 近似対象となる観測データを生成 */
-	double y[N];
-	for (tmp = 0; tmp < N; tmp++) y[tmp] = 0.;
+	double y[NUM_OF_MOMENTEQ];
+	for (tmp = 0; tmp < NUM_OF_MOMENTEQ; tmp++) y[tmp] = 0.;
 
 	// 等価線形化法で初期値を計算
 	double sigma_x, sigma_y, rho_xy;
 	this->_culcInitValue(&sigma_x, &sigma_y, &rho_xy);
 
 	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
-	double x_init[P] = { 0.5, sigma_x + this->mu1, sigma_y + this->mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
+	double x_init[NUM_OF_PARAM] = { 0.5, sigma_x + this->mu1, sigma_y + this->mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
 	
 	// 最小二乗法で使うパラメータ
-	ParamData* setData = new ParamData(N, P, y, ZETA, EPSILON, dF);
+	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, y, ZETA, EPSILON, dF);
 
 
 	// nsga2
-	NSGA2 n2	= new NSGA2(120, 20, true, 500);
+	NSGA2 *n2	= new NSGA2(120, 20, true, 500);
 	nsga2_function n2f;
-	n2f.n	= N;
-	n2f.p	= P;
+	n2f.n	= NUM_OF_MOMENTEQ;
+	n2f.p	= NUM_OF_PARAM;
 	n2f.params	= setData;
 	n2->run(&n2f);
 
@@ -60,19 +60,19 @@ std::string Analysis::leastSquareMethod()
 	f.f		= &MomentEq::expb_f;
 	f.df	= &MomentEq::expb_df;
 	f.fdf	= &MomentEq::expb_fdf;
-	f.n		= N;
-	f.p		= P;
+	f.n		= NUM_OF_MOMENTEQ;
+	f.p		= NUM_OF_PARAM;
 	f.params = setData;
 
 	// 最小二乗法のソルバーをセット
 	const gsl_multifit_fdfsolver_type *T;
 	gsl_multifit_fdfsolver *s;
 	T = gsl_multifit_fdfsolver_lmsder;
-	s = gsl_multifit_fdfsolver_alloc(T, N, P);
+	s = gsl_multifit_fdfsolver_alloc(T, NUM_OF_MOMENTEQ, NUM_OF_PARAM);
 
 	// 計算開始
 	gsl_vector_view x;
-	x = gsl_vector_view_array(x_init, P);
+	x = gsl_vector_view_array(x_init, NUM_OF_PARAM);
 	gsl_multifit_fdfsolver_set(s, &f, &x.vector);
 	size_t iter = 0;
 	int status;
@@ -110,12 +110,14 @@ std::string Analysis::leastSquareMethod()
 	/******************************/
 
 	// TODO:何をやっているのか見直す
-	gsl_matrix *covar = gsl_matrix_alloc(P, P);
-	gsl_multifit_covar(s->J, 0.0, covar);
+	gsl_matrix *J = gsl_matrix_alloc(NUM_OF_MOMENTEQ, NUM_OF_PARAM);
+	gsl_multifit_fdfsolver_jac(s, J);
+	gsl_matrix *covar = gsl_matrix_alloc(NUM_OF_PARAM, NUM_OF_PARAM);
+	gsl_multifit_covar(J, 0.0, covar);
 
 #define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
 	double chi = gsl_blas_dnrm2(s->f);
-	double dof = N - P;
+	double dof = NUM_OF_MOMENTEQ - NUM_OF_PARAM;
 	double c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
 	std::cout << "roop(iter): " << iter << std::endl;
@@ -134,7 +136,7 @@ std::string Analysis::leastSquareMethod()
 	std::cout << "status  = " << gsl_strerror(status) << "\n" << std::endl;
 
 	gsl_multifit_fdfsolver_free(s);
-
+	gsl_matrix_free (J);
 	return gsl_strerror(status);
 }
 

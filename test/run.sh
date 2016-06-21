@@ -4,7 +4,7 @@
 # ----------
 
 ############ Compile-force #############################################
-g++48 -lstdc++ -Wl,--heap,900000000,--stack,536870912 ./testMain.cpp -o lsm.exe -lm -lgsl -lgslcblas
+g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ./testMain.cpp ../src/analysis.cpp ../src/expfit.cpp ../src/nsga2.cpp -o lsm.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 
 ############ Reading init_value.txt ####################################
 initfile=init_value_disp.txt

@@ -1,11 +1,21 @@
 #include "../include/nsga2.h"
 #include "../include/expfit.h"
 
+// コンストラクタ
+NSGA2::NSGA2(int pop, int bits, bool gray, int iter) {
+    // 境界値
+    _max  = 0;
+    _min  = 1;
+    _popSize      = pop;  // 120
+    _numOfBits    = bits; // 20
+    _useGrayCode  = gray; // true
+    _iterations   = iter;  // 500
+}
 
 /*
     NSGA2を実行する
 */
-int run(nsga2_function * function)
+int NSGA2::run(nsga2_function * function)
 {
     unsigned i, ii, k, t, ret;
 
@@ -13,23 +23,22 @@ int run(nsga2_function * function)
 
     // 突然変異と交叉のパラメータ
     double crossProb = 0.9;            // crossover probability
-    double flipProb = 1. / f->n; // mutation probability
+    double flipProb = 1. / function->n; // mutation probability
 
     // 変数の定義域を設定
     // TODO:各パラメータで設定できるように
-    const Interval rangeOfValues(this->_max, this->_min);
-    double f1 = 0., f2 = 0.;
+    const Interval rangeOfValues(_max, _min);
 
     // 親個体と子個体
-    std::vector< std::vector<double> > PF(function->n, std::vector<double>(this->_popSize));
-    std::vector< std::vector<double> > OF(function->n, std::vector<double>(this->_popSize));
+    std::vector< std::vector<double> > PF(function->n, std::vector<double>(_popSize));
+    std::vector< std::vector<double> > OF(function->n, std::vector<double>(_popSize));
 
     // ランダム値生成器
     Rng::seed(seed);
 
     // 親子の個体群を定義
-    PopulationMOO parents(this->_popSize, ChromosomeT< bool >(function->n*this->_numOfBits));
-    PopulationMOO offsprings(this->_popSize, ChromosomeT< bool >(function->n*this->_numOfBits));
+    PopulationMOO parents(_popSize, ChromosomeT< bool >(function->n*_numOfBits));
+    PopulationMOO offsprings(_popSize, ChromosomeT< bool >(function->n*_numOfBits));
 
     // 最小化のタスク
     parents   .setMinimize();
@@ -53,13 +62,13 @@ int run(nsga2_function * function)
     gsl_vector *x, *f;
     // 個体群の評価
     for (i = 0; i < parents.size(); ++i) {
-        dblchrom.decodeBinary(parents[ i ][ 0 ], rangeOfValues, this->_numOfBits, this->_useGrayCode);
+        dblchrom.decodeBinary(parents[ i ][ 0 ], rangeOfValues, _numOfBits, _useGrayCode);
 
         // 変数をgsl_vectorにセット
-        for (ii = 0; ii < f->p; ++ii)
+        for (ii = 0; ii < function->p; ++ii)
             gsl_vector_set(x, t, dblchrom[ ii ]);
         // 方程式
-        ret = MomentEq::expb_f(x, function->param, f);
+        ret = MomentEq::expb_f(x, function->params, f);
         for (ii = 0; ii < function->n; ++i)
             func[ ii ]    = gsl_vector_get(f, ii);
 
@@ -72,7 +81,7 @@ int run(nsga2_function * function)
     }
 
     // iterate
-    for (t = 1; t <= this->_iterations; ++t) {
+    for (t = 1; t <= _iterations; ++t) {
         cout << "Generation: " << t << endl;
 
         // 親個体を子個体にコピー
@@ -89,13 +98,13 @@ int run(nsga2_function * function)
 
         // 個体群の評価
         for (i = 0; i < parents.size(); ++i) {
-            dblchrom.decodeBinary(offsprings[ i ][ 0 ], rangeOfValues, this->_numOfBits, this->_useGrayCode);
+            dblchrom.decodeBinary(offsprings[ i ][ 0 ], rangeOfValues, _numOfBits, _useGrayCode);
 
             // 変数をgsl_vectorにセット
-            for (ii = 0; ii < f->p; ++ii)
+            for (ii = 0; ii < function->p; ++ii)
                 gsl_vector_set(x, t, dblchrom[ ii ]);
             // 方程式
-            ret = MomentEq::expb_f(x, function->param, f);
+            ret = MomentEq::expb_f(x, function->params, f);
             for (ii = 0; ii < function->n; ++ii)
                 func[ ii ]    = gsl_vector_get(f, ii);
 
@@ -117,9 +126,9 @@ int run(nsga2_function * function)
     } // 繰り返し
 
     // data output
-    ArchiveMOO archive(this->_popSize);
+    ArchiveMOO archive(_popSize);
     archive.minimize();
-    for (ii = 0; ii < this->_popSize; ++ii) {
+    for (ii = 0; ii < _popSize; ++ii) {
         archive.addArchive(parents[ ii ]);
     }
     archive.nonDominatedSolutions();
@@ -140,10 +149,10 @@ int run(nsga2_function * function)
     @param *filename ファイルポインタ
     @param &archive アーカイブ集団
 */
-void _saveArchiveInFile(char *filename, ArchiveMOO &archive)
+void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
 {
     // TODO:各パラメータで設定できるように
-    const Interval rangeOfValues(this->_max, this->_min);
+    const Interval rangeOfValues(_max, _min);
 
     unsigned no = archive.size();
     unsigned noOfObj;
@@ -170,7 +179,7 @@ void _saveArchiveInFile(char *filename, ArchiveMOO &archive)
 
         // パラメータ値
         individual.operator=(archive.readArchive(i));
-        chrom.decodeBinary(individual[0], rangeOfValues, this->_numOfBits, this->_useGrayCode);
+        chrom.decodeBinary(individual[0], rangeOfValues, _numOfBits, _useGrayCode);
         for (unsigned k = 0; k < chrom.size(); ++k)
         {
             ofs << chrom[k] << " " << std::flush;

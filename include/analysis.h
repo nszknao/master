@@ -13,10 +13,10 @@
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_sf.h>
-#include "../include/expfit.h"
+#include "expfit.h"
 
-#define N 15
-#define P 10
+#define NUM_OF_MOMENTEQ 15
+#define NUM_OF_PARAM 10
 #define PI M_PI
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
 
