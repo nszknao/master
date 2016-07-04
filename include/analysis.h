@@ -46,6 +46,30 @@ public:
 	void culcDispVarience();
 	void culcVelVarience();
 	void createLevelCrossing();
+	~Analysis();
+};
+
+class Parameter
+{
+public:
+	double *a, *mu1, *mu2, *sigma1, *sigma2, *kappa;
+	void setParameter(double a_[], double mu1_[], double mu2_[], double sigma1_[], double sigma2_[], double kappa_[]) {
+		a		= a_;
+		mu1		= mu1_;
+		mu2		= mu2_;
+		sigma1	= sigma1_;
+		sigma2	= sigma2_;
+		kappa	= kappa_;
+	};
+	void freeParameter()
+	{
+		delete [] a;
+		delete [] mu1;
+		delete [] mu2;
+		delete [] sigma1;
+		delete [] sigma2;
+		delete [] kappa;		
+	};
 };
 
 #endif // !__ANALISYS_H_INCLUDE_

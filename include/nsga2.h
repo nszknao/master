@@ -12,6 +12,7 @@
 #include <gsl/gsl_vector.h>
 
 #include "expfit.h"
+#include "paramdata.h"
 
 using namespace std;
 
@@ -19,9 +20,7 @@ using namespace std;
 class nsga2_function
 {
 public:
-	size_t n;       /* number of functions */
-	size_t p;       /* number of independent variables */
-	void * params;  /* user parameters */
+	ParamData * params;  /* user parameters */
 };
 
 class NSGA2

@@ -12,13 +12,15 @@ Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, doub
 	this->mu2	= arg_m2;
 }
 
+// デストラクタ
+Analysis::~Analysis()
+{
+}
+
 // 最小二乗法を解いて解析解を求める
 std::string Analysis::leastSquareMethod()
 {
 	std::cout << "Get analysis solution using least squeare method.\n" << std::endl;
-
-	// カウント変数
-	int tmp;
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
 	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
@@ -32,10 +34,6 @@ std::string Analysis::leastSquareMethod()
 	dF[4] = 0;
 	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 
-	/* 近似対象となる観測データを生成 */
-	double y[NUM_OF_MOMENTEQ];
-	for (tmp = 0; tmp < NUM_OF_MOMENTEQ; tmp++) y[tmp] = 0.;
-
 	// 等価線形化法で初期値を計算
 	double sigma_x, sigma_y, rho_xy;
 	this->_culcInitValue(&sigma_x, &sigma_y, &rho_xy);
@@ -44,14 +42,11 @@ std::string Analysis::leastSquareMethod()
 	double x_init[NUM_OF_PARAM] = { 0.5, sigma_x + this->mu1, sigma_y + this->mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
 	
 	// 最小二乗法で使うパラメータ
-	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, y, ZETA, EPSILON, dF);
-
+	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
 
 	// nsga2
-	NSGA2 *n2	= new NSGA2(120, 20, true, 500);
+	NSGA2 *n2	= new NSGA2(120, 20, true, 100);
 	nsga2_function n2f;
-	n2f.n	= NUM_OF_MOMENTEQ;
-	n2f.p	= NUM_OF_PARAM;
 	n2f.params	= setData;
 	n2->run(&n2f);
 
@@ -107,6 +102,9 @@ std::string Analysis::leastSquareMethod()
 	this->prm_kappa[0] = gsl_vector_get(s->x, 7);		// kappa123
 	this->prm_kappa[1] = gsl_vector_get(s->x, 8);		// kappa223
 	this->prm_kappa[2] = gsl_vector_get(s->x, 9);		// kappa323
+
+	Parameter *prm	= new Parameter();
+	prm->setParameter(prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
 	/******************************/
 
 	// TODO:何をやっているのか見直す
@@ -122,21 +120,26 @@ std::string Analysis::leastSquareMethod()
 
 	std::cout << "roop(iter): " << iter << std::endl;
 	std::cout << "/*********************solution*********************/" << std::endl;
-	std::cout << "a	      = " << this->prm_a[1] << " +/- " << c*ERR(0) << std::endl;
-	std::cout << "mu1     = " << this->prm_mu1[0] << " +/- " << c*ERR(1) << std::endl;
-	std::cout << "mu2     = " << this->prm_mu2[0] << " +/- " << c*ERR(2) << std::endl;
-	std::cout << "sigma11 = " << this->prm_sigma1[0] << " +/- " << c*ERR(3) << std::endl;
-	std::cout << "sigma11 = " << this->prm_sigma2[0] << " +/- " << c*ERR(4) << std::endl;
-	std::cout << "sigma21 = " << this->prm_sigma1[1] << " +/- " << c*ERR(5) << std::endl;
-	std::cout << "sigma22 = " << this->prm_sigma2[1] << " +/- " << c*ERR(6) << std::endl;
-	std::cout << "k1      = " << this->prm_kappa[0] << " +/- " << c*ERR(7) << std::endl;
-	std::cout << "k2      = " << this->prm_kappa[1] << " +/- " << c*ERR(8) << std::endl;
-	std::cout << "k3      = " << this->prm_kappa[2] << " +/- " << c*ERR(9)<< std::endl;
+	std::cout << "a	      = " << prm->a[1] << " +/- " << c*ERR(0) << std::endl;
+	std::cout << "mu1     = " << prm->mu1[0] << " +/- " << c*ERR(1) << std::endl;
+	std::cout << "mu2     = " << prm->mu2[0] << " +/- " << c*ERR(2) << std::endl;
+	std::cout << "sigma11 = " << prm->sigma1[0] << " +/- " << c*ERR(3) << std::endl;
+	std::cout << "sigma11 = " << prm->sigma2[0] << " +/- " << c*ERR(4) << std::endl;
+	std::cout << "sigma21 = " << prm->sigma1[1] << " +/- " << c*ERR(5) << std::endl;
+	std::cout << "sigma22 = " << prm->sigma2[1] << " +/- " << c*ERR(6) << std::endl;
+	std::cout << "k1      = " << prm->kappa[0] << " +/- " << c*ERR(7) << std::endl;
+	std::cout << "k2      = " << prm->kappa[1] << " +/- " << c*ERR(8) << std::endl;
+	std::cout << "k3      = " << prm->kappa[2] << " +/- " << c*ERR(9)<< std::endl;
 	std::cout << "/**************************************************/" << std::endl;
 	std::cout << "status  = " << gsl_strerror(status) << "\n" << std::endl;
 
 	gsl_multifit_fdfsolver_free(s);
 	gsl_matrix_free (J);
+
+	prm->freeParameter();
+	// delete n2;
+	// delete setData;
+
 	return gsl_strerror(status);
 }
 
@@ -313,20 +316,23 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 double Analysis::_createGaussianPdf(double a[], double mu[], double sigma[], double x) 
 {
 	double pdf = 0.;
-	int tmp;
+	unsigned int i;
 
-	for (tmp = 0; tmp < NUM_GAUSS; tmp++)
-	{
-		pdf += a[tmp]*(1./sqrt(2.*PI)/sigma[tmp])*exp(-(x-mu[tmp])*(x-mu[tmp])/2./pow(sigma[tmp],2.));
-	}
+	for (i = 0; i < NUM_GAUSS; ++i)
+		pdf += a[i]*(1./sqrt(2.*PI)/sigma[i])*exp(-(x-mu[i])*(x-mu[i])/2./pow(sigma[i],2.));
 
 	return pdf;
 }
 
 /**
  * 閾値通過率を計算
- *
- * 
+ * @param double pp_xi 閾値
+ * @param double a[] 重み
+ * @param double mu1[] 変位の平均
+ * @param double mu2[] 速度の平均
+ * @param double sigma1[] 変位の分散
+ * @param double sigma2[] 速度の分散
+ * @param double kappa[]
  */
 double Analysis::_culcLevelCrossing(double pp_xi, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
 {
@@ -334,7 +340,7 @@ double Analysis::_culcLevelCrossing(double pp_xi, double a[], double mu1[], doub
 	double pp_c = 0., pp_g = 0., pp_sigma = 0.;
 	int tmp;
 
-	for (tmp = 0; tmp < 3; tmp++)
+	for (tmp = 0; tmp < NUM_GAUSS; ++tmp)
 	{
 		pp_c		= kappa[tmp]/sigma1[tmp]/sigma2[tmp];
 		pp_g		= mu2[tmp] + pp_c*sigma2[tmp]*(pp_xi - mu1[tmp])/sigma1[tmp];

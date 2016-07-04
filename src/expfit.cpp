@@ -16,7 +16,6 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	ParamData* paramData		= static_cast<ParamData*>(params);
 	unsigned NUM_OF_MOMENT_EQUATION	= paramData->n;
 	unsigned NUM_OF_PARAMETER		= paramData->p;
-	double *y				= paramData->y;
 	double zeta				= paramData->zeta;
 	double epi				= paramData->epsilon;
 	double *dG				= paramData->dG;
@@ -193,7 +192,7 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	// 補正係数を含めた結果をfに格納
 	for (tmp=0; tmp<NUM_OF_MOMENT_EQUATION; tmp++)
 	{
-		gsl_vector_set(f, tmp, keisu[tmp]*(array_result_moment_eq[tmp]-y[tmp]));
+		gsl_vector_set(f, tmp, keisu[tmp]*(array_result_moment_eq[tmp]));
 	}
 
 	return GSL_SUCCESS;
@@ -208,7 +207,6 @@ int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 	ParamData* paramData = static_cast<ParamData*>(params);
 	unsigned NUM_OF_MOMENT_EQUATION	= paramData->n;
 	unsigned NUM_OF_PARAMETER		= paramData->p;
-	double *y					= paramData->y;
 	double zeta					= paramData->zeta;
 	double epi					= paramData->epsilon;
 	double *dG					= paramData->dG;

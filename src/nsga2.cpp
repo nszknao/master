@@ -17,36 +17,36 @@ NSGA2::NSGA2(int pop, int bits, bool gray, int iter) {
 */
 int NSGA2::run(nsga2_function * function)
 {
-    unsigned i, ii, k, t, ret;
+    unsigned int i, ii, k, t;
 
     unsigned seed   = 0;
 
     // 突然変異と交叉のパラメータ
     double crossProb = 0.9;            // crossover probability
-    double flipProb = 1. / function->n; // mutation probability
+    double flipProb = 1. / function->params->n; // mutation probability
 
     // 変数の定義域を設定
     // TODO:各パラメータで設定できるように
     const Interval rangeOfValues(_max, _min);
 
     // 親個体と子個体
-    std::vector< std::vector<double> > PF(function->n, std::vector<double>(_popSize));
-    std::vector< std::vector<double> > OF(function->n, std::vector<double>(_popSize));
+    std::vector< std::vector<double> > PF(function->params->n, std::vector<double>(_popSize));
+    std::vector< std::vector<double> > OF(function->params->n, std::vector<double>(_popSize));
 
     // ランダム値生成器
     Rng::seed(seed);
 
     // 親子の個体群を定義
-    PopulationMOO parents(_popSize, ChromosomeT< bool >(function->n*_numOfBits));
-    PopulationMOO offsprings(_popSize, ChromosomeT< bool >(function->n*_numOfBits));
+    PopulationMOO parents(_popSize, ChromosomeT< bool >(function->params->p*_numOfBits));
+    PopulationMOO offsprings(_popSize, ChromosomeT< bool >(function->params->p*_numOfBits));
 
     // 最小化のタスク
     parents   .setMinimize();
     offsprings.setMinimize();
 
     // 目的関数の個数をセット
-    parents   .setNoOfObj(function->n);
-    offsprings.setNoOfObj(function->n);
+    parents   .setNoOfObj(function->params->n);
+    offsprings.setNoOfObj(function->params->n);
 
     // 遺伝子型を表現型にデコードした時の一時保存用
     ChromosomeT< double > dblchrom;
@@ -57,27 +57,29 @@ int NSGA2::run(nsga2_function * function)
        dynamic_cast< ChromosomeT< bool >& >( parents[ i ][ 0 ] ).initialize();
 
     // 目的関数値を保存する
-    std::vector<double> func(function->n);
-    
+    std::vector<double> func(function->params->n);
+
     gsl_vector *x, *f;
+    x   = gsl_vector_alloc(function->params->p);
+    f   = gsl_vector_alloc(function->params->n);
     // 個体群の評価
     for (i = 0; i < parents.size(); ++i) {
+        // 個体をデコードしてgsl_vectorに変換
         dblchrom.decodeBinary(parents[ i ][ 0 ], rangeOfValues, _numOfBits, _useGrayCode);
-
-        // 変数をgsl_vectorにセット
-        for (ii = 0; ii < function->p; ++ii)
-            gsl_vector_set(x, t, dblchrom[ ii ]);
-        // 方程式
-        ret = MomentEq::expb_f(x, function->params, f);
-        for (ii = 0; ii < function->n; ++i)
+        for (ii = 0; ii < function->params->p; ++ii)
+            gsl_vector_set(x, ii, dblchrom[ ii ]);
+        
+        // モーメント方程式を解いてgsl_vectorに変換
+        MomentEq::expb_f(x, function->params, f);
+        for (ii = 0; ii < function->params->n; ++ii)
             func[ ii ]    = gsl_vector_get(f, ii);
 
         // 目的関数
         parents[ i ].setMOOFitnessValues(func);
 
         // 親個体
-        for (ii = 0; ii < function->n; ++ii)
-            PF[ i ][ ii ] = func[ ii ];
+        for (ii = 0; ii < function->params->n; ++ii)
+            PF[ ii ][ i ] = func[ ii ];
     }
 
     // iterate
@@ -98,38 +100,40 @@ int NSGA2::run(nsga2_function * function)
 
         // 個体群の評価
         for (i = 0; i < parents.size(); ++i) {
+            // 個体をデコードしてgsl_vectorに変換
             dblchrom.decodeBinary(offsprings[ i ][ 0 ], rangeOfValues, _numOfBits, _useGrayCode);
+            for (ii = 0; ii < function->params->p; ++ii)
+                gsl_vector_set(x, ii, dblchrom[ ii ]);
 
-            // 変数をgsl_vectorにセット
-            for (ii = 0; ii < function->p; ++ii)
-                gsl_vector_set(x, t, dblchrom[ ii ]);
-            // 方程式
-            ret = MomentEq::expb_f(x, function->params, f);
-            for (ii = 0; ii < function->n; ++ii)
+            // モーメント方程式を解いてgsl_vectorに変換
+            MomentEq::expb_f(x, function->params, f);
+            for (ii = 0; ii < function->params->n; ++ii)
                 func[ ii ]    = gsl_vector_get(f, ii);
 
             // 目的関数
             offsprings[ i ].setMOOFitnessValues(func);
 
             // 子個体
-            for (ii = 0; ii < function->n; ++ii)
-                OF[ i ][ ii ] = func[ ii ];
+            for (ii = 0; ii < function->params->n; ++ii)
+                OF[ ii ][ i ] = func[ ii ];
         }
 
         // 選択
         parents.selectCrowdedMuPlusLambda(offsprings);
-        for (k = 0; k < parents.size(); k++) {
-            for (ii = 0; ii < function->n; ++ii) {
-                PF[ k ][ ii ]   = parents[ k ].getMOOFitness(ii);
+        for (k = 0; k < parents.size(); ++k) {
+            for (ii = 0; ii < function->params->n; ++ii) {
+                PF[ ii ][ k ]   = parents[ k ].getMOOFitness(ii);
             }
         }
     } // 繰り返し
 
+
+
     // data output
     ArchiveMOO archive(_popSize);
     archive.minimize();
-    for (ii = 0; ii < _popSize; ++ii) {
-        archive.addArchive(parents[ ii ]);
+    for (i = 0; i < _popSize; ++i) {
+        archive.addArchive(parents[ i ]);
     }
     archive.nonDominatedSolutions();
 
@@ -139,6 +143,9 @@ int NSGA2::run(nsga2_function * function)
 
     cout    << "size of the archive: "  << archive.size()
     << ", filename of archive: " << filename << endl << endl;
+
+    gsl_vector_free(x);
+    gsl_vector_free(f);
 
     return EXIT_SUCCESS;
 }
