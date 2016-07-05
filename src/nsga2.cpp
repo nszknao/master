@@ -83,6 +83,7 @@ int NSGA2::run(nsga2_function * function)
     }
 
     // iterate
+    cout << "NSGA2: start" << endl;
     for (t = 1; t <= _iterations; ++t) {
         cout << "Generation: " << t << endl;
 
@@ -126,6 +127,7 @@ int NSGA2::run(nsga2_function * function)
             }
         }
     } // 繰り返し
+    cout << "NSGA2: end" << endl;
 
 
 

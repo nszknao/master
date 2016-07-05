@@ -13,10 +13,16 @@ int main(int argc, char *argv[])
         std::cout << "--------------------\n" << std::endl;
         std::cout << "analysis.cpp started.\n" << std::endl;
 
-        std::string result	= ana->leastSquareMethod();
+        Parameter* prm	= new Parameter();
+        prm->allocParameter();
+        std::string result	= ana->leastSquareMethod(prm);
+
         if (result == "success") {
-        	ana->createDispPdf();
+	       	ana->createDispPdf(prm);
         }
+
+        prm->freeParameter();
+        delete prm;
 
         std::cout << "analysis.cpp has done.\n" << std::endl;
         std::cout << "--------------------\n" << std::endl;

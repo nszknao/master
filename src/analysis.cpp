@@ -13,12 +13,58 @@ Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, doub
 }
 
 // デストラクタ
-Analysis::~Analysis()
+Analysis::~Analysis() {}
+
+void Parameter::setParameter(std::vector<double> &a_, std::vector<double> &mu1_, std::vector<double> &mu2_, std::vector<double> &sigma1_, std::vector<double> &sigma2_, std::vector<double> &kappa_)
 {
+	std::copy(a_.begin(), a_.end(), back_inserter(_a));
+	std::copy(mu1_.begin(), mu1_.end(), back_inserter(_mu1));
+	std::copy(mu2_.begin(), mu2_.end(), back_inserter(_mu2));
+	std::copy(sigma1_.begin(), sigma1_.end(), back_inserter(_sigma1));
+	std::copy(sigma2_.begin(), sigma2_.end(), back_inserter(_sigma2));
+	std::copy(kappa_.begin(), kappa_.end(), back_inserter(_kappa));
+}
+
+void Parameter::allocParameter()
+{
+	_a.reserve(NUM_GAUSS);
+	_mu1.reserve(NUM_GAUSS);
+	_mu2.reserve(NUM_GAUSS);
+	_sigma1.reserve(NUM_GAUSS);
+	_sigma2.reserve(NUM_GAUSS);
+	_kappa.reserve(NUM_GAUSS);
+}
+
+void Parameter::freeParameter()
+{
+	std::vector<double>().swap(_a);
+	std::vector<double>().swap(_mu1);
+	std::vector<double>().swap(_mu2);
+	std::vector<double>().swap(_sigma1);
+	std::vector<double>().swap(_sigma2);
+	std::vector<double>().swap(_kappa);
+}
+
+std::vector<double> Parameter::getParameter(std::string prm)
+{
+	if (prm == "a")
+		return _a;
+	else if (prm == "mu1")
+		return _mu1;
+	else if (prm == "mu2")
+		return _mu2;
+	else if (prm == "sigma1")
+		return _sigma1;
+	else if (prm == "sigma2")
+		return _sigma2;
+	else if (prm == "kappa")
+		return _kappa;
+	else
+		std::cout << "Error: Given parameter doesn't exist." << std::endl;
 }
 
 // 最小二乗法を解いて解析解を求める
-std::string Analysis::leastSquareMethod()
+std::string Analysis::leastSquareMethod(Parameter *prm)
 {
 	std::cout << "Get analysis solution using least squeare method.\n" << std::endl;
 
@@ -80,30 +126,30 @@ std::string Analysis::leastSquareMethod()
 
 
 	/********** 計算結果 **********/
+	std::vector<double> prm_a(NUM_GAUSS), prm_mu1(NUM_GAUSS), prm_mu2(NUM_GAUSS), prm_sigma1(NUM_GAUSS), prm_sigma2(NUM_GAUSS), prm_kappa(NUM_GAUSS);
 	// 重み
-	this->prm_a[1] = gsl_vector_get(s->x, 0);		// a2
-	this->prm_a[0] = (1. - this->prm_a[1]) / 2.;		// a1
-	this->prm_a[2] = this->prm_a[0];					// a3
+	prm_a[1] = gsl_vector_get(s->x, 0);		// a2
+	prm_a[0] = (1. - prm_a[1]) / 2.;		// a1
+	prm_a[2] = prm_a[0];					// a3
 	// 変位
-	this->prm_mu1[0] = gsl_vector_get(s->x, 1);	// mu11
-	this->prm_mu1[1] = 0.;						// mu21
-	this->prm_mu1[2] = -1.*this->prm_mu1[0];			// mu31
-	this->prm_sigma1[0] = gsl_vector_get(s->x, 3);	// sigma11
-	this->prm_sigma1[1] = gsl_vector_get(s->x, 5);	// sigma21
-	this->prm_sigma1[2] = this->prm_sigma1[0];				// sigma31
+	prm_mu1[0] = gsl_vector_get(s->x, 1);	// mu11
+	prm_mu1[1] = 0.;						// mu21
+	prm_mu1[2] = -1.*prm_mu1[0];			// mu31
+	prm_sigma1[0] = gsl_vector_get(s->x, 3);	// sigma11
+	prm_sigma1[1] = gsl_vector_get(s->x, 5);	// sigma21
+	prm_sigma1[2] = prm_sigma1[0];				// sigma31
 	// 速度
-	this->prm_mu2[0] = gsl_vector_get(s->x, 2);	// mu12
-	this->prm_mu2[1] = 0.;						// mu22
-	this->prm_mu2[2] = -1.*this->prm_mu2[0];			// mu32
-	this->prm_sigma2[0] = gsl_vector_get(s->x, 4);	// sigma12
-	this->prm_sigma2[1] = gsl_vector_get(s->x, 6);	// sigma22
-	this->prm_sigma2[2] = this->prm_sigma2[0];				// sigma32
+	prm_mu2[0] = gsl_vector_get(s->x, 2);	// mu12
+	prm_mu2[1] = 0.;						// mu22
+	prm_mu2[2] = -1.*prm_mu2[0];			// mu32
+	prm_sigma2[0] = gsl_vector_get(s->x, 4);	// sigma12
+	prm_sigma2[1] = gsl_vector_get(s->x, 6);	// sigma22
+	prm_sigma2[2] = prm_sigma2[0];				// sigma32
 	// 共分散
-	this->prm_kappa[0] = gsl_vector_get(s->x, 7);		// kappa123
-	this->prm_kappa[1] = gsl_vector_get(s->x, 8);		// kappa223
-	this->prm_kappa[2] = gsl_vector_get(s->x, 9);		// kappa323
+	prm_kappa[0] = gsl_vector_get(s->x, 7);		// kappa123
+	prm_kappa[1] = gsl_vector_get(s->x, 8);		// kappa223
+	prm_kappa[2] = gsl_vector_get(s->x, 9);		// kappa323
 
-	Parameter *prm	= new Parameter();
 	prm->setParameter(prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
 	/******************************/
 
@@ -120,46 +166,43 @@ std::string Analysis::leastSquareMethod()
 
 	std::cout << "roop(iter): " << iter << std::endl;
 	std::cout << "/*********************solution*********************/" << std::endl;
-	std::cout << "a	      = " << prm->a[1] << " +/- " << c*ERR(0) << std::endl;
-	std::cout << "mu1     = " << prm->mu1[0] << " +/- " << c*ERR(1) << std::endl;
-	std::cout << "mu2     = " << prm->mu2[0] << " +/- " << c*ERR(2) << std::endl;
-	std::cout << "sigma11 = " << prm->sigma1[0] << " +/- " << c*ERR(3) << std::endl;
-	std::cout << "sigma11 = " << prm->sigma2[0] << " +/- " << c*ERR(4) << std::endl;
-	std::cout << "sigma21 = " << prm->sigma1[1] << " +/- " << c*ERR(5) << std::endl;
-	std::cout << "sigma22 = " << prm->sigma2[1] << " +/- " << c*ERR(6) << std::endl;
-	std::cout << "k1      = " << prm->kappa[0] << " +/- " << c*ERR(7) << std::endl;
-	std::cout << "k2      = " << prm->kappa[1] << " +/- " << c*ERR(8) << std::endl;
-	std::cout << "k3      = " << prm->kappa[2] << " +/- " << c*ERR(9)<< std::endl;
+	std::cout << "a	      = " << prm->getParameter("a")[1] << " +/- " << c*ERR(0) << std::endl;
+	std::cout << "mu1     = " << prm->getParameter("mu1")[0] << " +/- " << c*ERR(1) << std::endl;
+	std::cout << "mu2     = " << prm->getParameter("mu2")[0] << " +/- " << c*ERR(2) << std::endl;
+	std::cout << "sigma11 = " << prm->getParameter("sigma1")[0] << " +/- " << c*ERR(3) << std::endl;
+	std::cout << "sigma11 = " << prm->getParameter("sigma2")[0] << " +/- " << c*ERR(4) << std::endl;
+	std::cout << "sigma21 = " << prm->getParameter("sigma1")[1] << " +/- " << c*ERR(5) << std::endl;
+	std::cout << "sigma22 = " << prm->getParameter("sigma2")[1] << " +/- " << c*ERR(6) << std::endl;
+	std::cout << "k1      = " << prm->getParameter("kappa")[0] << " +/- " << c*ERR(7) << std::endl;
+	std::cout << "k2      = " << prm->getParameter("kappa")[1] << " +/- " << c*ERR(8) << std::endl;
+	std::cout << "k3      = " << prm->getParameter("kappa")[2] << " +/- " << c*ERR(9)<< std::endl;
 	std::cout << "/**************************************************/" << std::endl;
 	std::cout << "status  = " << gsl_strerror(status) << "\n" << std::endl;
 
 	gsl_multifit_fdfsolver_free(s);
 	gsl_matrix_free (J);
 
-	prm->freeParameter();
-	// delete n2;
-	// delete setData;
+	delete n2;
+	delete setData;
 
 	return gsl_strerror(status);
 }
 
 // 変位のpdfを求める
-void Analysis::createDispPdf()
+void Analysis::createDispPdf(Parameter* prm)
 {
 	std::cout << "Creating a file of the displacement pdf(.dat).\n" << std::endl;
 
-	// カウント変数
-	size_t tmp;
-
-	double gsa_xmin	= -6., integration = 0.;
+	const int XMIN = -6;
+	unsigned int i;
+	double integration = 0.;
 
 	FILE *gsax1pdf;
 	gsax1pdf = fopen("gsay1pdf.dat", "w");
 
-	for (tmp = 0; tmp*0.01 < 12; tmp++)
-	{
-		fprintf(gsax1pdf, "%lf %lf\n", gsa_xmin + tmp*0.01, this->_createGaussianPdf(this->prm_a, this->prm_mu1, this->prm_sigma1, gsa_xmin + tmp*0.01));
-		integration += 0.01*this->_createGaussianPdf(this->prm_a, this->prm_mu1, this->prm_sigma1, gsa_xmin + tmp*0.01);
+	for (i = 0; i*0.01 <= 12; ++i) {
+		fprintf(gsax1pdf, "%lf %lf\n", XMIN + i*0.01, this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), XMIN + i*0.01));
+		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), XMIN + i*0.01);
 	}
 
 	fclose(gsax1pdf);
@@ -195,24 +238,23 @@ void Analysis::culcDispVarience()
 }
 
 // 閾値通過率の分布を求める
-void Analysis::createLevelCrossing()
+void Analysis::createLevelCrossing(Parameter *prm)
 {
 	std::cout << "Creating a file of the level crossing(.dat).\n" << std::endl;
 
-	// カウント変数
-	size_t tmp_xi;
+	unsigned int xi;
 
 	FILE *x1_prob_pass;
 	x1_prob_pass = fopen("x1_prob_pass.dat", "w");
 
 	double pp_xi, prob_pass = 0.;
 
-	for (tmp_xi = 0; tmp_xi*0.01 < 8; tmp_xi++)
+	for (xi = 0; xi*0.01 < 8; ++xi)
 	{
 		prob_pass = 0.;	// 元に戻す
-		pp_xi = (double)tmp_xi*0.01;
+		pp_xi = (double)xi*0.01;
 
-		prob_pass = this->_culcLevelCrossing(pp_xi, this->prm_a, this->prm_mu1, this->prm_mu2, this->prm_sigma1, this->prm_sigma2, this->prm_kappa);
+		prob_pass = this->_culcLevelCrossing(pp_xi, prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("mu2"), prm->getParameter("sigma1"), prm->getParameter("sigma2"), prm->getParameter("kappa"));
 
 		fprintf(x1_prob_pass, "%lf %lf\n", pp_xi, prob_pass);
 	}
@@ -221,22 +263,21 @@ void Analysis::createLevelCrossing()
 }
 
 // 速度のpdfを作成する
-void Analysis::createVelPdf()
+void Analysis::createVelPdf(Parameter *prm)
 {
 	std::cout << "Creating a file of the velocity varience(.dat).\n" << std::endl;
 
-	// カウント変数
-	int tmp;
-
-	double gsa_ymin = -15., integration = 0.;
+	const int XMIN = -15;
+	unsigned int i;
+	double integration = 0.;
 
 	FILE *gsax2pdf;
 	gsax2pdf = fopen("gsay2pdf.dat", "w");
 
-	for (tmp = 0; tmp*0.01 < 30; tmp++)
+	for (i = 0; i*0.01 <= 30; ++i)
 	{
-		fprintf(gsax2pdf, "%lf %lf\n", gsa_ymin + tmp*0.01, this->_createGaussianPdf(this->prm_a, this->prm_mu2, this->prm_sigma2, gsa_ymin));
-		integration += 0.01*this->_createGaussianPdf(this->prm_a, this->prm_mu2, this->prm_sigma2, gsa_ymin);
+		fprintf(gsax2pdf, "%lf %lf\n", XMIN + i*0.01, this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), XMIN));
+		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), XMIN);
 	}
 
 	fclose(gsax2pdf);
@@ -313,7 +354,7 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
  * @param double x 変数
  * @return pdf 確率密度関数
  */
-double Analysis::_createGaussianPdf(double a[], double mu[], double sigma[], double x) 
+double Analysis::_createGaussianPdf(const std::vector<double> &a, const std::vector<double> &mu, const std::vector<double> &sigma, double x) 
 {
 	double pdf = 0.;
 	unsigned int i;
@@ -334,7 +375,7 @@ double Analysis::_createGaussianPdf(double a[], double mu[], double sigma[], dou
  * @param double sigma2[] 速度の分散
  * @param double kappa[]
  */
-double Analysis::_culcLevelCrossing(double pp_xi, double a[], double mu1[], double mu2[], double sigma1[], double sigma2[], double kappa[])
+double Analysis::_culcLevelCrossing(double pp_xi, const std::vector<double> &a, const std::vector<double> &mu1, const std::vector<double> &mu2, const std::vector<double> &sigma1, const std::vector<double> &sigma2, const std::vector<double> &kappa)
 {
 	double prob_pass = 0.;
 	double pp_c = 0., pp_g = 0., pp_sigma = 0.;
