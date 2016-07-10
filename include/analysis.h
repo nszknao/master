@@ -51,11 +51,13 @@ public:
 	// TODO:グローバル変数はアンスコから始める．
 	Analysis(double lambda, double beta2, double alpha, double mu1, double mu2);
 	std::string leastSquareMethod(Parameter *prm);
-	void createDispPdf(Parameter *prm);
-	void createVelPdf(Parameter *prm);
+	int GeneticAlgorithm(std::vector<Parameter*> &);
+	void createDispPdf(Parameter *prm, std::vector<double> &, std::vector<double> &, int);
+	void createVelPdf(Parameter *prm, std::vector<double> &, std::vector<double> &, int);
 	void culcDispVarience();
 	void culcVelVarience();
 	void createLevelCrossing(Parameter *prm);
+	void outputIntoFile(const std::string, const std::vector<double> &, const std::vector<double> &);
 	~Analysis();
 };
 

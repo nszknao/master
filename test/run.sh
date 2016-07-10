@@ -65,7 +65,7 @@ mkdir ${eps}/"velocity(log)"
 mkdir ${eps}/"velocity(linear)"
 fi
 
-##### Handling if "bplot.plt" exists. #############
+##### Handling if "plot.plt" exists. #############
 plot="plot.plt"
 
 if [ -e ${plot} ]

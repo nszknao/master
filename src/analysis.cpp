@@ -59,12 +59,86 @@ std::vector<double> Parameter::getParameter(std::string prm)
 		return _sigma2;
 	else if (prm == "kappa")
 		return _kappa;
-	else
+	else {
 		std::cout << "Error: Given parameter doesn't exist." << std::endl;
+		return std::vector<double>();
+	}
 }
 
-// 最小二乗法を解いて解析解を求める
-std::string Analysis::leastSquareMethod(Parameter *prm)
+/**
+ * @fn NSGA2でモーメント方程式を解く
+ * @param Parameter* prm モーメント方程式から求めたパラメータ
+ */
+int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm)
+{
+	std::cout << "Get analysis solution using NSGA2.\n" << std::endl;
+
+	unsigned int i;
+
+	// パルス振幅（generalized Gauss distribution）に関するパラメータ
+	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
+
+	// 入力に関するモーメント
+	double dF[6];
+	dF[0] = 0;
+	dF[1] = this->_alpha*S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
+	dF[2] = 0;
+	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[4] = 0;
+	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+
+	// 入力や系のパラメータ
+	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
+
+	// nsga2
+	NSGA2 *n2	= new NSGA2(10, 20, true, 300);
+	n2->run(setData);
+
+		/********** 計算結果 **********/
+	prm.reserve(n2->getPrmValue().size());
+	for (i = 0; i < n2->getPrmValue().size(); ++i) {
+		std::vector<double> prm_a(NUM_GAUSS), prm_mu1(NUM_GAUSS), prm_mu2(NUM_GAUSS), prm_sigma1(NUM_GAUSS), prm_sigma2(NUM_GAUSS), prm_kappa(NUM_GAUSS);
+		// 重み
+		prm_a[1] = n2->getPrmValue()[i][0];		// a2
+		prm_a[0] = (1. - prm_a[1]) / 2.;		// a1
+		prm_a[2] = prm_a[0];					// a3
+		// 変位
+		prm_mu1[0] = n2->getPrmValue()[i][1];	// mu11
+		prm_mu1[1] = 0.;						// mu21
+		prm_mu1[2] = -1.*prm_mu1[0];			// mu31
+		prm_sigma1[0] = n2->getPrmValue()[i][3];	// sigma11
+		prm_sigma1[1] = n2->getPrmValue()[i][5];	// sigma21
+		prm_sigma1[2] = prm_sigma1[0];				// sigma31
+		// 速度
+		prm_mu2[0] = n2->getPrmValue()[i][2];	// mu12
+		prm_mu2[1] = 0.;						// mu22
+		prm_mu2[2] = -1.*prm_mu2[0];			// mu32
+		prm_sigma2[0] = n2->getPrmValue()[i][4];	// sigma12
+		prm_sigma2[1] = n2->getPrmValue()[i][6];	// sigma22
+		prm_sigma2[2] = prm_sigma2[0];				// sigma32
+		// 共分散
+		prm_kappa[0] = n2->getPrmValue()[i][7];		// kappa123
+		prm_kappa[1] = n2->getPrmValue()[i][8];		// kappa223
+		prm_kappa[2] = n2->getPrmValue()[i][9];		// kappa323
+	
+		Parameter* p	= new Parameter();
+		p->allocParameter();
+		p->setParameter(prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
+		prm.push_back(p);
+	}
+	/******************************/
+
+	delete setData;
+	delete n2;
+
+	return EXIT_SUCCESS;
+}
+
+/**
+ * @fn 最小二乗法を解いて解析解を求める
+ * @param Parameter* prm モーメント方程式から求めたパラメータ
+ */
+std::string Analysis::leastSquareMethod(Parameter* prm)
 {
 	std::cout << "Get analysis solution using least squeare method.\n" << std::endl;
 
@@ -89,12 +163,6 @@ std::string Analysis::leastSquareMethod(Parameter *prm)
 	
 	// 最小二乗法で使うパラメータ
 	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
-
-	// nsga2
-	NSGA2 *n2	= new NSGA2(120, 20, true, 100);
-	nsga2_function n2f;
-	n2f.params	= setData;
-	n2->run(&n2f);
 
 	// 最小二乗法を解くための関数をセット
 	gsl_multifit_function_fdf f;
@@ -182,30 +250,31 @@ std::string Analysis::leastSquareMethod(Parameter *prm)
 	gsl_multifit_fdfsolver_free(s);
 	gsl_matrix_free (J);
 
-	delete n2;
 	delete setData;
 
 	return gsl_strerror(status);
 }
 
-// 変位のpdfを求める
-void Analysis::createDispPdf(Parameter* prm)
+/**
+ * @fn 変位のPDFを求める
+ * @param Parameter* prm モーメント方程式から求めたパラメータ
+ * @param vector &x X軸の情報を保存（領域確保済み）
+ * @param vector &y Y軸の情報を保存（領域確保済み）
+ * @param int xmin X軸の最小値
+ */
+void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector<double> &y, int xmin)
 {
-	std::cout << "Creating a file of the displacement pdf(.dat).\n" << std::endl;
+	std::cout << "Culculate the displacement pdf.\n" << std::endl;
 
-	const int XMIN = -6;
 	unsigned int i;
 	double integration = 0.;
 
-	FILE *gsax1pdf;
-	gsax1pdf = fopen("gsay1pdf.dat", "w");
-
-	for (i = 0; i*0.01 <= 12; ++i) {
-		fprintf(gsax1pdf, "%lf %lf\n", XMIN + i*0.01, this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), XMIN + i*0.01));
-		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), XMIN + i*0.01);
+	for (i = 0; i*0.01 <= abs(xmin)*2; ++i) {
+		x[i]	= xmin + i*0.01;
+		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*0.01);
+		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*0.01);
 	}
 
-	fclose(gsax1pdf);
 	std::cout << "y1 integration = " << integration << ".\n" << std::endl;
 }
 
@@ -262,25 +331,26 @@ void Analysis::createLevelCrossing(Parameter *prm)
 	fclose(x1_prob_pass);
 }
 
-// 速度のpdfを作成する
-void Analysis::createVelPdf(Parameter *prm)
+/**
+ * @fn 速度のPDFを求める
+ * @param Parameter* prm モーメント方程式から求めたパラメータ
+ * @param vector &x X軸の情報を保存（領域確保済み）
+ * @param vector &y Y軸の情報を保存（領域確保済み）
+ * @param int xmin X軸の最小値
+ */
+void Analysis::createVelPdf(Parameter *prm, std::vector<double> &x, std::vector<double> &y, int xmin)
 {
 	std::cout << "Creating a file of the velocity varience(.dat).\n" << std::endl;
 
-	const int XMIN = -15;
 	unsigned int i;
 	double integration = 0.;
 
-	FILE *gsax2pdf;
-	gsax2pdf = fopen("gsay2pdf.dat", "w");
-
 	for (i = 0; i*0.01 <= 30; ++i)
 	{
-		fprintf(gsax2pdf, "%lf %lf\n", XMIN + i*0.01, this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), XMIN));
-		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), XMIN);
+		x[i]	= xmin + i*0.01;
+		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), xmin);
+		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), xmin);
 	}
-
-	fclose(gsax2pdf);
 	printf("y integration = %lf \n",integration);
 }
 
@@ -291,7 +361,7 @@ void Analysis::createVelPdf(Parameter *prm)
 void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 {
 	// カウント変数
-	int tmp;
+	unsigned int tmp;
 	
 	int s, num = 3;
 	double a[num*num], b[num];
@@ -343,6 +413,37 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 	std::cout << "roop(_culcInitValue):" <<  tmp << std::endl;
 	std::cout << "sigma_x=" << sqrt(Exx) << ", sigma_y=" << sqrt(Eyy) << ", rho_xy=" << Exy/sqrt(Exx*Eyy) << "\n" << std::endl;
 	return;
+}
+
+/**
+ * @fn ファイルに出力する
+ * @param string name ファイル名
+ * @param vector &x X軸情報
+ * @param vector &y Y軸情報
+ */
+void Analysis::outputIntoFile(const std::string name, const std::vector<double> &x, const std::vector<double> &y)
+{
+	std::cout << "Creating a file.\n" << std::endl;
+
+	// 値の数をチェック
+	if (x.size() != y.size()) {
+		std::cout << "Error: Do not match vector size." << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	std::ofstream ofs(name);
+	// FILE *f;
+	// if ((f = fopen(name, "w")) == NULL) {
+	// 	std::cout << "Error: Failed to open file." << std::endl;
+	// 	exit(EXIT_FAILURE);
+	// }
+
+	unsigned int i;
+	for (i = 0; i < x.size(); ++i) {
+		ofs << x[i] << " " << y[i] << std::endl;
+		// fprintf(f, "%lf %lf\n", x[i], y[i]);
+	}
+	// fclose(f);
 }
 
 /**

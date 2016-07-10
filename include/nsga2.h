@@ -16,25 +16,23 @@
 
 using namespace std;
 
-
-class nsga2_function
-{
-public:
-	ParamData * params;  /* user parameters */
-};
-
 class NSGA2
 {
 private:
+	std::vector< std::vector<double> > _obj, _prm;		// 結果を保存する
 	unsigned _dimension, _popSize, _numOfBits, _iterations;
 	bool _useGrayCode;
 	int _max, _min;
 
 	void _saveArchiveInFile(char *filename, ArchiveMOO &archive);
+	void _saveArchive(ArchiveMOO &archive);
 
 public:
 	NSGA2(int pop, int bits, bool gray, int iter);
-	int run(nsga2_function * f);
+	void freeVector();
+	int run(ParamData* f);
+	std::vector< std::vector<double> > getObjValue();
+	std::vector< std::vector<double> > getPrmValue();
 };
 
 #endif // !__NSGA2_H_INCLUDE_

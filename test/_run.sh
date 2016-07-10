@@ -1,15 +1,34 @@
 #!/bin/bash
+##### Handling if "plot.plt" exists. #############
+plot="plot.plt"
 
-export COMPILER_PATH=/usr/bin
-
-if [ -e gatest.exe ]; then
-        rm gatest.exe
+if [ -e ${plot} ]
+then
+rm ${plot}
+touch ${plot}
+else
+touch ${plot}
 fi
-############ Compile-force #############################################
-# g++ -g -O0 -lstdc++ ../test/testMain.cpp ../ga/src/Ga.cpp ../ga/src/GaCommon.cpp -o gatest.exe -lm -lgsl -lgslcblas -std=c++11
-g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ../ga/src/nsga2Sample_Shark.cpp -o gatest.exe -lm -std=c++11 -lshark -lpthread
-# g++48 -I /usr/include/paradiseo/moeo -I /usr/include/paradiseo/mo -I /usr/include/paradiseo/eo -Wall -g -O0 ../ga/src/Sch1.cpp -o gatest.exe -std=c++0x -lm -lcma -leo -leoutils -les -lga -lmoeo
 
-if [ -e gatest.exe ]; then
-        ./gatest.exe
-fi
+# 変位応答分布（対数）
+cat <<EOF >${plot}
+set terminal postscript eps enhanced color
+set style line 1 lt 1 lw 2
+set size 0.45,0.55
+unset key
+EOF
+
+for (( i = 0 ; i < 10 ; i++ ))
+do
+cat <<EOF >>${plot}
+set output "log_pdf_of_y1_${i}.eps"
+set xlabel "displacement {/Italic-Times y_1}"
+set ylabel "probability density {/Italic-Times p_{Y_1}}"
+set xtics 2
+set ytics 0.1
+set logscale y
+set format y "10^{%L}"
+p [-6:6][0.00001:1.0] "results/l=0.4,b2=2.5000000/dat/dat_a=0.1/gsay1pdf_${i}.dat" with lines linetype 1 lw 4 lc rgb "red"
+EOF
+done
+gnuplot ${plot}
