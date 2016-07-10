@@ -36,6 +36,7 @@ public:
 	void setParameter(std::vector<double> &, std::vector<double> &, std::vector<double> &, std::vector<double> &, std::vector<double> &, std::vector<double> &);
 	void allocParameter();
 	void freeParameter();
+	bool validate();
 	std::vector<double> getParameter(std::string);
 };
 

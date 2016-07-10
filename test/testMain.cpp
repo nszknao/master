@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 	for (i = 0; i < prm.size(); ++i) {
 		filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
 		std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
+		if (!prm[i]->validate()) continue;
 		ana->createDispPdf(prm[i], dispX, dispY, xmin);
 		ana->outputIntoFile(filename, dispX, dispY);
 	}

@@ -66,6 +66,31 @@ std::vector<double> Parameter::getParameter(std::string prm)
 }
 
 /**
+ * @fn パラメータの値が正常かチェックする
+ * @param Parameter* prm モーメント方程式から求めたパラメータ
+ */
+bool Parameter::validate()
+{
+	bool flg	= true;
+	unsigned int i;
+	for (i = 0; i < NUM_GAUSS; ++i) {
+		if (this->_a[i] < 0) {
+			flg	= false;
+		}
+		if (this->_sigma1[i] < 0) {
+			flg	= false;
+		}
+		if (this->_sigma2[i] < 0) {
+			flg	= false;
+		}
+		if (this->_kappa[i] < -1 || this->_kappa[i] > 1) {
+			flg	= false;
+		}
+	}
+	return flg;
+}
+
+/**
  * @fn NSGA2でモーメント方程式を解く
  * @param Parameter* prm モーメント方程式から求めたパラメータ
  */
@@ -91,7 +116,7 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm)
 	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
 
 	// nsga2
-	NSGA2 *n2	= new NSGA2(10, 20, true, 300);
+	NSGA2 *n2	= new NSGA2(120, 20, true, 300);
 	n2->run(setData);
 
 		/********** 計算結果 **********/
