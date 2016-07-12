@@ -1,5 +1,5 @@
 #include "../include/analysis.h"
-#include <typeinfo>
+
 
 int main(int argc, char *argv[])
 {
@@ -13,29 +13,46 @@ int main(int argc, char *argv[])
 	std::cout << "--------------------\n" << std::endl;
 	std::cout << "analysis.cpp started.\n" << std::endl;
 	
+	Analysis *ana	= new Analysis(lambda, beta2, alpha, mu1, mu1);
+
+	/* 最小二乗法で解く */
 	// Parameter* prm	= new Parameter();
 	// prm->allocParameter();
-	Analysis *ana	= new Analysis(lambda, beta2, alpha, mu1, mu1);
 	// std::string result	= ana->leastSquareMethod(prm);
-	std::vector<Parameter*> prm;
-	ana->GeneticAlgorithm(prm);
 	// if (result == "success") {
 	// 	int xmin	= -6;
 	// 	std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
 	// 	ana->createDispPdf(prm, dispX, dispY, xmin);
 	// 	ana->outputIntoFile((char*)"gsay1pdf.dat", dispX, dispY);
 	// }
-	int xmin	= -6;
+	// delete prm;
+
+	/* GAで解く */
+	std::vector<Parameter*> prm;
+	std::vector< std::vector<double> > pValue, oValue;
+	ana->GeneticAlgorithm(prm, pValue, oValue);
+	int xminDisp	= -6;
+	int xmaxFCross	= 8;
 	std::string filename	= "";
 	for (i = 0; i < prm.size(); ++i) {
-		filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
-		std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
 		if (!prm[i]->validate()) continue;
-		ana->createDispPdf(prm[i], dispX, dispY, xmin);
+		// if (ana->isOverSpecifyValue(oValue[i], 50.)) continue;
+		/* 変位のPDFを求める */
+		std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
+		ana->createDispPdf(prm[i], dispX, dispY, xminDisp);
+		filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
 		ana->outputIntoFile(filename, dispX, dispY);
+		/* 閾値通過率を求める */
+		std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
+		ana->createLevelCrossing(prm[i], fCrossX, fCrossY, xmaxFCross);
+		filename	= "firstcross_" + std::to_string(i) + ".dat";
+		ana->outputIntoFile(filename, fCrossX, fCrossY);
 	}
-	
-	// delete prm;
+	for (i = 0; i < prm.size(); ++i) {
+		prm[i]->freeParameter();
+		delete prm[i];
+	}
+
 	delete ana;
 	
 	std::cout << "analysis.cpp has done.\n" << std::endl;

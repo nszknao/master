@@ -33,7 +33,6 @@ params="l=${lambda},b2=${beta2}"
 
 X=`echo "${alpha} * 10" | bc`
 XX=${X%.*}
-echo ${XX}
 if [[ $XX -eq 1 ]]
 then
 if [ -e ./${results}/${params}/ ]
@@ -152,18 +151,18 @@ EOF
 
 
 #変位応答の確率密度関数(対数軸)をプロットする
-cat <<EOF >>${plot}
-set output "${eps}/displacement(log)/log_pdf_of_y1_mu1=${loginit}.eps"
-set xlabel "displacement {/Italic-Times y_1}"
-set ylabel "probability density {/Italic-Times p_{Y_1}}"
-set xtics 2
-set ytics 0.1
-set logscale y
-set format y "10^{%L}"
-p [-6:6][0.00001:1.0] "./y1_pdf.dat" with p pt 6 ps 1 lc rgb "blue",\
-		"./gsay1pdf.dat" with lines linetype 1 lw 4 lc rgb "red",\
-		"./Gpdf/y1_Gpdf.dat" with lines linetype 2 lw 4
-EOF
+# cat <<EOF >>${plot}
+# set output "${eps}/displacement(log)/log_pdf_of_y1_mu1=${loginit}.eps"
+# set xlabel "displacement {/Italic-Times y_1}"
+# set ylabel "probability density {/Italic-Times p_{Y_1}}"
+# set xtics 2
+# set ytics 0.1
+# set logscale y
+# set format y "10^{%L}"
+# p [-6:6][0.00001:1.0] "./y1_pdf.dat" with p pt 6 ps 1 lc rgb "blue",\
+# 		"./gsay1pdf.dat" with lines linetype 1 lw 4 lc rgb "red",\
+# 		"./Gpdf/y1_Gpdf.dat" with lines linetype 2 lw 4
+# EOF
 
 ##速度応答の確率密度関数(対数軸)をプロットする
 #cat <<EOF >>${plot}
@@ -179,8 +178,7 @@ EOF
 #			"./Gpdf/y2_Gpdf.dat" with lines linetype 2 lw 2
 #EOF
 
-gnuplot ${plot}
-echo -e "Plotting is success!!\n"
+# gnuplot ${plot}
 
 #rm "gsay1pdf.dat"
 #fi

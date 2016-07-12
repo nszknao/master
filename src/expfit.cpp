@@ -8,11 +8,15 @@
 
 
 /**
- * @fn
- * GSLの非線形最小二乗法で使うモーメント方程式の関数値ベクトル
+ * @fn GSLの非線形最小二乗法で使うモーメント方程式の関数値ベクトル
+ * @param gsl_vector* x 方程式のパラメータ
+ * @param void* params 系や入力のパラメータ
+ * @param gsl_vector* f 計算後の方程式の値を格納
  */
 int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
+	unsigned int i;
+
 	ParamData* paramData		= static_cast<ParamData*>(params);
 	unsigned NUM_OF_MOMENT_EQUATION	= paramData->n;
 	unsigned NUM_OF_PARAMETER		= paramData->p;
@@ -41,32 +45,10 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*zeta,0,0,0,0,0,-6*epi
 	};
 	
-	// モーメント方程式を解く際の補正係数
-	double keisu[15];
-	keisu[0] = 5.;
-	keisu[1] = 24. / 5.;
-	keisu[2] = 24. / 6.;
-	keisu[3] = 24. / 16.;
-	keisu[4] = 24. / 19.;
-	keisu[5] = 1.;
-	keisu[6] = 24. / 32.;
-	keisu[7] = 24. / 36.;
-	keisu[8] = 24. / 64.;
-	keisu[9] = 24. / 79.;
-	keisu[10] = 24. / 98.;
-	keisu[11] = 24. / 117.;
-	keisu[12] = 24. / 144;
-	keisu[13] = 24. / 183.;
-	keisu[14] = 24. / 216;
-
-	// カウント変数
-	unsigned tmp;
-	
 	double param[NUM_OF_PARAMETER];	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
 
-	for (tmp=0; tmp<NUM_OF_PARAMETER; tmp++)
-	{
-		param[tmp] = gsl_vector_get(x, tmp);
+	for (i = 0; i < NUM_OF_PARAMETER; ++i) {
+		param[i] = gsl_vector_get(x, i);
 	}
 	// ゆとり作戦
 	double pa0 = param[0], pa1 = param[1], pa2 = param[2], pa3 = param[3], pa4 = param[4], pa5 = param[5], pa6 = param[6], pa7 = param[7], pa8 = param[8], pa9 = param[9];
@@ -168,9 +150,8 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 
 
 	double v_result_moment_eq[NUM_OF_MOMENT_EQUATION];
-	for (tmp=0; tmp<NUM_OF_MOMENT_EQUATION; tmp++)
-	{
-		v_result_moment_eq[tmp] = 0.0;
+	for (i=0; i<NUM_OF_MOMENT_EQUATION; ++i) {
+		v_result_moment_eq[i] = 0.0;
 	}
 
 	// モーメント方程式を解く
@@ -181,26 +162,56 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 
 	// 計算結果を配列に保存
 	double array_result_moment_eq[NUM_OF_MOMENT_EQUATION];
-	for (tmp=0; tmp<NUM_OF_MOMENT_EQUATION; tmp++)
-	{
-		array_result_moment_eq[tmp] = gsl_matrix_get(&m_result_moment_eq.matrix, tmp, 0);	// 先の行列計算の答えを配列にする
+	for (i=0; i<NUM_OF_MOMENT_EQUATION; ++i) {
+		array_result_moment_eq[i] = gsl_matrix_get(&m_result_moment_eq.matrix, i, 0);	// 先の行列計算の答えを配列にする
 	}
 	array_result_moment_eq[2]  += dG[1];
 	array_result_moment_eq[7]  += dG[3];
 	array_result_moment_eq[14] += dG[5];
 	
 	// 補正係数を含めた結果をfに格納
-	for (tmp=0; tmp<NUM_OF_MOMENT_EQUATION; tmp++)
-	{
-		gsl_vector_set(f, tmp, keisu[tmp]*(array_result_moment_eq[tmp]));
+	for (i = 0; i < NUM_OF_MOMENT_EQUATION; ++i) {
+		gsl_vector_set(f, i, (array_result_moment_eq[i]));
+		if (i == 15)
+			gsl_vector_set(f, i, MomentEq::limitingConditionFnc(x));
 	}
 
 	return GSL_SUCCESS;
 }
 
-/**
- * @fn
- * GSLの非線形最小自乗法で使うモーメント方程式のヤコビアン
+double MomentEq::limitingConditionFnc(const gsl_vector* x)
+{
+	double val	= 0.;
+	double a		= gsl_vector_get(x, 0);
+	// double mu1		= gsl_vector_get(x, 1);
+	// double mu2		= gsl_vector_get(x, 2);
+	double sigma11	= gsl_vector_get(x, 3);
+	double sigma12	= gsl_vector_get(x, 4);
+	double sigma21	= gsl_vector_get(x, 5);
+	double sigma22	= gsl_vector_get(x, 6);
+	double kappa1	= gsl_vector_get(x, 7);
+	double kappa2	= gsl_vector_get(x, 8);
+	double kappa3	= gsl_vector_get(x, 9);
+
+	// 不等式の制約条件
+	double c1, c2, c3, c4, c5, c6, c7, c8;
+	(0 <= a && a <= 1)	? c1 = 0. : c1 = a;
+	
+	(0 <= sigma11)	? c2 = 0. : c2 = sigma11;	(0 <= sigma12)	? c3 = 0. : c3 = sigma12;
+	(0 <= sigma21)	? c4 = 0. : c4 = sigma21;	(0 <= sigma22)	? c5 = 0. : c5 = sigma22;
+	
+	(-1 <= kappa1 && kappa1 <= 1)	? c6 = 0. : c6 = kappa1;	(-1 <= kappa2 && kappa2 <= 1)	? c7 = 0. : c7 = kappa2;
+	(-1 <= kappa3 && kappa3 <= 1)	? c8 = 0. : c8 = kappa3;
+
+	val	= 100*(pow(c1,2) + pow(c2,2) + pow(c3,2) + pow(c4,2) + pow(c5,2) + pow(c6,2) + pow(c7,2) + pow(c8,2));
+	return val;
+}
+
+ /**
+ * @fn GSLの非線形最小二乗法で使うモーメント方程式のヤコビアン
+ * @param gsl_vector* x 方程式のパラメータ
+ * @param void* params 系や入力のパラメータ
+ * @param gsl_vector* f 計算後の方程式の値を格納
  */
 int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 {

@@ -2,9 +2,6 @@
 #include "../include/expfit.h"
 
 NSGA2::NSGA2(int pop, int bits, bool gray, int iter) {
-    // 境界値
-    _max  = 0;
-    _min  = 1;
     _popSize      = pop;  // 120
     _numOfBits    = bits; // 20
     _useGrayCode  = gray; // true
@@ -32,8 +29,8 @@ int NSGA2::run(ParamData* params)
     double flipProb = 1. / params->n;   // mutation probability
 
     // 変数の定義域を設定
-    // TODO:各パラメータで設定できるように
-    const Interval rangeOfValues(_max, _min);
+    std::vector<double> lower(params->p), upper(params->p);
+    this->_setValueRange(lower, upper);
 
     // 親個体と子個体
     std::vector< std::vector<double> > PF(params->n, std::vector<double>(_popSize));
@@ -142,7 +139,7 @@ int NSGA2::run(ParamData* params)
     archive.nonDominatedSolutions();
 
     this->_saveArchive(archive);
-    // this->_saveArchiveInFile((char*)"nsga2example.out", archive);
+    this->_saveArchiveInFile((char*)"nsga2example.out", archive);
 
     cout    << "size of the archive: "  << archive.size() << endl << endl;
 
@@ -150,6 +147,25 @@ int NSGA2::run(ParamData* params)
     gsl_vector_free(f);
 
     return EXIT_SUCCESS;
+}
+
+/**
+ * @fn 変数の範囲を指定する
+ * @param std::vector<double> &lower 下限（領域確保済み）
+ * @param std::vector<double> &upper 上限（領域確保済み）
+ */
+void NSGA2::_setValueRange(std::vector<double> &lower, std::vector<double> &upper)
+{
+    lower[0]    = 0;    upper[0]    = 1;        // a
+    lower[1]    = -6;   upper[1]    = 6;        // mu1
+    lower[2]    = -12;  upper[1]    = 12;       //mu2
+    lower[3]    = 0;    upper[3]    = 3;        // sigma11
+    lower[4]    = 0;    upper[4]    = 3;        // sigma12
+    lower[5]    = 0;    upper[5]    = 3;        // sigma21
+    lower[6]    = 0;    upper[6]    = 3;        // sigma22
+    lower[7]    = -1;   upper[7]    = 1;        // kappa1
+    lower[8]    = -1;   upper[8]    = 1;        // kappa2
+    lower[9]    = -1;   upper[9]    = 1;        // kappa3
 }
 
 std::vector< std::vector<double> > NSGA2::getObjValue()
@@ -162,14 +178,14 @@ std::vector< std::vector<double> > NSGA2::getPrmValue()
     return _prm;
 }
 
-/*
-    アーカイブの情報を格納
-    @param &archive アーカイブ集団
-*/
+/**
+ * @fn アーカイブの情報を格納
+ * @param ArchiveMOO &archive アーカイブ集団
+ */
 void NSGA2::_saveArchive(ArchiveMOO &archive)
 {
     // TODO:各パラメータで設定できるように
-    const Interval rangeOfValues(_max, _min);
+    const Interval rangeOfValues(_min, _max);
 
     unsigned int i, ii, iii;
     unsigned int no = archive.size();
@@ -214,16 +230,16 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
  * @fn ２次元vectorのリサイズ
  */
 
-/*
-    アーカイブの情報をファイルに書き込む．
-    目的関数値1 目的関数値2 ... | パラメータ値1 パラメータ値2 ...
-    @param *filename ファイルポインタ
-    @param &archive アーカイブ集団
-*/
+/**
+ * @fn アーカイブの情報をファイルに書き込む．
+ * 目的関数値1 目的関数値2 ... | パラメータ値1 パラメータ値2 ...
+ * @param char* filename ファイルポインタ
+ * @param ArchiveMOO &archive アーカイブ集団
+ */
 void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
 {
     // TODO:各パラメータで設定できるように
-    const Interval rangeOfValues(_max, _min);
+    const Interval rangeOfValues(_min, _max);
 
     unsigned no = archive.size();
     unsigned noOfObj;

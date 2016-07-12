@@ -16,7 +16,7 @@
 #include <gsl/gsl_sf.h>
 #include "expfit.h"
 
-#define NUM_OF_MOMENTEQ 15
+#define NUM_OF_MOMENTEQ 16	// 制約条件のための目的関数を１つ追加
 #define NUM_OF_PARAM 10
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
 #define PI M_PI
@@ -43,22 +43,20 @@ public:
 class Analysis
 {
 private:
-	double _lambda, _beta2, _alpha, mu1, mu2;
+	double _lambda, _beta2, _alpha, _mu1, _mu2;
 	double _createGaussianPdf(const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, double x);
-	double _culcLevelCrossing(double pp_xi, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &);
+	double _culcLevelCrossing(double, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &);
 	void _culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy);
 
 public:
-	// TODO:グローバル変数はアンスコから始める．
-	Analysis(double lambda, double beta2, double alpha, double mu1, double mu2);
-	std::string leastSquareMethod(Parameter *prm);
-	int GeneticAlgorithm(std::vector<Parameter*> &);
-	void createDispPdf(Parameter *prm, std::vector<double> &, std::vector<double> &, int);
-	void createVelPdf(Parameter *prm, std::vector<double> &, std::vector<double> &, int);
-	void culcDispVarience();
-	void culcVelVarience();
-	void createLevelCrossing(Parameter *prm);
+	Analysis(double, double, double, double, double);
+	std::string leastSquareMethod(Parameter*);
+	int GeneticAlgorithm(std::vector<Parameter*> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
+	void createDispPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
+	void createVelPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
+	void createLevelCrossing(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void outputIntoFile(const std::string, const std::vector<double> &, const std::vector<double> &);
+	bool isOverSpecifyValue(const std::vector<double> &, double);
 	~Analysis();
 };
 

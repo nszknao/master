@@ -24,8 +24,9 @@ private:
 	bool _useGrayCode;
 	int _max, _min;
 
-	void _saveArchiveInFile(char *filename, ArchiveMOO &archive);
-	void _saveArchive(ArchiveMOO &archive);
+	void _setValueRange(std::vector<double> &, std::vector<double> &);
+	void _saveArchiveInFile(char*, ArchiveMOO &);
+	void _saveArchive(ArchiveMOO &);
 
 public:
 	NSGA2(int pop, int bits, bool gray, int iter);
