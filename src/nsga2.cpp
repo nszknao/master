@@ -1,10 +1,8 @@
 #include "../include/nsga2.h"
 #include "../include/expfit.h"
 
-NSGA2::NSGA2(int pop, int bits, bool gray, int iter) {
+NSGA2::NSGA2(int pop, int iter) {
     _popSize      = pop;  // 120
-    _numOfBits    = bits; // 20
-    _useGrayCode  = gray; // true
     _iterations   = iter;  // 500
 }
 
@@ -40,8 +38,8 @@ int NSGA2::run(ParamData* params)
     Rng::seed(seed);
 
     // 親子の個体群を定義
-    PopulationMOO parents(_popSize, ChromosomeT< bool >(params->p*_numOfBits));
-    PopulationMOO offsprings(_popSize, ChromosomeT< bool >(params->p*_numOfBits));
+    PopulationMOO parents(_popSize, ChromosomeT< double >(params->p));
+    PopulationMOO offsprings(_popSize, ChromosomeT< double >(params->p));
 
     // 最小化のタスク
     parents   .setMinimize();
@@ -51,13 +49,16 @@ int NSGA2::run(ParamData* params)
     parents   .setNoOfObj(params->n);
     offsprings.setNoOfObj(params->n);
 
-    // 遺伝子型を表現型にデコードした時の一時保存用
-    ChromosomeT< double > dblchrom;
+    // 最終的なアーカイブ集団
+    ArchiveMOO archive(_popSize);
+    archive.minimize();
+
 
     // 親個体群の初期化
-    // TODO:初期値は自分で指定
     for (i = 0; i < parents.size(); ++i)
-       dynamic_cast< ChromosomeT< bool >& >( parents[ i ][ 0 ] ).initialize();
+       dynamic_cast< ChromosomeT< double >& >( parents[ i ][ 0 ] ).initialize(0, 1.);
+    
+    ChromosomeT< double > dblchrom;
 
     // 目的関数値を保存する
     std::vector<double> func(params->n);
@@ -67,8 +68,8 @@ int NSGA2::run(ParamData* params)
     f   = gsl_vector_alloc(params->n);
     // 個体群の評価
     for (i = 0; i < parents.size(); ++i) {
-        // 個体をデコードしてgsl_vectorに変換
-        dblchrom.decodeBinary(parents[ i ][ 0 ], rangeOfValues, _numOfBits, _useGrayCode);
+        // gsl_vectorに変換
+        dblchrom    = dynamic_cast< ChromosomeT< double > &>(parents[ i ][ 0 ]);
         for (ii = 0; ii < params->p; ++ii)
             gsl_vector_set(x, ii, dblchrom[ ii ]);
         
@@ -92,18 +93,19 @@ int NSGA2::run(ParamData* params)
         offsprings.selectBinaryTournamentMOO(parents);
 
         // recombine by crossing over two parents
-        for (i = 0; i < offsprings.size(); i += 2)
+        for (i = 0; i < offsprings.size(); i += 2) {
             if (Rng::coinToss(crossProb))
-                offsprings[ i ][ 0 ].crossoverUniform(offsprings[ i+1 ][ 0 ]);
+                dynamic_cast< ChromosomeT< double > &>(offsprings[ i ][ 0 ]).SBX(dynamic_cast< ChromosomeT< double > &>(offsprings[ i+1 ][ 0 ]), lower, upper, 20., 0.5);
+        }
 
         // flipping bitsによって突然変異
         for (i = 0; i < offsprings.size(); ++i)
-            dynamic_cast< ChromosomeT< bool >& >(offsprings[ i ][ 0 ]).flip(flipProb);
+            dynamic_cast< ChromosomeT< double > &>(offsprings[ i ][ 0 ]).mutatePolynomial(lower, upper, 20., flipProb);
 
         // 個体群の評価
         for (i = 0; i < parents.size(); ++i) {
-            // 個体をデコードしてgsl_vectorに変換
-            dblchrom.decodeBinary(offsprings[ i ][ 0 ], rangeOfValues, _numOfBits, _useGrayCode);
+            // gsl_vectorに変換
+            dblchrom    = dynamic_cast< ChromosomeT< double > &>(offsprings[ i ][ 0 ]);
             for (ii = 0; ii < params->p; ++ii)
                 gsl_vector_set(x, ii, dblchrom[ ii ]);
 
@@ -122,22 +124,31 @@ int NSGA2::run(ParamData* params)
 
         // 選択
         parents.selectCrowdedMuPlusLambda(offsprings);
+
         for (k = 0; k < parents.size(); ++k) {
             for (ii = 0; ii < params->n; ++ii) {
                 PF[ ii ][ k ]   = parents[ k ].getMOOFitness(ii);
             }
         }
+
+        // 10世代おきに劣解をアーカイブから除く
+        if (!(t % 10)) {
+            archive.cleanArchive();
+            for (i = 0; i < parents.size(); ++i)
+                archive.addArchive(parents[ i ]);
+            archive.nonDominatedSolutions();
+        }
     } // 繰り返し
     cout << "NSGA2: end\n" << endl;
 
     // data output
-    ArchiveMOO archive(_popSize);
-    archive.minimize();
-    for (i = 0; i < _popSize; ++i) {
+    archive.cleanArchive();
+    for (i = 0; i < _popSize; ++i)
         archive.addArchive(parents[ i ]);
-    }
+
     archive.nonDominatedSolutions();
 
+    cout << archive.size() << endl;
     this->_saveArchive(archive);
     this->_saveArchiveInFile((char*)"nsga2example.out", archive);
 
@@ -157,12 +168,12 @@ int NSGA2::run(ParamData* params)
 void NSGA2::_setValueRange(std::vector<double> &lower, std::vector<double> &upper)
 {
     lower[0]    = 0;    upper[0]    = 1;        // a
-    lower[1]    = -6;   upper[1]    = 6;        // mu1
-    lower[2]    = -12;  upper[1]    = 12;       //mu2
-    lower[3]    = 0;    upper[3]    = 3;        // sigma11
-    lower[4]    = 0;    upper[4]    = 3;        // sigma12
-    lower[5]    = 0;    upper[5]    = 3;        // sigma21
-    lower[6]    = 0;    upper[6]    = 3;        // sigma22
+    lower[1]    = -2;   upper[1]    = 2;        // mu1
+    lower[2]    = -2;  upper[2]    = 2;       // mu2
+    lower[3]    = 0;    upper[3]    = 2;        // sigma11
+    lower[4]    = 0;    upper[4]    = 2;        // sigma12
+    lower[5]    = 0;    upper[5]    = 2;        // sigma21
+    lower[6]    = 0;    upper[6]    = 2;        // sigma22
     lower[7]    = -1;   upper[7]    = 1;        // kappa1
     lower[8]    = -1;   upper[8]    = 1;        // kappa2
     lower[9]    = -1;   upper[9]    = 1;        // kappa3
@@ -184,21 +195,14 @@ std::vector< std::vector<double> > NSGA2::getPrmValue()
  */
 void NSGA2::_saveArchive(ArchiveMOO &archive)
 {
-    // TODO:各パラメータで設定できるように
-    const Interval rangeOfValues(_min, _max);
-
-    unsigned int i, ii, iii;
+    unsigned int i, ii;
     unsigned int no = archive.size();
     unsigned int noOfObj;
     if (no > 0)
         noOfObj = archive.readArchive(0).getNoOfObj();
     else
         noOfObj = 0;
-    _obj.resize(no);
-    for (i = 0; i < no; ++i) {
-        _obj[i].resize(noOfObj);
-    }
-
+    Common::resize2DemensionalVector(_obj, no, noOfObj);
 
     IndividualMOO individual;
     ChromosomeT< double > chrom;
@@ -214,21 +218,14 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
 
         // パラメータ値
         individual.operator=(archive.readArchive(i));
-        chrom.decodeBinary(individual[0], rangeOfValues, _numOfBits, _useGrayCode);
-        if (i == 0) {
-            _prm.resize(no);
-            for (iii = 0; iii < no; ++iii) {
-                _prm[iii].resize(chrom.size());
-            }
-        }
+        chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
+        if (i == 0)
+            Common::resize2DemensionalVector(_prm, no, chrom.size());
+
         for (ii = 0; ii < chrom.size(); ++ii)
             _prm[i][ii] = chrom[ii];
     }
 }
-
-/**
- * @fn ２次元vectorのリサイズ
- */
 
 /**
  * @fn アーカイブの情報をファイルに書き込む．
@@ -238,9 +235,6 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
  */
 void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
 {
-    // TODO:各パラメータで設定できるように
-    const Interval rangeOfValues(_min, _max);
-
     unsigned no = archive.size();
     unsigned noOfObj;
     if (no > 0)
@@ -266,9 +260,8 @@ void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
 
         // パラメータ値
         individual.operator=(archive.readArchive(i));
-        chrom.decodeBinary(individual[0], rangeOfValues, _numOfBits, _useGrayCode);
-        for (unsigned k = 0; k < chrom.size(); ++k)
-        {
+        chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
+        for (unsigned k = 0; k < chrom.size(); ++k) {
             ofs << chrom[k] << " " << std::flush;
         }
 

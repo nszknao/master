@@ -117,7 +117,7 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::v
 	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
 
 	// nsga2
-	NSGA2 *n2	= new NSGA2(120, 20, true, 300);
+	NSGA2 *n2	= new NSGA2(120, 300);
 	n2->run(setData);
 
 	unsigned int popSize	= n2->getPrmValue().size();
@@ -416,29 +416,6 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 	std::cout << "roop(_culcInitValue):" <<  tmp << std::endl;
 	std::cout << "sigma_x=" << sqrt(Exx) << ", sigma_y=" << sqrt(Eyy) << ", rho_xy=" << Exy/sqrt(Exx*Eyy) << "\n" << std::endl;
 	return;
-}
-
-/**
- * @fn ファイルに出力する
- * @param string name ファイル名
- * @param vector &x X軸情報
- * @param vector &y Y軸情報
- */
-void Analysis::outputIntoFile(const std::string name, const std::vector<double> &x, const std::vector<double> &y)
-{
-	std::cout << "Creating a file.\n" << std::endl;
-
-	// 値の数をチェック
-	if (x.size() != y.size()) {
-		std::cout << "Error: Do not match vector size." << std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	std::ofstream ofs(name);
-	unsigned int i;
-	for (i = 0; i < x.size(); ++i) {
-		ofs << x[i] << " " << y[i] << std::endl;
-	}
 }
 
 bool Analysis::isOverSpecifyValue(const std::vector<double> &v, double value)

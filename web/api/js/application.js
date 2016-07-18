@@ -1,0 +1,7 @@
+/**
+ * pinchshopper
+ */
+(function($) {
+	$(function() {
+	});
+})(jQuery);

@@ -172,40 +172,42 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	// 補正係数を含めた結果をfに格納
 	for (i = 0; i < NUM_OF_MOMENT_EQUATION; ++i) {
 		gsl_vector_set(f, i, (array_result_moment_eq[i]));
-		if (i == 15)
-			gsl_vector_set(f, i, MomentEq::limitingConditionFnc(x));
 	}
 
 	return GSL_SUCCESS;
 }
 
-double MomentEq::limitingConditionFnc(const gsl_vector* x)
-{
-	double val	= 0.;
-	double a		= gsl_vector_get(x, 0);
-	// double mu1		= gsl_vector_get(x, 1);
-	// double mu2		= gsl_vector_get(x, 2);
-	double sigma11	= gsl_vector_get(x, 3);
-	double sigma12	= gsl_vector_get(x, 4);
-	double sigma21	= gsl_vector_get(x, 5);
-	double sigma22	= gsl_vector_get(x, 6);
-	double kappa1	= gsl_vector_get(x, 7);
-	double kappa2	= gsl_vector_get(x, 8);
-	double kappa3	= gsl_vector_get(x, 9);
+/**
+ * @fn 制約条件を１つの目的関数として表す
+ * 今は使っていない。
+ */
+// double MomentEq::limitingConditionFnc(const gsl_vector* x)
+// {
+// 	double val	= 0.;
+// 	double a		= gsl_vector_get(x, 0);
+// 	// double mu1		= gsl_vector_get(x, 1);
+// 	// double mu2		= gsl_vector_get(x, 2);
+// 	double sigma11	= gsl_vector_get(x, 3);
+// 	double sigma12	= gsl_vector_get(x, 4);
+// 	double sigma21	= gsl_vector_get(x, 5);
+// 	double sigma22	= gsl_vector_get(x, 6);
+// 	double kappa1	= gsl_vector_get(x, 7);
+// 	double kappa2	= gsl_vector_get(x, 8);
+// 	double kappa3	= gsl_vector_get(x, 9);
 
-	// 不等式の制約条件
-	double c1, c2, c3, c4, c5, c6, c7, c8;
-	(0 <= a && a <= 1)	? c1 = 0. : c1 = a;
+// 	// 不等式の制約条件
+// 	double c1, c2, c3, c4, c5, c6, c7, c8;
+// 	(0 <= a && a <= 1)	? c1 = 0. : c1 = a;
 	
-	(0 <= sigma11)	? c2 = 0. : c2 = sigma11;	(0 <= sigma12)	? c3 = 0. : c3 = sigma12;
-	(0 <= sigma21)	? c4 = 0. : c4 = sigma21;	(0 <= sigma22)	? c5 = 0. : c5 = sigma22;
+// 	(0 <= sigma11)	? c2 = 0. : c2 = sigma11;	(0 <= sigma12)	? c3 = 0. : c3 = sigma12;
+// 	(0 <= sigma21)	? c4 = 0. : c4 = sigma21;	(0 <= sigma22)	? c5 = 0. : c5 = sigma22;
 	
-	(-1 <= kappa1 && kappa1 <= 1)	? c6 = 0. : c6 = kappa1;	(-1 <= kappa2 && kappa2 <= 1)	? c7 = 0. : c7 = kappa2;
-	(-1 <= kappa3 && kappa3 <= 1)	? c8 = 0. : c8 = kappa3;
+// 	(-1 <= kappa1 && kappa1 <= 1)	? c6 = 0. : c6 = kappa1;	(-1 <= kappa2 && kappa2 <= 1)	? c7 = 0. : c7 = kappa2;
+// 	(-1 <= kappa3 && kappa3 <= 1)	? c8 = 0. : c8 = kappa3;
 
-	val	= 100*(pow(c1,2) + pow(c2,2) + pow(c3,2) + pow(c4,2) + pow(c5,2) + pow(c6,2) + pow(c7,2) + pow(c8,2));
-	return val;
-}
+// 	val	= 100*(pow(c1,2) + pow(c2,2) + pow(c3,2) + pow(c4,2) + pow(c5,2) + pow(c6,2) + pow(c7,2) + pow(c8,2));
+// 	return val;
+// }
 
  /**
  * @fn GSLの非線形最小二乗法で使うモーメント方程式のヤコビアン

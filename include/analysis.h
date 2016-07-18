@@ -16,7 +16,7 @@
 #include <gsl/gsl_sf.h>
 #include "expfit.h"
 
-#define NUM_OF_MOMENTEQ 16	// 制約条件のための目的関数を１つ追加
+#define NUM_OF_MOMENTEQ 15
 #define NUM_OF_PARAM 10
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
 #define PI M_PI

@@ -16,7 +16,7 @@ public:
 	static int expb_f(const gsl_vector *x, void *params, gsl_vector *f);
 	static int expb_df(const gsl_vector * x, void *params, gsl_matrix *J);
 	static int expb_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *J);
-	static double limitingConditionFnc(const gsl_vector* x);
+	// static double limitingConditionFnc(const gsl_vector* x);
 };
 
 #endif // !__EXPFIT_H_INCLUDE_
