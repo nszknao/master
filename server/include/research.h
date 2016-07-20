@@ -19,10 +19,14 @@
 using namespace std;
 
 
+#ifndef __OSCILLATOR_AND_EXCITATION_PARAMETER__
+#define __OSCILLATOR_AND_EXCITATION_PARAMETER__
 /********** 系の係数・入力条件（不変）**********/
-#define S0 (1./(2.*M_PI))	// whitenoiseのパワースペクトル
-#define EPSILON 0.3			// 非線形性の強さ
-#define ZETA 0.05			// 減衰定数
+#define PI M_PI
+#define S0 1./(2.*PI)
+#define EPSILON 0.3
+#define ZETA 0.2
+#endif // !__OSCILLATOR_AND_EXCITATION_PARAMETER__
 
 /********** 計算条件 **********/
 #define SAMPLE_LENGTH 131072	// 131072,65536

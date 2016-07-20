@@ -15,9 +15,9 @@
 		</div>
 		<form action="/run" method="post" class="form-horizontal">
 			<div class="form-group">
-				<label class="radio-inline col-sm-3 col-sm-offset-1"><input type="radio" name="simulation">解析＋シミュレーション</label>
-				<label class="radio-inline col-sm-3 col-sm-offset-1"><input type="radio" name="simulation">シミュレーション</label>
-				<label class="radio-inline col-sm-3 col-sm-offset-1"><input type="radio" name="simulation">解析</label>
+				<label class="radio-inline col-sm-3 col-sm-offset-1"><input type="radio" name="simulation" value="both">解析＋シミュレーション</label>
+				<label class="radio-inline col-sm-3 col-sm-offset-1"><input type="radio" name="simulation" value="simulation">シミュレーション</label>
+				<label class="radio-inline col-sm-3 col-sm-offset-1"><input type="radio" name="simulation" value="analysis">解析</label>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-9">

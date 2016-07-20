@@ -16,16 +16,20 @@
 #include <gsl/gsl_sf.h>
 #include "expfit.h"
 
+#ifndef __OSCILLATOR_AND_EXCITATION_PARAMETER__
+#define __OSCILLATOR_AND_EXCITATION_PARAMETER__
+/********** 系の係数・入力条件（不変）**********/
+#define S0 1./(2.*PI)
+#define EPSILON 0.3
+#define ZETA 0.2
+#endif // !__OSCILLATOR_AND_EXCITATION_PARAMETER__
+
+/********** 系の係数・入力条件（不変）**********/
 #define NUM_OF_MOMENTEQ 15
 #define NUM_OF_PARAM 10
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
-#define PI M_PI
-
-/************ 系の係数・入力条件（不変）*******************/
-#define S0 1./(2.*PI)
-#define ZETA 0.2
-#define EPSILON 0.3
 #define GGD_KAPPA 2.	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
+#define PI M_PI
 
 
 class Parameter
@@ -60,4 +64,4 @@ public:
 	~Analysis();
 };
 
-#endif // !__ANALISYS_H_INCLUDE_
+#endif // !__ANALISYS_H_INCLUDE__
