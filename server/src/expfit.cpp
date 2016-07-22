@@ -168,21 +168,21 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	array_result_moment_eq[7]  += dG[3];
 	array_result_moment_eq[14] += dG[5];
 
-	// オーダーを調べたい時に使う
-	std::cout << array_result_moment_eq[0] << "," << array_result_moment_eq[1] << "," << array_result_moment_eq[2] << "," << array_result_moment_eq[3] << "," << array_result_moment_eq[4] << 
-	"," << array_result_moment_eq[5] << "," << array_result_moment_eq[6] << "," << array_result_moment_eq[7] << "," << array_result_moment_eq[8] << "," << array_result_moment_eq[9] << 
-	"," << array_result_moment_eq[10] << "," << array_result_moment_eq[11] << "," << array_result_moment_eq[12] << "," << array_result_moment_eq[13] << "," << array_result_moment_eq[14] << std::endl;
-	
 	// 補正係数
 	std::vector<double> k(NUM_OF_MOMENT_EQUATION);
-	k[0] = 1.3;	k[1] = 0.5;	k[2] = 1.4;	k[3] = 3.5;	k[4] = 2.5;	k[5] = 2.5;	k[6] = 5.5;	k[7] = 8.0;
-	k[8] = 18.;	k[9] = 12.;	k[10] = 15.;	k[11] = 20.;	k[12] = 30.;	k[13] = 30.;	k[14] = 300.;
+	k[0] = 1.26;	k[1] = 0.66;	k[2] = 1.35;	k[3] = 3.81;	k[4] = 2.53;	k[5] = 2.85;	k[6] = 5.16;	k[7] = 7.25;
+	k[8] = 19.6;	k[9] = 11.5;	k[10] = 13.7;	k[11] = 18.3;	k[12] = 26.9;	k[13] = 27.9;	k[14] = 318.;
 
 	// 補正係数を含めた結果をfに格納
 	for (i = 0; i < NUM_OF_MOMENT_EQUATION; ++i) {
-		gsl_vector_set(f, i, array_result_moment_eq[i]);
+		gsl_vector_set(f, i, 1./k[i]*array_result_moment_eq[i]);
 	}
 
+	// オーダーを調べたい時に使う
+	// std::cout << gsl_vector_get(f, 0) << "," << gsl_vector_get(f, 1) << "," << gsl_vector_get(f, 2) << "," << gsl_vector_get(f, 3) << "," << gsl_vector_get(f, 4) << 
+	// "," << gsl_vector_get(f, 5) << "," << gsl_vector_get(f, 6) << "," << gsl_vector_get(f, 7) << "," << gsl_vector_get(f, 8) << "," << gsl_vector_get(f, 9) << 
+	// "," << gsl_vector_get(f, 10) << "," << gsl_vector_get(f, 11) << "," << gsl_vector_get(f, 12) << "," << gsl_vector_get(f, 13) << "," << gsl_vector_get(f, 14) << std::endl;
+	
 	return GSL_SUCCESS;
 }
 
