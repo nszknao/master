@@ -1,4 +1,5 @@
 #!/bin/bash
+SRC_PATH="/usr/local/src/master"
 RESULT_PATH="/usr/local/src/master/results"
 
 ##### Handling whether argument exists. #############
@@ -93,7 +94,8 @@ set ylabel "probability density {/Italic-Times p_{Y_1}}"
 set xtics 2
 set ytics 0.2
 p [-6:6][0.:1.0] "${RESULT_PATH}/${params}/${dat}/gsay1pdf_${num}.dat" with l lt 1 lw 4 lc rgb "blue",\
-					"${RESULT_PATH}/${params}/${dat}/y1_pdf.dat" with p pt 6 ps 1 lc rgb "red"
+					"${RESULT_PATH}/${params}/${dat}/y1_pdf.dat" with p pt 6 ps 1 lc rgb "red",\
+					"${SRC_PATH}/dat/y1_Gpdf.dat" with lines lt 2 lw 4
 EOF
 
 cat <<EOF >>${plot}
@@ -106,7 +108,8 @@ set ytics 0.1
 set logscale y
 set format y "10^{%L}"
 p [-6:6][0.00001:1.0] "${RESULT_PATH}/${params}/${dat}/gsay1pdf_${num}.dat" with l lt 1 lw 4 lc rgb "blue",\
-						"${RESULT_PATH}/${params}/${dat}/y1_pdf.dat" with p pt 6 ps 1 lc rgb "red"
+						"${RESULT_PATH}/${params}/${dat}/y1_pdf.dat" with p pt 6 ps 1 lc rgb "red",\
+						"${SRC_PATH}/dat/y1_Gpdf.dat" with lines lt 2 lw 4
 EOF
 fi
 
