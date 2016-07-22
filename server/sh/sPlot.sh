@@ -18,7 +18,7 @@ eps="eps_a=${alpha}"
 
 ##### Handling whether directory exists. #############
 if [ ! -e ${RESULT_PATH}/${params}/${dat} ]; then
-	echo "指定されたαの結果が存在しません。" 1>&2
+	echo "指定されたアルファの結果が存在しません。" 1>&2
 	exit 1
 fi
 
@@ -41,6 +41,8 @@ fi
 # 初期設定
 cat <<EOF >${plot}
 set terminal postscript eps enhanced color
+set xlabel font "Times New Roman"
+set ylabel font "Times New Roman"
 unset key
 EOF
 
@@ -48,10 +50,12 @@ EOF
 if [ -e ${RESULT_PATH}/${params}/${dat}/"t_force.dat" ]; then
 cat <<EOF >>${plot}
 set output "${RESULT_PATH}/${params}/${eps}/excitation.eps"
-set size 0.6,0.4
-set xlabel "time {/Symbol-Oblique t}"
+set size 0.7,0.3
+set xlabel "Time {/Italic-Times t}"
+set xtics 100
+set ytics 150
 set ylabel "input"
-p [0:50][-50:50] "${RESULT_PATH}/${params}/${dat}/t_force.dat" with lines lt 1 notitle
+p [0:500][-300:300] "${RESULT_PATH}/${params}/${dat}/t_force.dat" with lines lt 1 notitle
 EOF
 fi
 
@@ -59,11 +63,12 @@ fi
 if [ -e ${RESULT_PATH}/${params}/${dat}/"t_x1.dat" ]; then
 cat <<EOF >>${plot}
 set output "${RESULT_PATH}/${params}/${eps}/response.eps"
-set size 0.6,0.4
-set xlabel "time {/Italic-Times t}"
+set size 0.7,0.3
+set xlabel "Time {/Italic-Times t}"
 set ylabel "displacement {/Italic-Times y_1}"
-set ytics 1
-p [0:1300][-5:5] "${RESULT_PATH}/${params}/${dat}/t_x1.dat" with lines lt 1 lw 3 lc rgb "red"
+set xtics 100
+set ytics 3
+p [0:500][-6:6] "${RESULT_PATH}/${params}/${dat}/t_x1.dat" with lines lt 1 lw 3 lc rgb "red"
 EOF
 fi
 

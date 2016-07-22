@@ -89,6 +89,8 @@ int NSGA2::run(ParamData* params)
     // iterate
     cout << "NSGA2: start" << endl;
     for (t = 1; t <= _iterations; ++t) {
+        cout << "generation: " << t << endl;
+
         // 親個体を子個体にコピー
         offsprings.selectBinaryTournamentMOO(parents);
 
@@ -235,8 +237,9 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
  */
 void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
 {
-    unsigned no = archive.size();
-    unsigned noOfObj;
+    unsigned int i, ii;
+    unsigned int no = archive.size();
+    unsigned int noOfObj;
     if (no > 0)
         noOfObj = archive.readArchive(0).getNoOfObj();
     else
@@ -247,12 +250,12 @@ void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
 
     double f;
     ofstream ofs(filename);
-    for (unsigned i = 0; i < no; ++i)
+    for (i = 0; i < no; ++i)
     {
         // 目的関数値
-        for (unsigned j = 0; j < noOfObj; ++j)
+        for (ii = 0; ii < noOfObj; ++ii)
         {
-            f   = archive.readArchive(i).getMOOFitness(j);
+            f   = archive.readArchive(i).getMOOFitness(ii);
             ofs << f << " " << std::flush;
         }
 
@@ -261,8 +264,8 @@ void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
         // パラメータ値
         individual.operator=(archive.readArchive(i));
         chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
-        for (unsigned k = 0; k < chrom.size(); ++k) {
-            ofs << chrom[k] << " " << std::flush;
+        for (ii = 0; ii < chrom.size(); ++ii) {
+            ofs << chrom[ii] << " " << std::flush;
         }
 
         ofs << std::endl;

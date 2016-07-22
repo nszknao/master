@@ -19,6 +19,7 @@
 #ifndef __OSCILLATOR_AND_EXCITATION_PARAMETER__
 #define __OSCILLATOR_AND_EXCITATION_PARAMETER__
 /********** 系の係数・入力条件（不変）**********/
+#define PI M_PI
 #define S0 1./(2.*PI)
 #define EPSILON 0.3
 #define ZETA 0.2
@@ -29,7 +30,6 @@
 #define NUM_OF_PARAM 10
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
 #define GGD_KAPPA 2.	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
-#define PI M_PI
 
 
 class Parameter

@@ -3,7 +3,9 @@ SRC_PATH="/usr/local/src/master"
 RESULT_PATH="/usr/local/src/master/results"
 
 ############ Compile-force #############################################
-g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/main.cpp ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/research.cpp -o both.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/sMain.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/research.cpp -o ${SRC_PATH}/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/aMain.cpp ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+# g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/main.cpp ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/research.cpp -o ${SRC_PATH}/both -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 
 ############ Reading init_value.txt ####################################
 initfile=init_value_disp.txt
@@ -22,7 +24,9 @@ do
 	dat="dat_a=${alpha}"
 
 #### Run #####################################
-	./both.exe ${lambda} ${beta2} ${alpha} ${loginit}
+	${SRC_PATH}/simulation.exe ${lambda} ${beta2} ${alpha}
+	${SRC_PATH}/analysis.exe ${lambda} ${beta2} ${alpha} ${loginit}
+	# ${SRC_PATH}/both ${lambda} ${beta2} ${alpha} ${loginit}
 
 ##### Make directory. #############
 	if [ ! -e ${RESULT_PATH} ]; then

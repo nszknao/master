@@ -117,7 +117,7 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::v
 	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
 
 	// nsga2
-	NSGA2 *n2	= new NSGA2(120, 300);
+	NSGA2 *n2	= new NSGA2(200, 300);
 	n2->run(setData);
 
 	unsigned int popSize	= n2->getPrmValue().size();

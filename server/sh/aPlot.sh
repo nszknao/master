@@ -42,6 +42,8 @@ fi
 # 初期設定
 cat <<EOF >${plot}
 set terminal postscript eps enhanced color
+set xlabel font "Times New Roman"
+set ylabel font "Times New Roman"
 unset key
 EOF
 

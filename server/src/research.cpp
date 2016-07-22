@@ -10,13 +10,11 @@ Simulation::Simulation(double lambda, double beta2, double alpha)
 
 /**
  * @fn 入力を生成する
- * @param std::vector<double> &force 入力を格納
+ * @param std::vector<double> &force 入力を格納（領域確保済み）
  * @param std::vector<double> &t 時刻を格納
  **/
-void Simulation::createExcitation(std::vector<double> &force, std::vector<double> &t)
+void Simulation::_createExcitation(std::vector<double> &force)
 {
-	std::cout << "Start creating excitation.\n" << std::endl;
-
 	unsigned int i;
 
 	// ランダム変数
@@ -29,12 +27,8 @@ void Simulation::createExcitation(std::vector<double> &force, std::vector<double
 	double wSt = sqrt(this->_alpha);
 	double pSt = sqrt(1 - this->_alpha);
 
-	force.resize(SAMPLE_LENGTH);
-	t.resize(SAMPLE_LENGTH);
-	for (i = 0; i < SAMPLE_LENGTH; ++i) {
-		t[i]		= i*dt;
+	for (i = 0; i < SAMPLE_LENGTH; ++i)
 		force[i]	= wSt*gsl_ran_gaussian(r, _sigma) + pSt*gsl_ran_bernoulli(r, dt*_lambda)*gsl_ran_gaussian(rp, sqrt(_beta2)) / dt;
-	}
 }
 
 /**
@@ -43,11 +37,12 @@ void Simulation::createExcitation(std::vector<double> &force, std::vector<double
  * @param std::vector<double> &y 応答変位を格納
  * @param std::vector<double> &force 入力
  **/
-void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector<double> > &v_y1, std::vector< std::vector<double> > &v_y2, const std::vector<double> &force)
+void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector<double> > &v_y1, std::vector< std::vector<double> > &v_y2, std::vector<double> &force)
 {
 	std::cout << "Start solving equation of motion using 4th-Runge-Kutta.\n" << std::endl;
 
 	unsigned int i, ii;
+
 
 	t.resize(SAMPLE_LENGTH);
 	Common::resize2DemensionalVector(v_y1, NUM_OF_SAMPLES, SAMPLE_LENGTH);
@@ -56,6 +51,10 @@ void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector
 	double DY1[4], DY2[4];
 	for (i = 0; i < NUM_OF_SAMPLES; ++i)
 	{
+		/* 入力を生成 */
+		force.resize(SAMPLE_LENGTH);
+		this->_createExcitation(force);
+
 		// 初期値
 		double y1 = 0., y2 = 0.;
 
@@ -82,7 +81,8 @@ void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector
 			if (y2>_y2max) _y2max = y2;
 			if (y2<_y2min) _y2min = y2;
 
-			// cout << "y1min: " << _y1min << "y1: " << y1 << endl;
+
+			// cout << "y1min:" << _y1min << ", y1:" << y1 << endl;
 			v_y1[i][ii] = y1;
 			v_y2[i][ii] = y2;
 

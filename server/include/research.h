@@ -30,7 +30,7 @@ using namespace std;
 
 /********** 計算条件 **********/
 #define SAMPLE_LENGTH 131072	// 131072,65536
-#define NUM_OF_SAMPLES 200		// 入力の標本数
+#define NUM_OF_SAMPLES 100		// 入力の標本数
 #define dt 0.01		// 時間刻み幅
 #define dx 0.1		// pdfの横軸の刻み幅
 
@@ -44,11 +44,11 @@ private:
 	// ルンゲクッタで使う
 	static double _f1(double force, double y1, double y2);
 	static double _f2(double force, double y1, double y2);
+	void _createExcitation(std::vector<double> &);
 
 public:
 	Simulation(double lambda, double beta2, double alpha);
-	void createExcitation(std::vector<double> &, std::vector<double> &);
-	void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, const std::vector<double> &);
+	void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector<double> &);
 	void createDispPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
 	void createVelPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
 	void exactSolutionOfGaussianWhiteNoise();
