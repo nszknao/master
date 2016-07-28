@@ -25,7 +25,7 @@ using namespace std;
 #define PI M_PI
 #define S0 1./(2.*PI)
 #define EPSILON 0.3
-#define ZETA 0.2
+#define ZETA 0.05
 #endif // !__OSCILLATOR_AND_EXCITATION_PARAMETER__
 
 /********** åvéZèåè **********/

@@ -44,41 +44,41 @@ int main(int argc, char *argv[])
 	Analysis *ana	= new Analysis(lambda, beta2, alpha, mu1, mu1);
 
 	/* 最小二乗法で解く */
-	// Parameter* prm	= new Parameter();
-	// prm->allocParameter();
-	// std::string result	= ana->leastSquareMethod(prm);
-	// if (result == "success") {
-	// 	int xmin	= -6;
-	// 	std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
-	// 	ana->createDispPdf(prm, dispX, dispY, xmin);
-	// 	ana->outputIntoFile((char*)"gsay1pdf.dat", dispX, dispY);
-	// }
-	// delete prm;
+	Parameter* prm	= new Parameter();
+	prm->allocParameter();
+	std::string result	= ana->leastSquareMethod(prm);
+	if (result == "success") {
+		int xmin	= -6;
+		std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
+		ana->createDispPdf(prm, dispX, dispY, xmin);
+		ana->outputIntoFile((char*)"gsay1pdf.dat", dispX, dispY);
+	}
+	delete prm;
 
 	/* GAで解く */
-	std::vector<Parameter*> prm;
-	std::vector< std::vector<double> > pValue, oValue;
-	ana->GeneticAlgorithm(prm, pValue, oValue);
-	int xminDisp	= -6;
+	// std::vector<Parameter*> prm;
+	// std::vector< std::vector<double> > pValue, oValue;
+	// ana->GeneticAlgorithm(prm, pValue, oValue);
+	// int xminDisp	= -6;
 	// int xmaxFCross	= 8;
-	for (i = 0; i < prm.size(); ++i) {
-		if (!prm[i]->validate()) continue;
-		// if (ana->isOverSpecifyValue(oValue[i], 50.)) continue;
-		/* 変位のPDFを求める */
-		std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
-		ana->createDispPdf(prm[i], dispX, dispY, xminDisp);
-		filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
-		Common::outputIntoFile(filename, dispX, dispY);
-		/* 閾値通過率を求める */
-		// std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
-		// ana->createLevelCrossing(prm[i], fCrossX, fCrossY, xmaxFCross);
-		// filename	= "firstcross_" + std::to_string(i) + ".dat";
-		// Common::outputIntoFile(filename, fCrossX, fCrossY);
-	}
-	for (i = 0; i < prm.size(); ++i) {
-		prm[i]->freeParameter();
-		delete prm[i];
-	}
+	// for (i = 0; i < prm.size(); ++i) {
+	// 	if (!prm[i]->validate()) continue;
+	// 	// if (ana->isOverSpecifyValue(oValue[i], 50.)) continue;
+	// 	/* 変位のPDFを求める */
+	// 	std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
+	// 	ana->createDispPdf(prm[i], dispX, dispY, xminDisp);
+	// 	filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
+	// 	Common::outputIntoFile(filename, dispX, dispY);
+	// 	/* 閾値通過率を求める */
+	// 	std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
+	// 	ana->createLevelCrossing(prm[i], fCrossX, fCrossY, xmaxFCross);
+	// 	filename	= "firstcross_" + std::to_string(i) + ".dat";
+	// 	// Common::outputIntoFile(filename, fCrossX, fCrossY);
+	// }
+	// for (i = 0; i < prm.size(); ++i) {
+	// 	prm[i]->freeParameter();
+	// 	delete prm[i];
+	// }
 
 	delete ana;
 	

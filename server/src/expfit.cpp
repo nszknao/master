@@ -57,18 +57,19 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	double Eg[21];
 
 	// ２次モーメント
-	Eg[0] = (1 - pa0)*(pow(pa3,2) + pow(pa1,2)) + pa0*pow(pa5,2);														// y_1^2
-	Eg[1] = (1 - pa0)/2*((pa7 + pa1*pa2) + (pa9 + pa1*pa2)) + pa0*pa8;													// y_1*y_2
-	Eg[2] = (1 - pa0)*(pow(pa4,2) + pow(pa2,2)) + pa0*pow(pa6,2);														// y_2^2
-	
+	Eg[0] = (1 - pa0)*(pow(pa3,2) + pow(pa1,2)) + pa0*pow(pa5,2);	// y_1^2
+	// Eg[1] = (1 - pa0)/2*((pa7 + pa1*pa2) + (pa9 + pa1*pa2)) + pa0*pa8;	// y_1*y_2
+	Eg[1] = 0.;	// y_1*y_2
+	Eg[2] = (1 - pa0)*(pow(pa4,2) + pow(pa2,2)) + pa0*pow(pa6,2);	// y_2^2
+
 	// ４次モーメント
-	Eg[3] = (1 - pa0)*(3*pow(pa3,4) + 6*pow(pa1,2)*pow(pa3,2) + pow(pa1,4)) + 3*pa0*pow(pa5,4);										// y_1^4
-	Eg[4] = (1 - pa0)/2*((3*pow(pa3,2)*(pa7 + pa1*pa2) + pow(pa1,2)*(3*pa7 + pa1*pa2))
-		+ (3*pow(pa3,2)*(pa9 + pa1*pa2) + pow(pa1,2)*(3*pa9 + pa1*pa2)))
-		+ 3*pa0*pow(pa5,2)*pa8;																		// y_1^3*y_2
+	Eg[3] = (1 - pa0)*(3*pow(pa3,4) + 6*pow(pa1,2)*pow(pa3,2) + pow(pa1,4)) + 3*pa0*pow(pa5,4);	// y_1^4
+	// Eg[4] = (1 - pa0)/2*((3*pow(pa3,2)*(pa7 + pa1*pa2) + pow(pa1,2)*(3*pa7 + pa1*pa2))
+	// 	+ (3*pow(pa3,2)*(pa9 + pa1*pa2) + pow(pa1,2)*(3*pa9 + pa1*pa2))) + 3*pa0*pow(pa5,2)*pa8;	// y_1^3*y_2
+	Eg[4] = 0.;	// y_1^3*y_2	
 	Eg[5] = (1 - pa0)/2*((pow(pa3,2)*pow(pa4,2) + pow(pa1,2)*pow(pa4,2) + pow(pa2,2)*pow(pa3,2) + 2*pow(pa7,2) + 4*pa7*pa1*pa2 + pow(pa1,2)*pow(pa2,2))
 		+ (pow(pa3,2)*pow(pa4,2) + pow(pa1,2)*pow(pa4,2) + pow(pa2,2)*pow(pa3,2) + 2*pow(pa9,2) + 4*pa9*pa1*pa2 + pow(pa1,2)*pow(pa2,2)))
-		+ pa0*(pow(pa5,2)*pow(pa6,2) + 2*pow(pa8,2));															// y_1^2*y_2^2
+		+ pa0*(pow(pa5,2)*pow(pa6,2) + 2*pow(pa8,2));	// y_1^2*y_2^2
 	Eg[6] = (1 - pa0)/2*((3*pow(pa4,2)*(pa7 + pa1*pa2) + pow(pa2,2)*(3*pa7 + pa1*pa2))
 		+ (3*pow(pa4,2)*(pa9 + pa1*pa2) + pow(pa2,2)*(3*pa9 + pa1*pa2)))
 		+ 3*pa0*pow(pa6,2)*pa8;																		// y_1*y_2^3
@@ -76,9 +77,10 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	
 	// ６次モーメント
 	Eg[8] = (1 - pa0)*(15*pow(pa3,6) + 45*pow(pa3,4)*pow(pa1,2) + 15*pow(pa3,2)*pow(pa1,4) + pow(pa1,6)) + 15*pa0*pow(pa5,6);						// y_1^6
-	Eg[9] = (1 - pa0)/2*((15*pow(pa3,4)*(pa7 + pa1*pa2) + pow(pa1,5)*pa2 + 5*pow(pa1,4)*pa7 + 10*pow(pa1,3)*pa2*pow(pa3,2) + 30*pa7*pow(pa1,2)*pow(pa3,2))
-		+ (15*pow(pa3,4)*(pa9 + pa1*pa2) + pow(pa1,5)*pa2 + 5*pow(pa1,4)*pa9 + 10*pow(pa1,3)*pa2*pow(pa3,2) + 30*pa9*pow(pa1,2)*pow(pa3,2)))
-		+ 15*pa0*pow(pa5,4)*pa8;									// y_1^5*y_2
+	// Eg[9] = (1 - pa0)/2*((15*pow(pa3,4)*(pa7 + pa1*pa2) + pow(pa1,5)*pa2 + 5*pow(pa1,4)*pa7 + 10*pow(pa1,3)*pa2*pow(pa3,2) + 30*pa7*pow(pa1,2)*pow(pa3,2))
+	// 	+ (15*pow(pa3,4)*(pa9 + pa1*pa2) + pow(pa1,5)*pa2 + 5*pow(pa1,4)*pa9 + 10*pow(pa1,3)*pa2*pow(pa3,2) + 30*pa9*pow(pa1,2)*pow(pa3,2)))
+	// 	+ 15*pa0*pow(pa5,4)*pa8;									// y_1^5*y_2
+	Eg[9] = 0.;									// y_1^5*y_2
 	Eg[10] = (1 - pa0)/2*((3*pow(pa3,4)*pow(pa4,2) + 12*pow(pa3*pa7,2)+ 3*pow(pa2,2)*pow(pa3,4) + 6*pow(pa1*pa2*pa3,2) + pow(pa1,4)*pow(pa2,2) + 24*pa1*pa2*pow(pa3,2)*pa7
 		+ 8*pow(pa1,3)*pa2*pa7 + 6*pow(pa1*pa3*pa4,2) + 12*pow(pa1*pa7,2) + pow(pa1,4)*pow(pa4,2))
 		+ (3*pow(pa3,4)*pow(pa4,2) + 12*pow(pa3*pa9,2)+ 3*pow(pa2,2)*pow(pa3,4) + 6*pow(pa1*pa2*pa3,2) + pow(pa1,4)*pow(pa2,2) + 24*pa1*pa2*pow(pa3,2)*pa9

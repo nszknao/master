@@ -5,13 +5,11 @@ Simulation::Simulation(double lambda, double beta2, double alpha)
 	this->_lambda	= lambda;
 	this->_beta2	= beta2;
 	this->_alpha	= alpha;
-	this->_sigma	= sqrt(2.*M_PI*S0 / dt);
 }
 
 /**
  * @fn 入力を生成する
  * @param std::vector<double> &force 入力を格納（領域確保済み）
- * @param std::vector<double> &t 時刻を格納
  **/
 void Simulation::_createExcitation(std::vector<double> &force)
 {
@@ -24,11 +22,14 @@ void Simulation::_createExcitation(std::vector<double> &force)
 	gsl_rng_set(rp, time(NULL)+clock()+1);
 
 	// 入力強度
-	double wSt = sqrt(this->_alpha);
-	double pSt = sqrt(1 - this->_alpha);
+	double wSt = sqrt(_alpha);
+	double pSt = sqrt(1 - _alpha);
+
+	// ホワイトノイズの分散
+	double sigma	= sqrt(2.*M_PI*S0 / dt);
 
 	for (i = 0; i < SAMPLE_LENGTH; ++i)
-		force[i]	= wSt*gsl_ran_gaussian(r, _sigma) + pSt*gsl_ran_bernoulli(r, dt*_lambda)*gsl_ran_gaussian(rp, sqrt(_beta2)) / dt;
+		force[i]	= wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*_lambda)*gsl_ran_gaussian(rp, sqrt(_beta2)) / dt;
 }
 
 /**

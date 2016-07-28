@@ -4,7 +4,6 @@
 
 int main(int argc, char *argv[])
 {
-	unsigned int i;
 	std::string filename	= "";
 
 	char *ends;
@@ -27,11 +26,12 @@ int main(int argc, char *argv[])
 	// 	int xmin	= -6;
 	// 	std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
 	// 	ana->createDispPdf(prm, dispX, dispY, xmin);
-	// 	ana->outputIntoFile((char*)"gsay1pdf.dat", dispX, dispY);
+	// 	Common::outputIntoFile((char*)"gsay1pdf.dat", dispX, dispY);
 	// }
 	// delete prm;
 
 	/* GAで解く */
+	unsigned int i;
 	std::vector<Parameter*> prm;
 	std::vector< std::vector<double> > pValue, oValue;
 	ana->GeneticAlgorithm(prm, pValue, oValue);
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 		std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
 		ana->createLevelCrossing(prm[i], fCrossX, fCrossY, xmaxFCross);
 		filename	= "firstcross_" + std::to_string(i) + ".dat";
-		Common::outputIntoFile(filename, fCrossX, fCrossY);
+		// Common::outputIntoFile(filename, fCrossX, fCrossY);
 	}
 	for (i = 0; i < prm.size(); ++i) {
 		prm[i]->freeParameter();

@@ -275,7 +275,7 @@ std::string Analysis::leastSquareMethod(Parameter* prm)
 	std::cout << "mu1     = " << prm->getParameter("mu1")[0] << " +/- " << c*ERR(1) << std::endl;
 	std::cout << "mu2     = " << prm->getParameter("mu2")[0] << " +/- " << c*ERR(2) << std::endl;
 	std::cout << "sigma11 = " << prm->getParameter("sigma1")[0] << " +/- " << c*ERR(3) << std::endl;
-	std::cout << "sigma11 = " << prm->getParameter("sigma2")[0] << " +/- " << c*ERR(4) << std::endl;
+	std::cout << "sigma12 = " << prm->getParameter("sigma2")[0] << " +/- " << c*ERR(4) << std::endl;
 	std::cout << "sigma21 = " << prm->getParameter("sigma1")[1] << " +/- " << c*ERR(5) << std::endl;
 	std::cout << "sigma22 = " << prm->getParameter("sigma2")[1] << " +/- " << c*ERR(6) << std::endl;
 	std::cout << "k1      = " << prm->getParameter("kappa")[0] << " +/- " << c*ERR(7) << std::endl;
@@ -445,7 +445,7 @@ double Analysis::_createGaussianPdf(const std::vector<double> &a, const std::vec
 	unsigned int i;
 
 	for (i = 0; i < NUM_GAUSS; ++i)
-		pdf += a[i]*(1./sqrt(2.*PI)/sigma[i])*exp(-(x-mu[i])*(x-mu[i])/2./pow(sigma[i],2.));
+		pdf += a[i]*(1./sqrt(2.*PI)/sigma[i])*exp(-pow((x-mu[i]),2)/2./pow(sigma[i],2));
 
 	return pdf;
 }
