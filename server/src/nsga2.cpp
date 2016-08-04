@@ -152,7 +152,7 @@ int NSGA2::run(ParamData* params)
 
 	cout << archive.size() << endl;
 	this->_saveArchive(archive);
-	this->_saveArchiveInFile((char*)"nsga2example.out", archive);
+	this->_saveArchiveInFile((char*)"nsga2example.txt", archive);
 
 	cout    << "size of the archive: "  << archive.size() << endl << endl;
 
@@ -252,16 +252,20 @@ void NSGA2::_saveArchiveInFile(char *filename, ArchiveMOO &archive)
 	ofstream ofs(filename);
 	for (i = 0; i < no; ++i)
 	{
-		// 目的関数値
-		for (ii = 0; ii < noOfObj; ++ii)
-		{
+		individual.operator=(archive.readArchive(i));
+		chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
+		// モーメント値
+		std::vector<double> m;
+		MomentEq::getMomentFromParameter(chrom, m);
+		for (ii = 0; ii < m.size(); ++ii) {
+			ofs <<  m[ii] << " " << std::flush;
+		}
+		// 目的関数値（絶対値）
+		for (ii = 0; ii < noOfObj; ++ii) {
 			f   = archive.readArchive(i).getMOOFitness(ii);
 			ofs << fabs(f) << " " << std::flush;
 		}
-
 		// パラメータ値
-		individual.operator=(archive.readArchive(i));
-		chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
 		for (ii = 0; ii < chrom.size(); ++ii) {
 			ofs << chrom[ii] << " " << std::flush;
 		}

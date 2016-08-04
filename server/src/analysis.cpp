@@ -301,7 +301,7 @@ std::string Analysis::leastSquareMethod(Parameter* prm)
  */
 void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector<double> &y, int xmin)
 {
-	std::cout << "Culculate the displacement pdf.\n" << std::endl;
+	// std::cout << "Culculate the displacement pdf.\n" << std::endl;
 
 	unsigned int i;
 	double integration = 0.;
