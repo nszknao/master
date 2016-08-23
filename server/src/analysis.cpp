@@ -117,8 +117,9 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::v
 	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
 
 	// nsga2
-	NSGA2 *n2	= new NSGA2(120, 300);
+	NSGA2 *n2	= new NSGA2(200, 200);
 	n2->run(setData);
+	n2->saveArchiveInFile("nsga2archive.txt");
 
 	unsigned int popSize	= n2->getPrmValue().size();
 
@@ -304,12 +305,13 @@ void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector
 	// std::cout << "Culculate the displacement pdf.\n" << std::endl;
 
 	unsigned int i;
+	double range = 0.01;
 	double integration = 0.;
 
-	for (i = 0; i*0.01 <= abs(xmin)*2; ++i) {
-		x[i]	= xmin + i*0.01;
-		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*0.01);
-		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*0.01);
+	for (i = 0; i*range <= abs(xmin)*2; ++i) {
+		x[i]	= xmin + i*range;
+		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*range);
+		integration += range*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*range);
 	}
 
 	std::cout << "y1 integration = " << integration << ".\n" << std::endl;
@@ -324,7 +326,7 @@ void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector
  */
 void Analysis::createLevelCrossing(Parameter *prm, std::vector<double> &x, std::vector<double> &y, int xmax)
 {
-	std::cout << "Culculate the level crossing(.dat).\n" << std::endl;
+	// std::cout << "Culculate the level crossing(.dat).\n" << std::endl;
 
 	unsigned int i;
 
@@ -445,7 +447,7 @@ double Analysis::_createGaussianPdf(const std::vector<double> &a, const std::vec
 	unsigned int i;
 
 	for (i = 0; i < NUM_GAUSS; ++i)
-		pdf += a[i]*(1./sqrt(2.*PI)/sigma[i])*exp(-pow((x-mu[i]),2)/2./pow(sigma[i],2));
+		pdf += a[i]*(1./sqrt(2.*PI)/sigma[i])*exp(-1.*pow((x-mu[i]),2)/2./pow(sigma[i],2));
 
 	return pdf;
 }
@@ -471,7 +473,7 @@ double Analysis::_culcLevelCrossing(double pp_xi, const std::vector<double> &a, 
 		pp_g		= mu2[i] + pp_c*sigma2[i]*(pp_xi - mu1[i])/sigma1[i];
 		pp_sigma	= sigma2[i]*sqrt(1. - pow(pp_c,2));
 		// 閾値通過率
-		prob	+= a[i]*exp(-pow((pp_xi - mu1[i]),2)/2./pow(sigma1[i],2)) /2./PI/sigma1[i]/sigma2[i]/sqrt(1. - pow(pp_c,2))* (pow(pp_sigma,2)*exp(-pow(pp_g,2)/2./pow(pp_sigma,2))
+		prob	+= a[i]*exp(-1.*pow((pp_xi - mu1[i]),2)/2./pow(sigma1[i],2)) /2./PI/sigma1[i]/sigma2[i]/sqrt(1. - pow(pp_c,2))* (pow(pp_sigma,2)*exp(-pow(pp_g,2)/2./pow(pp_sigma,2))
 						+ sqrt(PI/2.)*pp_g*pp_sigma*(1. + erf(pp_g/sqrt(2.)/pp_sigma)));
 	}
 

@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 	std::vector<Parameter*> prm;
 	std::vector< std::vector<double> > pValue, oValue;
 	ana->GeneticAlgorithm(prm, pValue, oValue);
+	// TODO:モーメントごとに個体をソートする処理
 	int xminDisp	= -6;
 	int xmaxFCross	= 8;
 	for (i = 0; i < prm.size(); ++i) {

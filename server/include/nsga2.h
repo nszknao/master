@@ -22,15 +22,16 @@ class NSGA2
 private:
 	std::vector< std::vector<double> > _obj, _prm;		// 結果を保存する
 	unsigned _dimension, _popSize, _iterations;
+	ArchiveMOO _archive;
 
 	void _setValueRange(std::vector<double> &, std::vector<double> &);
-	void _saveArchiveInFile(char*, ArchiveMOO &);
 	void _saveArchive(ArchiveMOO &);
 
 public:
 	NSGA2(int pop, int iter);
 	void freeVector();
 	int run(ParamData* f);
+	void saveArchiveInFile(const std::string);
 	std::vector< std::vector<double> > getObjValue();
 	std::vector< std::vector<double> > getPrmValue();
 };

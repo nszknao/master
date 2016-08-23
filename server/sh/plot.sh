@@ -38,11 +38,11 @@ if [ ! -e ${RESULT_PATH}/${params}/${dat} ]; then
 fi
 
 ##### Handlings if a directry "eps" exists. ######
-if [ -e ${RESULT_PATH}/${params}/${eps} ]; then
-	rm -rf ${RESULT_PATH}/${params}/${eps}/*
-else
+# if [ -e ${RESULT_PATH}/${params}/${eps} ]; then
+# 	rm -rf ${RESULT_PATH}/${params}/${eps}/*
+# else
 	mkdir ${RESULT_PATH}/${params}/${eps}
-fi
+# fi
 
 ##### Handling if "plot.plt" exists. #############
 plot="plot.plt"
@@ -55,74 +55,74 @@ fi
 
 # 初期設定
 cat <<EOF >${plot}
-set terminal postscript eps enhanced color
-set xlabel font "Times New Roman"
-set ylabel font "Times New Roman"
-unset key
+	set terminal postscript eps enhanced color
+	set xlabel font "Times New Roman"
+	set ylabel font "Times New Roman"
+	unset key
 EOF
 
 # plot exitation
 if [ -e "${RESULT_PATH}/${params}/${dat}/t_force.dat" ]; then
-cat <<EOF >>${plot}
-set output "${RESULT_PATH}/${params}/${eps}/excitation.eps"
-set size 0.6,0.4
-set xlabel "time {/Symbol-Oblique t}"
-set ylabel "input"
-p [0:50][-50:50] "${RESULT_PATH}/${params}/${dat}/t_force.dat" with lines lt 1 notitle
+	cat <<EOF >>${plot}
+	set output "${RESULT_PATH}/${params}/${eps}/excitation.eps"
+	set size 0.6,0.4
+	set xlabel "time {/Symbol-Oblique t}"
+	set ylabel "input"
+	p [0:50][-50:50] "${RESULT_PATH}/${params}/${dat}/t_force.dat" with lines lt 1 notitle
 EOF
 fi
 
 # plot response distribution
 if [ -e "${RESULT_PATH}/${params}/${dat}/t_x1.dat" ]; then
-cat <<EOF >>${plot}
-set output "${RESULT_PATH}/${params}/${eps}/response.eps"
-set size 0.6,0.4
-set xlabel "time {/Italic-Times t}"
-set ylabel "displacement {/Italic-Times y_1}"
-set ytics 1
-p [0:1300][-5:5] "${RESULT_PATH}/${params}/${dat}/t_x1.dat" with lines lt 1 lw 3 lc rgb "red"
+	cat <<EOF >>${plot}
+	set output "${RESULT_PATH}/${params}/${eps}/response.eps"
+	set size 0.6,0.4
+	set xlabel "time {/Italic-Times t}"
+	set ylabel "displacement {/Italic-Times y_1}"
+	set ytics 1
+	p [0:1300][-5:5] "${RESULT_PATH}/${params}/${dat}/t_x1.dat" with lines lt 1 lw 3 lc rgb "red"
 EOF
 fi
 
 # plot first-cross pdf
 if [ -e "${RESULT_PATH}/${params}/${dat}/firstcross${num}.dat" ]; then
-cat <<EOF >>${plot}
-set output "${RESULT_PATH}/${params}/${eps}/firstcross${num}.eps"
-set size 0.45,0.55
-set xlabel "threshold {/Symbol x}"
-set ylabel "up-clossing rate"
-set xtics 2
-set ytics 0.2
-p [0:8][0:0.6] "${RESULT_PATH}/${params}/${dat}/firstcross${num}.dat" with l lt 1 lw 4 lc rgb "red"
+	cat <<EOF >>${plot}
+	set output "${RESULT_PATH}/${params}/${eps}/firstcross${num}.eps"
+	set size 0.45,0.55
+	set xlabel "threshold {/Symbol x}"
+	set ylabel "up-clossing rate"
+	set xtics 2
+	set ytics 0.2
+	p [0:8][0:0.6] "${RESULT_PATH}/${params}/${dat}/firstcross${num}.dat" with l lt 1 lw 4 lc rgb "red"
 EOF
 fi
 
 # plot distribution pdf
 if [ -e "${RESULT_PATH}/${params}/${dat}/gsay1pdf${num}.dat" ]; then
-cat <<EOF >>${plot}
-set output "${RESULT_PATH}/${params}/${eps}/gsay1pdf${num}.eps"
-set size 0.45,0.55
-set xlabel "displacement {/Italic-Times y_1}"
-set ylabel "probability density {/Italic-Times p_{Y_1}}"
-set xtics 2
-set ytics 0.2
-p [-6:6][0.:1.0] "${RESULT_PATH}/${params}/${dat}/gsay1pdf${num}.dat" with l lt 1 lw 4 lc rgb "blue",\
-					"${RESULT_PATH}/${params}/${dat}/y1_pdf.dat" with p pt 6 ps 1 lc rgb "red",\
-					"${SRC_PATH}/dat/y1_Gpdf.dat" with lines lt 2 lw 4
-EOF
-
-cat <<EOF >>${plot}
-set output "${RESULT_PATH}/${params}/${eps}/log_gsay1pdf${num}.eps"
-set size 0.45,0.55
-set xlabel "displacement {/Italic-Times y_1}"
-set ylabel "probability density {/Italic-Times p_{Y_1}}"
-set xtics 2
-set ytics 0.1
-set logscale y
-set format y "10^{%L}"
-p [-6:6][0.00001:1.0] "${RESULT_PATH}/${params}/${dat}/gsay1pdf${num}.dat" with l lt 1 lw 4 lc rgb "blue",\
+	cat <<EOF >>${plot}
+	set output "${RESULT_PATH}/${params}/${eps}/gsay1pdf${num}.eps"
+	set size 0.45,0.55
+	set xlabel "displacement {/Italic-Times y_1}"
+	set ylabel "probability density {/Italic-Times p_{Y_1}}"
+	set xtics 2
+	set ytics 0.2
+	p [-6:6][0.:0.6] "${RESULT_PATH}/${params}/${dat}/gsay1pdf${num}.dat" with l lt 1 lw 4 lc rgb "blue",\
 						"${RESULT_PATH}/${params}/${dat}/y1_pdf.dat" with p pt 6 ps 1 lc rgb "red",\
 						"${SRC_PATH}/dat/y1_Gpdf.dat" with lines lt 2 lw 4
+EOF
+
+	cat <<EOF >>${plot}
+	set output "${RESULT_PATH}/${params}/${eps}/log_gsay1pdf${num}.eps"
+	set size 0.45,0.55
+	set xlabel "displacement {/Italic-Times y_1}"
+	set ylabel "probability density {/Italic-Times p_{Y_1}}"
+	set xtics 2
+	set ytics 0.1
+	set logscale y
+	set format y "10^{%L}"
+	p [-6:6][0.00001:1.0] "${RESULT_PATH}/${params}/${dat}/gsay1pdf${num}.dat" with l lt 1 lw 4 lc rgb "blue",\
+							"${RESULT_PATH}/${params}/${dat}/y1_pdf.dat" with p pt 6 ps 1 lc rgb "red",\
+							"${SRC_PATH}/dat/y1_Gpdf.dat" with lines lt 2 lw 4
 EOF
 fi
 
