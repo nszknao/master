@@ -1,0 +1,6 @@
+/server/aResults/
+/server/sResults/
+/server/results/
+/server/dat/
+/server/*.txt
+*.exe
