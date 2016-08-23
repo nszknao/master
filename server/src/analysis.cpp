@@ -95,7 +95,7 @@ bool Parameter::validate()
  * @param vector<double> &pValue 計算結果のパラメータ値を保存
  * @param vector<double> &oValue 計算結果の目的関数値を保存
  */
-int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::vector<double> > &pValue, std::vector< std::vector<double> > &oValue)
+int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::vector<double> > &pValue, std::vector< std::vector<double> > &oValue, std::vector< std::vector<double> > &mValue)
 {
 	std::cout << "Get analysis solution using NSGA2.\n" << std::endl;
 
@@ -158,8 +158,10 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::v
 	/******************************/
 	Common::resize2DemensionalVector(pValue, popSize, NUM_OF_PARAM);
 	pValue	= n2->getPrmValue();
-	Common::resize2DemensionalVector(oValue, popSize, NUM_OF_PARAM);
+	Common::resize2DemensionalVector(oValue, popSize, NUM_OF_MOMENTEQ);
 	oValue	= n2->getObjValue();
+	Common::resize2DemensionalVector(mValue, popSize, NUM_OF_MOMENT);
+	mValue	= n2->getMomentValue();
 
 	n2->freeVector();
 	delete setData;

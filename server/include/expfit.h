@@ -9,7 +9,13 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 
-using namespace std;
+#ifndef __ANALISYS_PARAMETER__
+#define __ANALISYS_PARAMETER__
+/********** 解析条件 **********/
+#define NUM_OF_MOMENTEQ 15
+#define NUM_OF_MOMENT 21
+#define NUM_OF_PARAM 10
+#endif // !__ANALISYS_PARAMETER__
 
 class MomentEq
 {

@@ -18,16 +18,21 @@
 
 #ifndef __OSCILLATOR_AND_EXCITATION_PARAMETER__
 #define __OSCILLATOR_AND_EXCITATION_PARAMETER__
-/********** 系の係数・入力条件（不変）**********/
+/********** 系の係数・入力条件**********/
 #define PI M_PI
 #define S0 1./(2.*PI)
 #define EPSILON 0.3
 #define ZETA 0.05
 #endif // !__OSCILLATOR_AND_EXCITATION_PARAMETER__
 
-/********** 系の係数・入力条件（不変）**********/
+#ifndef __ANALISYS_PARAMETER__
+#define __ANALISYS_PARAMETER__
+/********** 解析条件 **********/
 #define NUM_OF_MOMENTEQ 15
+#define NUM_OF_MOMENT 21
 #define NUM_OF_PARAM 10
+#endif // !__ANALISYS_PARAMETER__
+
 #define NUM_GAUSS 3	// 足しあわせるガウス分布の数
 #define GGD_KAPPA 2.	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
 
@@ -55,7 +60,7 @@ private:
 public:
 	Analysis(double, double, double, double, double);
 	std::string leastSquareMethod(Parameter*);
-	int GeneticAlgorithm(std::vector<Parameter*> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
+	int GeneticAlgorithm(std::vector<Parameter*> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
 	void createDispPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createVelPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createLevelCrossing(Parameter*, std::vector<double> &, std::vector<double> &, int);

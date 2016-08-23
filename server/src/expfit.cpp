@@ -15,9 +15,7 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 {
 	unsigned int i;
 
-	ParamData* paramData		= static_cast<ParamData*>(params);
-	unsigned NUM_OF_MOMENT_EQUATION	= paramData->n;
-	unsigned NUM_OF_PARAMETER		= paramData->p;
+	ParamData* paramData	= static_cast<ParamData*>(params);
 	double zeta				= paramData->zeta;
 	double epi				= paramData->epsilon;
 	double *dG				= paramData->dG;
@@ -44,33 +42,33 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	};
 
 	// 求めるパラメータをセット	
-	std::vector<double> param(NUM_OF_PARAMETER);	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
-	for (i = 0; i < NUM_OF_PARAMETER; ++i)
+	std::vector<double> param(NUM_OF_PARAM);	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
+	for (i = 0; i < NUM_OF_PARAM; ++i)
 		param[i] = gsl_vector_get(x, i);
 	// モーメント方程式を計算
 	std::vector<double> Eg;
 	MomentEq::getMomentFromParameter(param, Eg);
 	// モーメント法手式の結果を保存するvector
-	std::vector<double> v_result_moment_eq(NUM_OF_MOMENT_EQUATION, 0.);
+	std::vector<double> v_result_moment_eq(NUM_OF_MOMENTEQ, 0.);
 	// モーメント方程式を解く
-	gsl_matrix_view m_cf_moment_eq		= gsl_matrix_view_array(&cf_moment_eq[0], NUM_OF_MOMENT_EQUATION, 21);
-	gsl_matrix_view m_moment			= gsl_matrix_view_array(&Eg[0], 21, 1);
-	gsl_matrix_view m_result_moment_eq	= gsl_matrix_view_array(&v_result_moment_eq[0], NUM_OF_MOMENT_EQUATION, 1);
+	gsl_matrix_view m_cf_moment_eq		= gsl_matrix_view_array(&cf_moment_eq[0], NUM_OF_MOMENTEQ, NUM_OF_MOMENT);
+	gsl_matrix_view m_moment			= gsl_matrix_view_array(&Eg[0], NUM_OF_MOMENT, 1);
+	gsl_matrix_view m_result_moment_eq	= gsl_matrix_view_array(&v_result_moment_eq[0], NUM_OF_MOMENTEQ, 1);
 	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &m_cf_moment_eq.matrix, &m_moment.matrix, 0.0, &m_result_moment_eq.matrix);
 	// 計算結果を配列に保存
-	std::vector<double> array_result_moment_eq(NUM_OF_MOMENT_EQUATION);
-	for (i=0; i<NUM_OF_MOMENT_EQUATION; ++i) {
+	std::vector<double> array_result_moment_eq(NUM_OF_MOMENTEQ);
+	for (i=0; i<NUM_OF_MOMENTEQ; ++i) {
 		array_result_moment_eq[i] = gsl_matrix_get(&m_result_moment_eq.matrix, i, 0);	// 先の行列計算の答えを配列にする
 	}
 	array_result_moment_eq[2]  += dG[1];
 	array_result_moment_eq[7]  += dG[3];
 	array_result_moment_eq[14] += dG[5];
 	// 補正係数
-	std::vector<double> k(NUM_OF_MOMENT_EQUATION);
+	std::vector<double> k(NUM_OF_MOMENTEQ);
 	k[0] = 1.26;	k[1] = 0.66;	k[2] = 1.35;	k[3] = 3.81;	k[4] = 2.53;	k[5] = 2.85;	k[6] = 5.16;	k[7] = 7.25;
 	k[8] = 19.6;	k[9] = 11.5;	k[10] = 13.7;	k[11] = 18.3;	k[12] = 26.9;	k[13] = 27.9;	k[14] = 318.;
 	// 補正係数を含めた結果をfに格納
-	for (i = 0; i < NUM_OF_MOMENT_EQUATION; ++i) {
+	for (i = 0; i < NUM_OF_MOMENTEQ; ++i) {
 		gsl_vector_set(f, i, 1./k[i]*array_result_moment_eq[i]);
 	}
 	// オーダーを調べたい時に使う
@@ -87,7 +85,7 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
  */
 void MomentEq::getMomentFromParameter(const std::vector<double> &p, std::vector<double> &m)
 {
-	m.resize(21);
+	m.resize(NUM_OF_MOMENT);
 
 	// ２次モーメント
 	m[0] = (1 - p[0])*(pow(p[3],2) + pow(p[1],2)) + p[0]*pow(p[5],2);	// y_1^2
@@ -225,8 +223,6 @@ void MomentEq::getMomentFromParameter(const std::vector<double> &p, std::vector<
 int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 {
 	ParamData* paramData = static_cast<ParamData*>(params);
-	unsigned NUM_OF_MOMENT_EQUATION	= paramData->n;
-	unsigned NUM_OF_PARAMETER		= paramData->p;
 	double zeta					= paramData->zeta;
 	double epi					= paramData->epsilon;
 	double *dG					= paramData->dG;
@@ -274,8 +270,8 @@ int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 	// カウント変数
 	unsigned tmp, tmp_param, tmp_moment;
 
-	double param[NUM_OF_PARAMETER];
-	for(tmp=0; tmp<NUM_OF_PARAMETER; tmp++)
+	double param[NUM_OF_PARAM];
+	for(tmp=0; tmp<NUM_OF_PARAM; tmp++)
 	{
 	  param[tmp] = gsl_vector_get(x, tmp);
 	}
@@ -283,7 +279,7 @@ int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 	double pa0 = param[0], pa1 = param[1], pa2 = param[2], pa3 = param[3], pa4 = param[4], pa5 = param[5], pa6 = param[6], pa7 = param[7], pa8 = param[8], pa9 = param[9];
 
 	/*************************** ヤコビアン（開始） ***************************/
-	double jacoby[21][NUM_OF_PARAMETER];
+	double jacoby[NUM_OF_MOMENT][NUM_OF_PARAM];
 
 	// ２次モーメントのヤコビ
 	jacoby[0][0] = -(pow(pa3,2) + pow(pa1,2)) + pow(pa5,2);
@@ -654,9 +650,9 @@ int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 	double v_jacoby_moment[210];
 	for (tmp_moment=0; tmp_moment<21; tmp_moment++)
 	{
-		for (tmp_param=0; tmp_param<NUM_OF_PARAMETER; tmp_param++)
+		for (tmp_param=0; tmp_param<NUM_OF_PARAM; tmp_param++)
 		{
-			v_jacoby_moment[NUM_OF_PARAMETER*tmp_moment + tmp_param] = jacoby[tmp_moment][tmp_param] ;
+			v_jacoby_moment[NUM_OF_PARAM*tmp_moment + tmp_param] = jacoby[tmp_moment][tmp_param] ;
 		}
 	}
 
@@ -682,13 +678,13 @@ int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 	};
 
 	// モーメント方程式のヤコビアンを計算
-	gsl_matrix_view m_cf_jacoby_moment_eq	= gsl_matrix_view_array(cf_jacoby_moment_eq, NUM_OF_MOMENT_EQUATION, NUM_OF_PARAMETER);
-	gsl_matrix_view m_cf_moment_eq			= gsl_matrix_view_array(cf_moment_eq, NUM_OF_MOMENT_EQUATION, 21);
-	gsl_matrix_view m_jacoby_moment			= gsl_matrix_view_array(v_jacoby_moment, 21, NUM_OF_PARAMETER);
+	gsl_matrix_view m_cf_jacoby_moment_eq	= gsl_matrix_view_array(cf_jacoby_moment_eq, NUM_OF_MOMENTEQ, NUM_OF_PARAM);
+	gsl_matrix_view m_cf_moment_eq			= gsl_matrix_view_array(cf_moment_eq, NUM_OF_MOMENTEQ, NUM_OF_MOMENT);
+	gsl_matrix_view m_jacoby_moment			= gsl_matrix_view_array(v_jacoby_moment, NUM_OF_MOMENT, NUM_OF_PARAM);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, &m_cf_moment_eq.matrix, &m_jacoby_moment.matrix, 0.0, &m_cf_jacoby_moment_eq.matrix);
 
 	// 計算結果をJに格納
-	for(tmp_moment=0; tmp_moment<NUM_OF_MOMENT_EQUATION; tmp_moment++)
+	for(tmp_moment=0; tmp_moment<NUM_OF_MOMENTEQ; tmp_moment++)
 	{
 		for(tmp_param=0; tmp_param<10; tmp_param++)
 		{
