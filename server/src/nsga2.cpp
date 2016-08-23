@@ -10,6 +10,7 @@ void NSGA2::freeVector()
 {
 	std::vector< std::vector<double> >().swap(_obj);
 	std::vector< std::vector<double> >().swap(_prm);
+	std::vector< std::vector<double> >().swap(_moment);
 }
 
 /**
@@ -155,6 +156,7 @@ int NSGA2::run(ParamData* params)
 
 	cout    << "size of the archive: "  << _archive.size() << endl << endl;
 
+	_archive.cleanArchive();
 	gsl_vector_free(x);
 	gsl_vector_free(f);
 
@@ -162,7 +164,92 @@ int NSGA2::run(ParamData* params)
 }
 
 /**
- * @fn アーカイブの情報をファイルに書き込む．
+ * @fn 変数の範囲を指定する
+ * @param std::vector<double> &lower 下限（領域確保済み）
+ * @param std::vector<double> &upper 上限（領域確保済み）
+ */
+void NSGA2::_setValueRange(std::vector<double> &lower, std::vector<double> &upper)
+{
+	lower[0]	= 0.;	upper[0]	= 1.;	// a
+	lower[1]	= -3.;	upper[1]	= 3.;	// mu1
+	lower[2]	= -2.;	upper[2]	= 2.;	// mu2
+	lower[3]	= 0.;	upper[3]	= 1.0;	// sigma11
+	lower[4]	= 0.;	upper[4]	= 1.0;	// sigma12
+	lower[5]	= 0.;	upper[5]	= 1.5;	// sigma21
+	lower[6]	= 0.;	upper[6]	= 1.0;	// sigma22
+	lower[7]	= -1.;	upper[7]	= 1.;	// kappa1
+	lower[8]	= -1.;	upper[8]	= 1.;	// kappa2
+	lower[9]	= -1.;	upper[9]	= 1.;	// kappa3
+}
+
+/**
+ * @fn 目的関数値を取得
+ */
+std::vector< std::vector<double> > NSGA2::getObjValue()
+{
+	return _obj;
+}
+
+/**
+ * @fn パラメータ値を取得
+ */
+std::vector< std::vector<double> > NSGA2::getPrmValue()
+{
+	return _prm;
+}
+
+/**
+ * @fn モーメント値を取得
+ */
+std::vector< std::vector<double> > NSGA2::getMomentValue()
+{
+	return _moment;
+}
+
+/**
+ * @fn アーカイブの情報を格納
+ * @param ArchiveMOO &archive アーカイブ集団
+ */
+void NSGA2::_saveArchive(ArchiveMOO &archive)
+{
+	unsigned int i, ii;
+	unsigned int no = archive.size();
+	unsigned int noOfObj;
+	if (no > 0)
+		noOfObj = archive.readArchive(0).getNoOfObj();
+	else
+		noOfObj = 0;
+
+	IndividualMOO individual;
+	ChromosomeT< double > chrom;
+
+	double f;
+	for (i = 0; i < no; ++i)
+	{
+		individual.operator=(archive.readArchive(i));
+		chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
+		// モーメント値
+		std::vector<double> m;
+		MomentEq::getMomentFromParameter(chrom, m);
+		if (i == 0) Common::resize2DemensionalVector(_moment, no, m.size());
+		for (ii = 0; ii < m.size(); ++ii) {
+			_moment[i][ii]	= m[ii];
+		}
+		// 目的関数値
+		if (i == 0) Common::resize2DemensionalVector(_obj, no, noOfObj);
+		for (ii = 0; ii < noOfObj; ++ii) {
+			f   = archive.readArchive(i).getMOOFitness(ii);
+			_obj[i][ii] = f;
+		}
+		// パラメータ値
+		if (i == 0)	Common::resize2DemensionalVector(_prm, no, chrom.size());
+		for (ii = 0; ii < chrom.size(); ++ii)
+			_prm[i][ii] = chrom[ii];
+	}
+}
+
+/**
+ * @fn アーカイブの情報をファイルに書き込む
  * 目的関数値1 目的関数値2 ... | パラメータ値1 パラメータ値2 ...
  * @param string name ファイル名
  * @param ArchiveMOO &archive アーカイブ集団
@@ -203,72 +290,5 @@ void NSGA2::saveArchiveInFile(const std::string name)
 		}
 
 		ofs << std::endl;
-	}
-}
-
-/**
- * @fn 変数の範囲を指定する
- * @param std::vector<double> &lower 下限（領域確保済み）
- * @param std::vector<double> &upper 上限（領域確保済み）
- */
-void NSGA2::_setValueRange(std::vector<double> &lower, std::vector<double> &upper)
-{
-	lower[0]	= 0.;	upper[0]	= 1.;	// a
-	lower[1]	= -3.;	upper[1]	= 3.;	// mu1
-	lower[2]	= -2.;	upper[2]	= 2.;	// mu2
-	lower[3]	= 0.;	upper[3]	= 1.0;	// sigma11
-	lower[4]	= 0.;	upper[4]	= 1.0;	// sigma12
-	lower[5]	= 0.;	upper[5]	= 1.5;	// sigma21
-	lower[6]	= 0.;	upper[6]	= 1.0;	// sigma22
-	lower[7]	= -1.;	upper[7]	= 1.;	// kappa1
-	lower[8]	= -1.;	upper[8]	= 1.;	// kappa2
-	lower[9]	= -1.;	upper[9]	= 1.;	// kappa3
-}
-
-std::vector< std::vector<double> > NSGA2::getObjValue()
-{
-	return _obj;
-}
-
-std::vector< std::vector<double> > NSGA2::getPrmValue()
-{
-	return _prm;
-}
-
-/**
- * @fn アーカイブの情報を格納
- * @param ArchiveMOO &archive アーカイブ集団
- */
-void NSGA2::_saveArchive(ArchiveMOO &archive)
-{
-	unsigned int i, ii;
-	unsigned int no = archive.size();
-	unsigned int noOfObj;
-	if (no > 0)
-		noOfObj = archive.readArchive(0).getNoOfObj();
-	else
-		noOfObj = 0;
-	Common::resize2DemensionalVector(_obj, no, noOfObj);
-
-	IndividualMOO individual;
-	ChromosomeT< double > chrom;
-
-	double f;
-	for (i = 0; i < no; ++i)
-	{
-		// 目的関数値
-		for (ii = 0; ii < noOfObj; ++ii) {
-			f   = archive.readArchive(i).getMOOFitness(ii);
-			_obj[i][ii] = f;
-		}
-
-		// パラメータ値
-		individual.operator=(archive.readArchive(i));
-		chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
-		if (i == 0)
-			Common::resize2DemensionalVector(_prm, no, chrom.size());
-
-		for (ii = 0; ii < chrom.size(); ++ii)
-			_prm[i][ii] = chrom[ii];
 	}
 }

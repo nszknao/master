@@ -92,8 +92,8 @@ bool Parameter::validate()
 /**
  * @fn NSGA2でモーメント方程式を解く
  * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param std::vector<double> &pValue 計算結果のパラメータ値を保存
- * @param std::vector<double> &oValue 計算結果の目的関数値を保存
+ * @param vector<double> &pValue 計算結果のパラメータ値を保存
+ * @param vector<double> &oValue 計算結果の目的関数値を保存
  */
 int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::vector<double> > &pValue, std::vector< std::vector<double> > &oValue)
 {
@@ -156,16 +156,12 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::v
 		prm.push_back(p);
 	}
 	/******************************/
-	// pValue.resize(popSize);
-	// for (i = 0; i < popSize; ++i)
-	// 	pValue[i].resize(NUM_OF_PARAM);
-	// oValue.resize(popSize);
-	// for (i = 0; i < popSize; ++i)
-	// 	oValue[i].resize(NUM_OF_MOMENTEQ);
-	// std::copy(n2->getPrmValue().begin(), n2->getPrmValue().end(), back_inserter(pValue));
-	// std::copy(n2->getObjValue().begin(), n2->getObjValue().end(), back_inserter(oValue));
-	n2->freeVector();
+	Common::resize2DemensionalVector(pValue, popSize, NUM_OF_PARAM);
+	pValue	= n2->getPrmValue();
+	Common::resize2DemensionalVector(oValue, popSize, NUM_OF_PARAM);
+	oValue	= n2->getObjValue();
 
+	n2->freeVector();
 	delete setData;
 	delete n2;
 
@@ -296,8 +292,8 @@ std::string Analysis::leastSquareMethod(Parameter* prm)
 /**
  * @fn 変位のPDFを求める
  * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param vector &x X軸の情報を保存（領域確保済み）
- * @param vector &y Y軸の情報を保存（領域確保済み）
+ * @param vector<double> &x X軸の情報を保存（領域確保済み）
+ * @param vector<double> &y Y軸の情報を保存（領域確保済み）
  * @param int xmin X軸の最小値
  */
 void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector<double> &y, int xmin)
@@ -320,8 +316,8 @@ void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector
 /**
  * @fn 閾値通過率の分布を求める
  * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param vector &x X軸の情報を保存（領域確保済み）
- * @param vector &y Y軸の情報を保存（領域確保済み）
+ * @param vector<double> &x X軸の情報を保存（領域確保済み）
+ * @param vector<double> &y Y軸の情報を保存（領域確保済み）
  * @param int xmin X軸の最大値
  */
 void Analysis::createLevelCrossing(Parameter *prm, std::vector<double> &x, std::vector<double> &y, int xmax)
@@ -339,8 +335,8 @@ void Analysis::createLevelCrossing(Parameter *prm, std::vector<double> &x, std::
 /**
  * @fn 速度のPDFを求める
  * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param vector &x X軸の情報を保存（領域確保済み）
- * @param vector &y Y軸の情報を保存（領域確保済み）
+ * @param vector<double> &x X軸の情報を保存（領域確保済み）
+ * @param vector<double> &y Y軸の情報を保存（領域確保済み）
  * @param int xmin X軸の最小値
  */
 void Analysis::createVelPdf(Parameter *prm, std::vector<double> &x, std::vector<double> &y, int xmin)
@@ -420,6 +416,11 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 	return;
 }
 
+/**
+ * @fn 指定したvectorが閾値以内に収まっているか判定
+ * @param vector<double> &v 対象のvector
+ * @param double value 閾値
+ */
 bool Analysis::isOverSpecifyValue(const std::vector<double> &v, double value)
 {
 	bool flg = false;
@@ -434,7 +435,7 @@ bool Analysis::isOverSpecifyValue(const std::vector<double> &v, double value)
 }
 
 /**
- * 1変数のガウス分布を足し合わせる
+ * @fn 1変数のガウス分布を足し合わせる
  * @param double a[] 重み
  * @param double mu[] 平均
  * @param double sigma[] 分散
@@ -455,12 +456,12 @@ double Analysis::_createGaussianPdf(const std::vector<double> &a, const std::vec
 /**
  * 閾値通過率を計算
  * @param double pp_xi 閾値
- * @param std::vector<double> a 重み
- * @param std::vector<double> mu1 変位の平均
- * @param std::vector<double> mu2 速度の平均
- * @param std::vector<double> sigma1 変位の分散
- * @param std::vector<double> sigma2 速度の分散
- * @param std::vector<double> kappa
+ * @param vector<double> &a 重み
+ * @param vector<double> &mu1 変位の平均
+ * @param vector<double> &mu2 速度の平均
+ * @param vector<double> &sigma1 変位の分散
+ * @param vector<double> &sigma2 速度の分散
+ * @param vector<double> &kappa
  */
 double Analysis::_culcLevelCrossing(double pp_xi, const std::vector<double> &a, const std::vector<double> &mu1, const std::vector<double> &mu2, const std::vector<double> &sigma1, const std::vector<double> &sigma2, const std::vector<double> &kappa)
 {

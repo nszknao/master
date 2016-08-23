@@ -20,7 +20,7 @@ using namespace std;
 class NSGA2
 {
 private:
-	std::vector< std::vector<double> > _obj, _prm;		// 結果を保存する
+	std::vector< std::vector<double> > _obj, _prm, _moment;		// 結果を保存する
 	unsigned _dimension, _popSize, _iterations;
 	ArchiveMOO _archive;
 
@@ -34,6 +34,7 @@ public:
 	void saveArchiveInFile(const std::string);
 	std::vector< std::vector<double> > getObjValue();
 	std::vector< std::vector<double> > getPrmValue();
+	std::vector< std::vector<double> > getMomentValue();
 };
 
 #endif // !__NSGA2_H_INCLUDE_
