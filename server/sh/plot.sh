@@ -41,7 +41,7 @@ fi
 # if [ -e ${RESULT_PATH}/${params}/${eps} ]; then
 # 	rm -rf ${RESULT_PATH}/${params}/${eps}/*
 # else
-	mkdir ${RESULT_PATH}/${params}/${eps}
+# 	mkdir ${RESULT_PATH}/${params}/${eps}
 # fi
 
 ##### Handling if "plot.plt" exists. #############

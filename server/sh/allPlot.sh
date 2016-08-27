@@ -23,7 +23,7 @@ num=$3
 ##### Plot all. #############
 for (( i = 0; i < ${num}; i++ )); do
 	sh ${SRC_PATH}/sh/plot.sh ${lambda} ${alpha} ${i}
-	echo "sh ${SRC_PATH}/sh/plot.sh 0.2 0.1 ${i}"
+	echo "sh ${SRC_PATH}/sh/plot.sh ${lambda} ${alpha} ${i}"
 	if [ "$?" -eq 1 ]; then
 		echo "エラーが発生しました。"
 		exit 1

@@ -223,7 +223,6 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
 	IndividualMOO individual;
 	ChromosomeT< double > chrom;
 
-	double f;
 	for (i = 0; i < no; ++i)
 	{
 		individual.operator=(archive.readArchive(i));
@@ -238,13 +237,13 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
 		// 目的関数値
 		if (i == 0) Common::resize2DemensionalVector(_obj, no, noOfObj);
 		for (ii = 0; ii < noOfObj; ++ii) {
-			f   = archive.readArchive(i).getMOOFitness(ii);
-			_obj[i][ii] = f;
+			_obj[i][ii] = archive.readArchive(i).getMOOFitness(ii);
 		}
 		// パラメータ値
 		if (i == 0)	Common::resize2DemensionalVector(_prm, no, chrom.size());
-		for (ii = 0; ii < chrom.size(); ++ii)
+		for (ii = 0; ii < chrom.size(); ++ii) {
 			_prm[i][ii] = chrom[ii];
+		}
 	}
 }
 

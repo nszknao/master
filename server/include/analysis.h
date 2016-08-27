@@ -59,13 +59,13 @@ private:
 
 public:
 	Analysis(double, double, double, double, double);
-	std::string leastSquareMethod(Parameter*);
-	int GeneticAlgorithm(std::vector<Parameter*> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
+	std::string leastSquareMethod(std::vector<double> &);
+	int GeneticAlgorithm(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
 	void createDispPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createVelPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createLevelCrossing(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void outputIntoFile(const std::string, const std::vector<double> &, const std::vector<double> &);
-	bool isOverSpecifyValue(const std::vector<double> &, double);
+	void getDetailParameterFromSimpleNotation(Parameter*, const std::vector<double> &);
 	~Analysis();
 };
 

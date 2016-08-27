@@ -19,12 +19,12 @@ code=$1
 
 ############ Compile-force #############################################
 if [ ${code} -eq 0 ]; then
-	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/sMain.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/research.cpp -o ${SRC_PATH}/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
-	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/aMain.cpp ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/simulation.cpp -o ${SRC_PATH}/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 elif [ ${code} -eq 1 ]; then
-	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/sMain.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/research.cpp -o ${SRC_PATH}/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/simulation.cpp -o ${SRC_PATH}/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 elif [ ${code} -eq 2 ]; then
-	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/aMain.cpp ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 fi
 
 ##### Make directory. #############

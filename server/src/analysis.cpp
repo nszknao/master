@@ -1,6 +1,7 @@
 #include "../include/analysis.h"
 #include "../include/paramdata.h"
 #include "../include/nsga2.h"
+#include "../include/common.h"
 
 void Parameter::setParameter(std::vector<double> &a_, std::vector<double> &mu1_, std::vector<double> &mu2_, std::vector<double> &sigma1_, std::vector<double> &sigma2_, std::vector<double> &kappa_)
 {
@@ -34,19 +35,19 @@ void Parameter::freeParameter()
 
 std::vector<double> Parameter::getParameter(std::string prm)
 {
-	if (prm == "a")
+	if (prm == "a") {
 		return _a;
-	else if (prm == "mu1")
+	} else if (prm == "mu1") {
 		return _mu1;
-	else if (prm == "mu2")
+	} else if (prm == "mu2") {
 		return _mu2;
-	else if (prm == "sigma1")
+	} else if (prm == "sigma1") {
 		return _sigma1;
-	else if (prm == "sigma2")
+	} else if (prm == "sigma2") {
 		return _sigma2;
-	else if (prm == "kappa")
+	} else if (prm == "kappa") {
 		return _kappa;
-	else {
+	} else {
 		std::cout << "Error: Given parameter doesn't exist." << std::endl;
 		return std::vector<double>();
 	}
@@ -91,15 +92,12 @@ bool Parameter::validate()
 
 /**
  * @fn NSGA2でモーメント方程式を解く
- * @param Parameter* prm モーメント方程式から求めたパラメータ
  * @param vector<double> &pValue 計算結果のパラメータ値を保存
  * @param vector<double> &oValue 計算結果の目的関数値を保存
  */
-int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::vector<double> > &pValue, std::vector< std::vector<double> > &oValue, std::vector< std::vector<double> > &mValue)
+int Analysis::GeneticAlgorithm(std::vector< std::vector<double> > &pValue, std::vector< std::vector<double> > &oValue, std::vector< std::vector<double> > &mValue)
 {
 	std::cout << "Get analysis solution using NSGA2.\n" << std::endl;
-
-	unsigned int i;
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
 	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
@@ -122,46 +120,14 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::v
 	n2->saveArchiveInFile("nsga2archive.txt");
 
 	unsigned int popSize	= n2->getPrmValue().size();
-
 	/********** 計算結果 **********/
-	prm.reserve(popSize);
-	for (i = 0; i < n2->getPrmValue().size(); ++i) {
-		std::vector<double> prm_a(NUM_GAUSS), prm_mu1(NUM_GAUSS), prm_mu2(NUM_GAUSS), prm_sigma1(NUM_GAUSS), prm_sigma2(NUM_GAUSS), prm_kappa(NUM_GAUSS);
-		// 重み
-		prm_a[1] = n2->getPrmValue()[i][0];		// a2
-		prm_a[0] = (1. - prm_a[1]) / 2.;		// a1
-		prm_a[2] = prm_a[0];					// a3
-		// 変位
-		prm_mu1[0] = n2->getPrmValue()[i][1];	// mu11
-		prm_mu1[1] = 0.;						// mu21
-		prm_mu1[2] = -1.*prm_mu1[0];			// mu31
-		prm_sigma1[0] = n2->getPrmValue()[i][3];	// sigma11
-		prm_sigma1[1] = n2->getPrmValue()[i][5];	// sigma21
-		prm_sigma1[2] = prm_sigma1[0];				// sigma31
-		// 速度
-		prm_mu2[0] = n2->getPrmValue()[i][2];	// mu12
-		prm_mu2[1] = 0.;						// mu22
-		prm_mu2[2] = -1.*prm_mu2[0];			// mu32
-		prm_sigma2[0] = n2->getPrmValue()[i][4];	// sigma12
-		prm_sigma2[1] = n2->getPrmValue()[i][6];	// sigma22
-		prm_sigma2[2] = prm_sigma2[0];				// sigma32
-		// 共分散
-		prm_kappa[0] = n2->getPrmValue()[i][7];		// kappa123
-		prm_kappa[1] = n2->getPrmValue()[i][8];		// kappa223
-		prm_kappa[2] = n2->getPrmValue()[i][9];		// kappa323
-	
-		Parameter* p	= new Parameter();
-		p->allocParameter();
-		p->setParameter(prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
-		prm.push_back(p);
-	}
-	/******************************/
 	Common::resize2DemensionalVector(pValue, popSize, NUM_OF_PARAM);
 	pValue	= n2->getPrmValue();
 	Common::resize2DemensionalVector(oValue, popSize, NUM_OF_MOMENTEQ);
 	oValue	= n2->getObjValue();
 	Common::resize2DemensionalVector(mValue, popSize, NUM_OF_MOMENT);
 	mValue	= n2->getMomentValue();
+	/******************************/
 
 	n2->freeVector();
 	delete setData;
@@ -171,13 +137,49 @@ int Analysis::GeneticAlgorithm(std::vector<Parameter*> &prm, std::vector< std::v
 }
 
 /**
+ * @fn 簡易的なパラメータ表記から詳細を得る
+ * @param Parameter* prm モーメント方程式から求めたパラメータ
+ * @param vector<double> &pValue 計算結果のパラメータ値を保存
+ */
+ void Analysis::getDetailParameterFromSimpleNotation(Parameter* prm, const std::vector<double> &pValue)
+ {
+	std::vector<double> prm_a(NUM_GAUSS), prm_mu1(NUM_GAUSS), prm_mu2(NUM_GAUSS), prm_sigma1(NUM_GAUSS), prm_sigma2(NUM_GAUSS), prm_kappa(NUM_GAUSS);
+
+	// 重み
+	prm_a[1] = pValue[0];		// a2
+	prm_a[0] = (1. - prm_a[1]) / 2.;		// a1
+	prm_a[2] = prm_a[0];					// a3
+	// 変位
+	prm_mu1[0] = pValue[1];	// mu11
+	prm_mu1[1] = 0.;						// mu21
+	prm_mu1[2] = -1.*prm_mu1[0];			// mu31
+	prm_sigma1[0] = pValue[3];	// sigma11
+	prm_sigma1[1] = pValue[5];	// sigma21
+	prm_sigma1[2] = prm_sigma1[0];				// sigma31
+	// 速度
+	prm_mu2[0] = pValue[2];	// mu12
+	prm_mu2[1] = 0.;						// mu22
+	prm_mu2[2] = -1.*prm_mu2[0];			// mu32
+	prm_sigma2[0] = pValue[4];	// sigma12
+	prm_sigma2[1] = pValue[6];	// sigma22
+	prm_sigma2[2] = prm_sigma2[0];				// sigma32
+	// 共分散
+	prm_kappa[0] = pValue[7];		// kappa123
+	prm_kappa[1] = pValue[8];		// kappa223
+	prm_kappa[2] = pValue[9];		// kappa323
+
+	prm->setParameter(prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
+ }
+
+/**
  * @fn 最小二乗法を解いて解析解を求める
  * @param Parameter* prm モーメント方程式から求めたパラメータ
  */
-std::string Analysis::leastSquareMethod(Parameter* prm)
+std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 {
 	std::cout << "Get analysis solution using least squeare method.\n" << std::endl;
 
+	unsigned int i;
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
 	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
 
@@ -228,34 +230,11 @@ std::string Analysis::leastSquareMethod(Parameter* prm)
 		status = gsl_multifit_test_delta(s->dx, s->x, 1e-10, 1e-10);
 	} while (status == GSL_CONTINUE && iter < 10000);
 
-
-	/********** 計算結果 **********/
-	std::vector<double> prm_a(NUM_GAUSS), prm_mu1(NUM_GAUSS), prm_mu2(NUM_GAUSS), prm_sigma1(NUM_GAUSS), prm_sigma2(NUM_GAUSS), prm_kappa(NUM_GAUSS);
-	// 重み
-	prm_a[1] = gsl_vector_get(s->x, 0);		// a2
-	prm_a[0] = (1. - prm_a[1]) / 2.;		// a1
-	prm_a[2] = prm_a[0];					// a3
-	// 変位
-	prm_mu1[0] = gsl_vector_get(s->x, 1);	// mu11
-	prm_mu1[1] = 0.;						// mu21
-	prm_mu1[2] = -1.*prm_mu1[0];			// mu31
-	prm_sigma1[0] = gsl_vector_get(s->x, 3);	// sigma11
-	prm_sigma1[1] = gsl_vector_get(s->x, 5);	// sigma21
-	prm_sigma1[2] = prm_sigma1[0];				// sigma31
-	// 速度
-	prm_mu2[0] = gsl_vector_get(s->x, 2);	// mu12
-	prm_mu2[1] = 0.;						// mu22
-	prm_mu2[2] = -1.*prm_mu2[0];			// mu32
-	prm_sigma2[0] = gsl_vector_get(s->x, 4);	// sigma12
-	prm_sigma2[1] = gsl_vector_get(s->x, 6);	// sigma22
-	prm_sigma2[2] = prm_sigma2[0];				// sigma32
-	// 共分散
-	prm_kappa[0] = gsl_vector_get(s->x, 7);		// kappa123
-	prm_kappa[1] = gsl_vector_get(s->x, 8);		// kappa223
-	prm_kappa[2] = gsl_vector_get(s->x, 9);		// kappa323
-
-	prm->setParameter(prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
-	/******************************/
+	// 計算結果
+	pValue.resize(NUM_OF_PARAM);
+	for (i = 0; i < NUM_OF_PARAM; ++i) {
+		pValue[i]	= gsl_vector_get(s->x, i);
+	}
 
 	// TODO:何をやっているのか見直す
 	gsl_matrix *J = gsl_matrix_alloc(NUM_OF_MOMENTEQ, NUM_OF_PARAM);
@@ -270,16 +249,16 @@ std::string Analysis::leastSquareMethod(Parameter* prm)
 
 	std::cout << "roop(iter): " << iter << std::endl;
 	std::cout << "/*********************solution*********************/" << std::endl;
-	std::cout << "a	      = " << prm->getParameter("a")[1] << " +/- " << c*ERR(0) << std::endl;
-	std::cout << "mu1     = " << prm->getParameter("mu1")[0] << " +/- " << c*ERR(1) << std::endl;
-	std::cout << "mu2     = " << prm->getParameter("mu2")[0] << " +/- " << c*ERR(2) << std::endl;
-	std::cout << "sigma11 = " << prm->getParameter("sigma1")[0] << " +/- " << c*ERR(3) << std::endl;
-	std::cout << "sigma12 = " << prm->getParameter("sigma2")[0] << " +/- " << c*ERR(4) << std::endl;
-	std::cout << "sigma21 = " << prm->getParameter("sigma1")[1] << " +/- " << c*ERR(5) << std::endl;
-	std::cout << "sigma22 = " << prm->getParameter("sigma2")[1] << " +/- " << c*ERR(6) << std::endl;
-	std::cout << "k1      = " << prm->getParameter("kappa")[0] << " +/- " << c*ERR(7) << std::endl;
-	std::cout << "k2      = " << prm->getParameter("kappa")[1] << " +/- " << c*ERR(8) << std::endl;
-	std::cout << "k3      = " << prm->getParameter("kappa")[2] << " +/- " << c*ERR(9)<< std::endl;
+	std::cout << "a	      = " << pValue[0] << " +/- " << c*ERR(0) << std::endl;
+	std::cout << "mu1     = " << pValue[1] << " +/- " << c*ERR(1) << std::endl;
+	std::cout << "mu2     = " << pValue[2] << " +/- " << c*ERR(2) << std::endl;
+	std::cout << "sigma11 = " << pValue[3] << " +/- " << c*ERR(3) << std::endl;
+	std::cout << "sigma12 = " << pValue[4] << " +/- " << c*ERR(4) << std::endl;
+	std::cout << "sigma21 = " << pValue[5] << " +/- " << c*ERR(5) << std::endl;
+	std::cout << "sigma22 = " << pValue[6] << " +/- " << c*ERR(6) << std::endl;
+	std::cout << "k1      = " << pValue[7] << " +/- " << c*ERR(7) << std::endl;
+	std::cout << "k2      = " << pValue[8] << " +/- " << c*ERR(8) << std::endl;
+	std::cout << "k3      = " << pValue[9] << " +/- " << c*ERR(9)<< std::endl;
 	std::cout << "/**************************************************/" << std::endl;
 	std::cout << "status  = " << gsl_strerror(status) << "\n" << std::endl;
 
@@ -419,24 +398,6 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 }
 
 /**
- * @fn 指定したvectorが閾値以内に収まっているか判定
- * @param vector<double> &v 対象のvector
- * @param double value 閾値
- */
-bool Analysis::isOverSpecifyValue(const std::vector<double> &v, double value)
-{
-	bool flg = false;
-	unsigned int i;
-
-	for (i = 0; i < v.size(); ++i) {
-		if (v[i] >= value || v[i] < -1*value)
-			flg	= true;
-	}
-
-	return flg;
-}
-
-/**
  * @fn 1変数のガウス分布を足し合わせる
  * @param double a[] 重み
  * @param double mu[] 平均
@@ -456,7 +417,7 @@ double Analysis::_createGaussianPdf(const std::vector<double> &a, const std::vec
 }
 
 /**
- * 閾値通過率を計算
+ * @fn 閾値通過率を計算
  * @param double pp_xi 閾値
  * @param vector<double> &a 重み
  * @param vector<double> &mu1 変位の平均
@@ -481,4 +442,84 @@ double Analysis::_culcLevelCrossing(double pp_xi, const std::vector<double> &a, 
 	}
 
 	return prob;
+}
+
+/**
+ * main
+ */
+int main(int argc, char *argv[])
+{
+	std::string filename	= "";
+
+	char *ends;
+	double lambda	= strtod(argv[1],&ends);
+	double beta2	= strtod(argv[2],&ends);
+	double alpha	= strtod(argv[3],&ends);
+	double mu1		= strtod(argv[4],&ends);
+
+
+	std::cout << "--------------------\n" << std::endl;
+	std::cout << "analysis.cpp started.\n" << std::endl;
+	
+	Analysis *ana	= new Analysis(lambda, beta2, alpha, mu1, mu1);
+
+	/* 最小二乗法で解く */
+	// std::vector<double> pValue;
+	// std::string result	= ana->leastSquareMethod(pValue);
+	// if (result == "success") {
+	// 	Parameter* prm	= new Parameter();
+	// 	prm->allocParameter();
+	// 	ana->getDetailParameterFromSimpleNotation(prm, pValue);
+
+	// 	int xmin	= -6;
+	// 	std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
+	// 	ana->createDispPdf(prm, dispX, dispY, xmin);
+	// 	Common::outputIntoFile((char*)"gsay1pdf.dat", dispX, dispY);
+
+	// 	delete prm;
+	// }
+
+	/* GAで解く */
+	unsigned int i;
+	std::vector<Parameter*> prm;
+	std::vector< std::vector<double> > pValue, oValue, mValue;
+
+	// 方程式を解く
+	ana->GeneticAlgorithm(pValue, oValue, mValue);
+	Common::sortBasedOnParticularArray(mValue, pValue, 0);	// E[y1^2]でソート
+	prm.reserve(pValue.size());
+	for (i = 0; i < pValue.size(); ++i) {
+		Parameter* p = new Parameter();
+		p->allocParameter();
+		ana->getDetailParameterFromSimpleNotation(p, pValue[i]);
+		prm.push_back(p);
+	}
+
+	// 描画のためのデータ生成	
+	int xminDisp	= -6;
+	int xmaxFCross	= 8;
+	for (i = 0; i < prm.size(); ++i) {
+		if (!prm[i]->validate()) continue;
+		// if (Common::isOverSpecifyValue(oValue[i], 50.)) continue;
+		/* 変位のPDFを求める */
+		std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
+		ana->createDispPdf(prm[i], dispX, dispY, xminDisp);
+		filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
+		Common::outputIntoFile(filename, dispX, dispY);
+		/* 閾値通過率を求める */
+		std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
+		ana->createLevelCrossing(prm[i], fCrossX, fCrossY, xmaxFCross);
+		filename	= "firstcross_" + std::to_string(i) + ".dat";
+		// Common::outputIntoFile(filename, fCrossX, fCrossY);
+	}
+	for (i = 0; i < prm.size(); ++i) {
+		prm[i]->freeParameter();
+		delete prm[i];
+	}
+
+	delete ana;
+	
+	std::cout << "analysis.cpp has done.\n" << std::endl;
+	std::cout << "--------------------\n" << std::endl;
+	return 0;
 }
