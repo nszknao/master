@@ -1,16 +1,15 @@
 #include "../include/nsga2.h"
 #include "../include/expfit.h"
 
-NSGA2::NSGA2(int pop, int iter) {
+NSGA2::NSGA2(int pop, int iter)
+{
 	_popSize      = pop;  // 120
 	_iterations   = iter;  // 500
 }
 
-void NSGA2::freeVector()
+NSGA2::~NSGA2()
 {
-	std::vector< std::vector<double> >().swap(_obj);
-	std::vector< std::vector<double> >().swap(_prm);
-	std::vector< std::vector<double> >().swap(_moment);
+	std::vector<GAIndividual>().swap(_finalPops);
 }
 
 /**
@@ -183,27 +182,20 @@ void NSGA2::_setValueRange(std::vector<double> &lower, std::vector<double> &uppe
 }
 
 /**
- * @fn 目的関数値を取得
+ * @fn 解の個体群を取得
  */
-std::vector< std::vector<double> > NSGA2::getObjValue()
+std::vector<GAIndividual> NSGA2::getFinalPops()
 {
-	return _obj;
+	return _finalPops;
 }
 
 /**
- * @fn パラメータ値を取得
+ * @fn 解の個体群のアロケーション
+ * @param int num 個体数
  */
-std::vector< std::vector<double> > NSGA2::getPrmValue()
+void NSGA2::_allocFinalPops(int num)
 {
-	return _prm;
-}
-
-/**
- * @fn モーメント値を取得
- */
-std::vector< std::vector<double> > NSGA2::getMomentValue()
-{
-	return _moment;
+	_finalPops.resize(num);
 }
 
 /**
@@ -223,6 +215,7 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
 	IndividualMOO individual;
 	ChromosomeT< double > chrom;
 
+	this->_allocFinalPops(no);
 	for (i = 0; i < no; ++i)
 	{
 		individual.operator=(archive.readArchive(i));
@@ -230,19 +223,19 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
 		// モーメント値
 		std::vector<double> m;
 		MomentEq::getMomentFromParameter(chrom, m);
-		if (i == 0) Common::resize2DemensionalVector(_moment, no, m.size());
+		_finalPops[i].mValue.resize(m.size());
 		for (ii = 0; ii < m.size(); ++ii) {
-			_moment[i][ii]	= m[ii];
+			_finalPops[i].mValue[ii]	= m[ii];
 		}
 		// 目的関数値
-		if (i == 0) Common::resize2DemensionalVector(_obj, no, noOfObj);
+		_finalPops[i].oValue.resize(noOfObj);
 		for (ii = 0; ii < noOfObj; ++ii) {
-			_obj[i][ii] = archive.readArchive(i).getMOOFitness(ii);
+			_finalPops[i].oValue[ii] = archive.readArchive(i).getMOOFitness(ii);
 		}
 		// パラメータ値
-		if (i == 0)	Common::resize2DemensionalVector(_prm, no, chrom.size());
+		_finalPops[i].pValue.resize(chrom.size());
 		for (ii = 0; ii < chrom.size(); ++ii) {
-			_prm[i][ii] = chrom[ii];
+			_finalPops[i].pValue[ii] = chrom[ii];
 		}
 	}
 }

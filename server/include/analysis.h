@@ -15,6 +15,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_sf.h>
 #include "expfit.h"
+#include "nsga2.h"
 
 #ifndef __OSCILLATOR_AND_EXCITATION_PARAMETER__
 #define __OSCILLATOR_AND_EXCITATION_PARAMETER__
@@ -60,7 +61,7 @@ private:
 public:
 	Analysis(double, double, double, double, double);
 	std::string leastSquareMethod(std::vector<double> &);
-	int GeneticAlgorithm(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
+	int GeneticAlgorithm(std::vector<GAIndividual> &);
 	void createDispPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createVelPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createLevelCrossing(Parameter*, std::vector<double> &, std::vector<double> &, int);

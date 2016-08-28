@@ -95,7 +95,7 @@ bool Parameter::validate()
  * @param vector<double> &pValue 計算結果のパラメータ値を保存
  * @param vector<double> &oValue 計算結果の目的関数値を保存
  */
-int Analysis::GeneticAlgorithm(std::vector< std::vector<double> > &pValue, std::vector< std::vector<double> > &oValue, std::vector< std::vector<double> > &mValue)
+int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 {
 	std::cout << "Get analysis solution using NSGA2.\n" << std::endl;
 
@@ -119,17 +119,8 @@ int Analysis::GeneticAlgorithm(std::vector< std::vector<double> > &pValue, std::
 	n2->run(setData);
 	n2->saveArchiveInFile("nsga2archive.txt");
 
-	unsigned int popSize	= n2->getPrmValue().size();
-	/********** 計算結果 **********/
-	Common::resize2DemensionalVector(pValue, popSize, NUM_OF_PARAM);
-	pValue	= n2->getPrmValue();
-	Common::resize2DemensionalVector(oValue, popSize, NUM_OF_MOMENTEQ);
-	oValue	= n2->getObjValue();
-	Common::resize2DemensionalVector(mValue, popSize, NUM_OF_MOMENT);
-	mValue	= n2->getMomentValue();
-	/******************************/
+	pops	= n2->getFinalPops();
 
-	n2->freeVector();
 	delete setData;
 	delete n2;
 
@@ -482,16 +473,19 @@ int main(int argc, char *argv[])
 	/* GAで解く */
 	unsigned int i;
 	std::vector<Parameter*> prm;
-	std::vector< std::vector<double> > pValue, oValue, mValue;
+	std::vector<GAIndividual> pops;
 
 	// 方程式を解く
-	ana->GeneticAlgorithm(pValue, oValue, mValue);
-	Common::sortBasedOnParticularArray(mValue, pValue, 0);	// E[y1^2]でソート
-	prm.reserve(pValue.size());
-	for (i = 0; i < pValue.size(); ++i) {
+	ana->GeneticAlgorithm(pops);
+	int key	= 0;	// E[y1^2]でソート
+	sort(pops.begin(), pops.end(), [&key](const GAIndividual &a, const GAIndividual &b){
+		return (a.mValue[key] == b.mValue[key]) ? (a.index < b.index) : (a.mValue[key] < b.mValue[key]);
+	});
+	prm.reserve(pops.size());
+	for (i = 0; i < pops.size(); ++i) {
 		Parameter* p = new Parameter();
 		p->allocParameter();
-		ana->getDetailParameterFromSimpleNotation(p, pValue[i]);
+		ana->getDetailParameterFromSimpleNotation(p, pops[i].pValue);
 		prm.push_back(p);
 	}
 

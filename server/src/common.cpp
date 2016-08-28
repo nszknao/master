@@ -42,47 +42,6 @@ void Common::resize2DemensionalVector(std::vector< std::vector< double > > &v, u
 }
 
 /**
- * @fn 特定のvectorを基準にしてソートする
- * @param vector< vector<double> > &ref 基準となる配列
- * @param vector< vector<double> > &target ソートしたい配列
- * @param int key ソートしたいキー
- */
-void Common::sortBasedOnParticularArray(const std::vector< std::vector<double> > &ref, std::vector< std::vector<double> > &target, int key)
-{
-	if (ref.size() != target.size()) {
-		std::cout << "Error: Different size of vector.";
-		exit(1);
-	}
-
-	unsigned int i;
-	struct data_t {
-		int index;
-		double value;
-	};
-
-	std::vector<data_t> refValue(ref.size());
-	for (i = 0; i < refValue.size(); ++i) {
-		refValue[i].index	= i;
-		refValue[i].value	= ref[i][key];
-	}
-	// for (i = 0; i < refValue.size(); ++i) {
-	// 	std::cout << "before [ " << refValue[i].index << " : " << refValue[i].value << " ]" << std::endl;
-	// }
-	sort(refValue.begin(), refValue.end(), [](const data_t &a, const data_t &b){
-		return (a.value == b.value) ? (a.index < b.index) : (a.value < b.value);
-	});
-	// for (i = 0; i < refValue.size(); ++i) {
-	// 	std::cout << "after [ " << refValue[i].index << " : " << refValue[i].value << " ]" << std::endl;
-	// }
-	// 対象の配列をソート
-	std::vector< std::vector<double> > tmp(target.size());
-	for (i = 0; i < target.size(); ++i) {
-		tmp[i]	= target[refValue[i].index];
-	}
-	target	= tmp;
-}
-
-/**
  * @fn 指定した配列の要素が閾値以内に収まっているか判定
  * @param vector<double> &v 対象のvector
  * @param double value 閾値
