@@ -55,7 +55,7 @@ class Analysis
 private:
 	double _lambda, _beta2, _alpha, _mu1, _mu2;
 	double _createGaussianPdf(const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, double x);
-	double _culcLevelCrossing(double, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &, const std::vector<double> &);
+	double _culcLevelCrossing(double, Parameter*);
 	void _culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy);
 
 public:
@@ -65,8 +65,8 @@ public:
 	void createDispPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createVelPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	void createLevelCrossing(Parameter*, std::vector<double> &, std::vector<double> &, int);
-	void outputIntoFile(const std::string, const std::vector<double> &, const std::vector<double> &);
-	void getDetailParameterFromSimpleNotation(Parameter*, const std::vector<double> &);
+	static void getDetailParameterFromSimpleNotation(Parameter*, const std::vector<double> &);
+	void outputPopsIntoFile(const std::string, const GAIndividual &, const std::vector<double> &, const std::vector<double> &);
 	~Analysis();
 };
 

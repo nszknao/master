@@ -300,7 +300,7 @@ void Analysis::createLevelCrossing(Parameter *prm, std::vector<double> &x, std::
 
 	for (i = 0; i*0.01 < xmax; ++i) {
 		x[i] = (double)i*0.01;
-		y[i] = this->_culcLevelCrossing((double)i*0.01, prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("mu2"), prm->getParameter("sigma1"), prm->getParameter("sigma2"), prm->getParameter("kappa"));
+		y[i] = this->_culcLevelCrossing((double)i*0.01, prm);
 	}
 }
 
@@ -417,11 +417,18 @@ double Analysis::_createGaussianPdf(const std::vector<double> &a, const std::vec
  * @param vector<double> &sigma2 速度の分散
  * @param vector<double> &kappa
  */
-double Analysis::_culcLevelCrossing(double pp_xi, const std::vector<double> &a, const std::vector<double> &mu1, const std::vector<double> &mu2, const std::vector<double> &sigma1, const std::vector<double> &sigma2, const std::vector<double> &kappa)
+double Analysis::_culcLevelCrossing(double pp_xi, Parameter* prm)
 {
 	double prob = 0.;
 	unsigned int i;
 	double pp_c = 0., pp_g = 0., pp_sigma = 0.;
+
+	std::vector<double> a		= prm->getParameter("a");
+	std::vector<double> mu1		= prm->getParameter("mu1");
+	std::vector<double> mu2		= prm->getParameter("mu2");
+	std::vector<double> sigma1	= prm->getParameter("sigma1");
+	std::vector<double> sigma2	= prm->getParameter("sigma2");
+	std::vector<double> kappa	= prm->getParameter("kappa");
 
 	for (i = 0; i < NUM_GAUSS; ++i) {
 		pp_c		= kappa[i]/sigma1[i]/sigma2[i];
@@ -433,6 +440,44 @@ double Analysis::_culcLevelCrossing(double pp_xi, const std::vector<double> &a, 
 	}
 
 	return prob;
+}
+
+/**
+ * @fn ファイルに個体情報を出力する
+ * --- 出力形式 ---
+ * # E[y1^2] E[y2y1] E[y2^2] ... E[y1^3y2^5] 目的関数1の値 目的関数2の値 ...  目的関数15の値
+ * 0.0001 1.4356
+ * ...
+ * --- 出力形式 ---
+ * @param string name ファイル名
+ * @param GAIndividual &ind 個体
+ * @param vector &x X軸情報
+ * @param vector &y Y軸情報
+ */
+void Analysis::outputPopsIntoFile(const std::string name, const GAIndividual &ind, const std::vector<double> &x, const std::vector<double> &y)
+{
+	std::cout << "Creating a file.\n" << std::endl;
+
+	// 値の数をチェック
+	if (x.size() != y.size()) {
+		std::cout << "Error: Do not match vector size." << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	std::ofstream ofs(name);
+	unsigned int i;
+	ofs << "#";
+	for (i = 0; i < ind.mValue.size(); ++i) {
+		ofs << " " << ind.mValue[i] << std::flush;
+	}
+	for (i = 0; i < ind.oValue.size(); ++i) {
+		ofs << " " << ind.oValue[i] << std::flush;
+	}
+	ofs << std::endl;
+
+	for (i = 0; i < x.size(); ++i) {
+		ofs << x[i] << " " << y[i] << std::endl;
+	}
 }
 
 /**
@@ -477,38 +522,34 @@ int main(int argc, char *argv[])
 
 	// 方程式を解く
 	ana->GeneticAlgorithm(pops);
-	int key	= 0;	// E[y1^2]でソート
+	// E[y1^2]でソート
+	int key	= 0;
 	sort(pops.begin(), pops.end(), [&key](const GAIndividual &a, const GAIndividual &b){
 		return (a.mValue[key] == b.mValue[key]) ? (a.index < b.index) : (a.mValue[key] < b.mValue[key]);
 	});
-	prm.reserve(pops.size());
-	for (i = 0; i < pops.size(); ++i) {
-		Parameter* p = new Parameter();
-		p->allocParameter();
-		ana->getDetailParameterFromSimpleNotation(p, pops[i].pValue);
-		prm.push_back(p);
-	}
 
 	// 描画のためのデータ生成	
 	int xminDisp	= -6;
 	int xmaxFCross	= 8;
-	for (i = 0; i < prm.size(); ++i) {
-		if (!prm[i]->validate()) continue;
-		// if (Common::isOverSpecifyValue(oValue[i], 50.)) continue;
+	for (i = 0; i < pops.size(); ++i) {
+		Parameter* p = new Parameter();
+		p->allocParameter();
+
+		Analysis::getDetailParameterFromSimpleNotation(p, pops[i].pValue);
+		if (!p->validate()) continue;
 		/* 変位のPDFを求める */
 		std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
-		ana->createDispPdf(prm[i], dispX, dispY, xminDisp);
+		ana->createDispPdf(p, dispX, dispY, xminDisp);
 		filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
-		Common::outputIntoFile(filename, dispX, dispY);
+		ana->outputPopsIntoFile(filename, pops[i], dispX, dispY);
 		/* 閾値通過率を求める */
 		std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
-		ana->createLevelCrossing(prm[i], fCrossX, fCrossY, xmaxFCross);
+		ana->createLevelCrossing(p, fCrossX, fCrossY, xmaxFCross);
 		filename	= "firstcross_" + std::to_string(i) + ".dat";
-		// Common::outputIntoFile(filename, fCrossX, fCrossY);
-	}
-	for (i = 0; i < prm.size(); ++i) {
-		prm[i]->freeParameter();
-		delete prm[i];
+		// ana->outputPopsIntoFile(filename, pops[i], fCrossX, fCrossY);
+
+		p->freeParameter();
+		delete p;
 	}
 
 	delete ana;
