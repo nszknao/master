@@ -1,4 +1,4 @@
-#include "../include/research.h"
+#include "../include/simulation.h"
 #include "../include/common.h"
 
 Simulation::Simulation(double lambda, double beta2, double alpha)

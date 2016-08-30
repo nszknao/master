@@ -456,8 +456,6 @@ double Analysis::_culcLevelCrossing(double pp_xi, Parameter* prm)
  */
 void Analysis::outputPopsIntoFile(const std::string name, const GAIndividual &ind, const std::vector<double> &x, const std::vector<double> &y)
 {
-	std::cout << "Creating a file.\n" << std::endl;
-
 	// 値の数をチェック
 	if (x.size() != y.size()) {
 		std::cout << "Error: Do not match vector size." << std::endl;
@@ -477,6 +475,51 @@ void Analysis::outputPopsIntoFile(const std::string name, const GAIndividual &in
 
 	for (i = 0; i < x.size(); ++i) {
 		ofs << x[i] << " " << y[i] << std::endl;
+	}
+}
+
+/**
+ * @fn ファイルに全個体情報を出力する
+ * --- 出力形式 ---
+ * # E[y1^2] E[y2y1] E[y2^2] ... E[y1^3y2^5] 目的関数1の値 目的関数2の値 ...  目的関数15の値
+ * 0.0001 1.4356
+ * ...
+ * --- 出力形式 ---
+ * @param string name ファイル名
+ * @param GAIndividual &ind 個体
+ * @param vector &x X軸情報
+ * @param vector &y Y軸情報
+ */
+void Analysis::outputAllPopsIntoFile(const std::string name, const std::vector<GAIndividual> &pops)
+{
+	unsigned int i, ii;
+	int xminDisp	= -6;
+
+	std::ofstream ofs(name);
+	for (i = 0; i < pops.size(); ++i) {
+		Parameter* p = new Parameter();
+		p->allocParameter();
+
+		Analysis::getDetailParameterFromSimpleNotation(p, pops[i].pValue);
+		if (!p->validate()) continue;
+		/* 変位のPDFを求める */
+		std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
+		this->createDispPdf(p, dispX, dispY, xminDisp);
+
+		ofs << "#";
+		for (ii = 0; ii < pops[i].mValue.size(); ++ii) {
+			ofs << " " << pops[i].mValue[ii] << std::flush;
+		}
+		for (ii = 0; ii < pops[i].oValue.size(); ++ii) {
+			ofs << " " << pops[i].oValue[ii] << std::flush;
+		}
+		ofs << std::endl;
+		for (ii = 0; ii < dispX.size(); ++ii) {
+			ofs << dispX[ii] << " " << dispY[ii] << std::endl;
+		}
+
+		p->freeParameter();
+		delete p;
 	}
 }
 
@@ -516,7 +559,6 @@ int main(int argc, char *argv[])
 	// }
 
 	/* GAで解く */
-	unsigned int i;
 	std::vector<Parameter*> prm;
 	std::vector<GAIndividual> pops;
 
@@ -529,28 +571,31 @@ int main(int argc, char *argv[])
 	});
 
 	// 描画のためのデータ生成	
-	int xminDisp	= -6;
-	int xmaxFCross	= 8;
-	for (i = 0; i < pops.size(); ++i) {
-		Parameter* p = new Parameter();
-		p->allocParameter();
+	filename	= "gsay1pdf.dat";
+	ana->outputAllPopsIntoFile(filename, pops);
+	// unsigned int i;
+	// int xminDisp	= -6;
+	// int xmaxFCross	= 8;
+	// for (i = 0; i < pops.size(); ++i) {
+	// 	Parameter* p = new Parameter();
+	// 	p->allocParameter();
 
-		Analysis::getDetailParameterFromSimpleNotation(p, pops[i].pValue);
-		if (!p->validate()) continue;
-		/* 変位のPDFを求める */
-		std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
-		ana->createDispPdf(p, dispX, dispY, xminDisp);
-		filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
-		ana->outputPopsIntoFile(filename, pops[i], dispX, dispY);
-		/* 閾値通過率を求める */
-		std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
-		ana->createLevelCrossing(p, fCrossX, fCrossY, xmaxFCross);
-		filename	= "firstcross_" + std::to_string(i) + ".dat";
-		// ana->outputPopsIntoFile(filename, pops[i], fCrossX, fCrossY);
+	// 	Analysis::getDetailParameterFromSimpleNotation(p, pops[i].pValue);
+	// 	if (!p->validate()) continue;
+	// 	/* 変位のPDFを求める */
+	// 	std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
+	// 	ana->createDispPdf(p, dispX, dispY, xminDisp);
+	// 	filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
+	// 	ana->outputPopsIntoFile(filename, pops[i], dispX, dispY);
+	// 	/* 閾値通過率を求める */
+	// 	std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
+	// 	ana->createLevelCrossing(p, fCrossX, fCrossY, xmaxFCross);
+	// 	filename	= "firstcross_" + std::to_string(i) + ".dat";
+	// 	// ana->outputPopsIntoFile(filename, pops[i], fCrossX, fCrossY);
 
-		p->freeParameter();
-		delete p;
-	}
+	// 	p->freeParameter();
+	// 	delete p;
+	// }
 
 	delete ana;
 	

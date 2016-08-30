@@ -67,6 +67,7 @@ public:
 	void createLevelCrossing(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	static void getDetailParameterFromSimpleNotation(Parameter*, const std::vector<double> &);
 	void outputPopsIntoFile(const std::string, const GAIndividual &, const std::vector<double> &, const std::vector<double> &);
+	void outputAllPopsIntoFile(const std::string, const std::vector<GAIndividual> &);
 	~Analysis();
 };
 
