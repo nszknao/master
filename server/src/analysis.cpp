@@ -493,7 +493,7 @@ void Analysis::outputPopsIntoFile(const std::string name, const GAIndividual &in
 void Analysis::outputAllPopsIntoFile(const std::string name, const std::vector<GAIndividual> &pops)
 {
 	unsigned int i, ii;
-	int xminDisp	= -6;
+	double xminDisp	= -5.5;
 
 	std::ofstream ofs(name);
 	for (i = 0; i < pops.size(); ++i) {

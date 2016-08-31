@@ -32,7 +32,7 @@ using namespace std;
 #define SAMPLE_LENGTH 131072	// 131072,65536
 #define NUM_OF_SAMPLES 100		// “ü—Í‚Ì•W–{”
 #define dt 0.01		// ŠÔ‚İ•
-#define dx 0.1		// pdf‚Ì‰¡²‚Ì‚İ•
+#define dx 0.01		// pdf‚Ì‰¡²‚Ì‚İ•
 
 
 class Simulation
