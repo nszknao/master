@@ -62,8 +62,8 @@ public:
 	Analysis(double, double, double, double, double);
 	std::string leastSquareMethod(std::vector<double> &);
 	int GeneticAlgorithm(std::vector<GAIndividual> &);
-	void createDispPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
-	void createVelPdf(Parameter*, std::vector<double> &, std::vector<double> &, int);
+	void createDispPdf(Parameter*, std::vector<double> &, std::vector<double> &, double);
+	void createVelPdf(Parameter*, std::vector<double> &, std::vector<double> &, double);
 	void createLevelCrossing(Parameter*, std::vector<double> &, std::vector<double> &, int);
 	static void getDetailParameterFromSimpleNotation(Parameter*, const std::vector<double> &);
 	void outputPopsIntoFile(const std::string, const GAIndividual &, const std::vector<double> &, const std::vector<double> &);

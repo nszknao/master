@@ -268,7 +268,7 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
  * @param vector<double> &y Y軸の情報を保存（領域確保済み）
  * @param int xmin X軸の最小値
  */
-void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector<double> &y, int xmin)
+void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector<double> &y, double xmin)
 {
 	// std::cout << "Culculate the displacement pdf.\n" << std::endl;
 
@@ -276,7 +276,7 @@ void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector
 	double range = 0.01;
 	double integration = 0.;
 
-	for (i = 0; i*range <= abs(xmin)*2; ++i) {
+	for (i = 0; i*range <= std::fabs(xmin)*2; ++i) {
 		x[i]	= xmin + i*range;
 		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*range);
 		integration += range*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*range);
@@ -311,14 +311,14 @@ void Analysis::createLevelCrossing(Parameter *prm, std::vector<double> &x, std::
  * @param vector<double> &y Y軸の情報を保存（領域確保済み）
  * @param int xmin X軸の最小値
  */
-void Analysis::createVelPdf(Parameter *prm, std::vector<double> &x, std::vector<double> &y, int xmin)
+void Analysis::createVelPdf(Parameter *prm, std::vector<double> &x, std::vector<double> &y, double xmin)
 {
 	std::cout << "Creating a file of the velocity varience(.dat).\n" << std::endl;
 
 	unsigned int i;
 	double integration = 0.;
 
-	for (i = 0; i*0.01 <= abs(xmin)*2; ++i)
+	for (i = 0; i*0.01 <= std::fabs(xmin)*2; ++i)
 	{
 		x[i]	= xmin + i*0.01;
 		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), xmin);
@@ -493,33 +493,23 @@ void Analysis::outputPopsIntoFile(const std::string name, const GAIndividual &in
 void Analysis::outputAllPopsIntoFile(const std::string name, const std::vector<GAIndividual> &pops)
 {
 	unsigned int i, ii;
-	double xminDisp	= -5.5;
 
 	std::ofstream ofs(name);
 	for (i = 0; i < pops.size(); ++i) {
-		Parameter* p = new Parameter();
-		p->allocParameter();
-
-		Analysis::getDetailParameterFromSimpleNotation(p, pops[i].pValue);
-		if (!p->validate()) continue;
-		/* 変位のPDFを求める */
-		std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
-		this->createDispPdf(p, dispX, dispY, xminDisp);
-
-		ofs << "#";
 		for (ii = 0; ii < pops[i].mValue.size(); ++ii) {
-			ofs << " " << pops[i].mValue[ii] << std::flush;
+			ofs << pops[i].mValue[ii] << " " << std::flush;
 		}
 		for (ii = 0; ii < pops[i].oValue.size(); ++ii) {
-			ofs << " " << pops[i].oValue[ii] << std::flush;
+			ofs << pops[i].oValue[ii] << " " << std::flush;
+		}
+		for (ii = 0; ii < pops[i].pValue.size(); ++ii) {
+			if (ii == pops[i].pValue.size()-1) {
+				ofs << pops[i].pValue[ii] << std::flush;				
+			} else {
+				ofs << pops[i].pValue[ii] << " " << std::flush;				
+			}
 		}
 		ofs << std::endl;
-		for (ii = 0; ii < dispX.size(); ++ii) {
-			ofs << dispX[ii] << " " << dispY[ii] << std::endl;
-		}
-
-		p->freeParameter();
-		delete p;
 	}
 }
 
