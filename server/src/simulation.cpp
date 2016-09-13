@@ -10,9 +10,9 @@ Simulation::Simulation(double lambda, double beta2, double alpha)
 
 /**
  * @fn 入力を生成する
- * @param std::vector<double> &force 入力を格納（領域確保済み）
+ * @param vector< vector<double> > &force 入力を格納（force[0]:合成した入力，force[1]:ガウス性ホワイトノイズ，force[2]:不規則パルス励振）
  **/
-void Simulation::_createExcitation(std::vector<double> &force)
+void Simulation::_createExcitation(std::vector< std::vector<double> > &force)
 {
 	unsigned int i;
 
@@ -29,17 +29,21 @@ void Simulation::_createExcitation(std::vector<double> &force)
 	// ホワイトノイズの分散
 	double sigma	= sqrt(2.*M_PI*S0 / dt);
 
-	for (i = 0; i < SAMPLE_LENGTH; ++i)
-		force[i]	= wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*_lambda)*gsl_ran_gaussian(rp, sqrt(_beta2)) / dt;
+	Common::resize2DemensionalVector(force, 3, SAMPLE_LENGTH);
+	for (i = 0; i < SAMPLE_LENGTH; ++i) {
+		force[0][i]	= wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*_lambda)*gsl_ran_gaussian(rp, sqrt(_beta2)) / dt;
+		force[1][i]	= wSt*gsl_ran_gaussian(r, sigma);
+		force[2][i]	= pSt*gsl_ran_bernoulli(r, dt*_lambda)*gsl_ran_gaussian(rp, sqrt(_beta2)) / dt;
+	}
 }
 
 /**
  * @fn 運動方程式を4次のルンゲクッタで解く
- * @param std::vector<double> &x 時間を格納
- * @param std::vector<double> &y 応答変位を格納
- * @param std::vector<double> &force 入力
+ * @param vector<double> &x 時間を格納
+ * @param vector<double> &y 応答変位を格納
+ * @param vector< vector<double> > &forces 入力
  **/
-void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector<double> > &v_y1, std::vector< std::vector<double> > &v_y2, std::vector<double> &force)
+void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector<double> > &v_y1, std::vector< std::vector<double> > &v_y2, std::vector< std::vector<double> > &forces)
 {
 	std::cout << "Start solving equation of motion using 4th-Runge-Kutta.\n" << std::endl;
 
@@ -53,9 +57,11 @@ void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector
 	double DY1[4], DY2[4];
 	for (i = 0; i < NUM_OF_SAMPLES; ++i)
 	{
-		/* 入力を生成 */
-		force.resize(SAMPLE_LENGTH);
-		this->_createExcitation(force);
+		// forces[0]が合成した入力
+		std::vector< std::vector<double> > _forces;
+		this->_createExcitation(_forces);
+		std::vector<double> force;
+		force	= _forces[0];
 
 		// 初期値
 		double y1 = 0., y2 = 0.;
@@ -84,12 +90,13 @@ void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector
 			if (y2<_y2min) _y2min = y2;
 
 
-			// cout << "y1min:" << _y1min << ", y1:" << y1 << endl;
 			v_y1[i][ii] = y1;
 			v_y2[i][ii] = y2;
 
-			if (i == 0)
+			if (i == 0){
 				t[ii]	= ii*dt;
+				forces	= _forces;
+			}
 		}
 	}
 }
@@ -218,7 +225,7 @@ void Simulation::exactSolutionOfGaussianWhiteNoise()
 
 	// 確率密度関数の厳密解epsilon
 	double exact_gauss_pdf;
-	double integral_gauss_pdf;
+	double integral_gauss_pdf	= 0.;
 
 	bessel_p = 2.*ZETA;
 	bessel_q = ZETA*EPSILON;
@@ -268,17 +275,21 @@ int main(int argc, char *argv[])
 	Simulation * sim	= new Simulation(lambda, beta2, alpha);
 
 	/* ルンゲクッタを解く */
-	std::vector<double> force, t;
-	std::vector< std::vector<double> > y1, y2;
-	sim->culcRungeKutta(t, y1, y2, force);
-	filename	= "t_force.dat";
-	Common::outputIntoFile(filename, t, force);
-	filename	= "t_x1.dat";
+	std::vector<double> t;
+	std::vector< std::vector<double> > y1, y2, forces;
+	sim->culcRungeKutta(t, y1, y2, forces);
+	filename	= "sim_force.dat";
+	Common::outputIntoFile(filename, t, forces[0]);
+	filename	= "sim_force_gaussian.dat";
+	Common::outputIntoFile(filename, t, forces[1]);
+	filename	= "sim_force_pulse.dat";
+	Common::outputIntoFile(filename, t, forces[2]);
+	filename	= "sim_x1.dat";
 	Common::outputIntoFile(filename, t, y1[0]);
 	/* 変位のPDFを求める */
 	std::vector<double> dispX, dispY;
 	sim->createDispPdf(y1, dispX, dispY);
-	filename	= "y1_pdf.dat";
+	filename	= "sim_y1pdf.dat";
 	Common::outputIntoFile(filename, dispX, dispY);
 	delete sim;
 

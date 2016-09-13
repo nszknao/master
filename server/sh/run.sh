@@ -7,7 +7,9 @@
 #########################
 
 SRC_PATH="/usr/local/src/master"
-RESULT_PATH="/usr/local/src/master/results"
+RESULT_PATH="${SRC_PATH}/results"
+DAT_PATH="${SRC_PATH}/dat"
+SH_PATH="${SRC_PATH}/sh"
 
 ##### Handling whether argument exists. #############
 if [ $# -ne 1 ]; then
@@ -27,16 +29,8 @@ elif [ ${code} -eq 2 ]; then
 	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 fi
 
-##### Make directory. #############
-if [ ! -e ${RESULT_PATH} ]; then
-	mkdir ${RESULT_PATH}
-else
-	rm -rf ${RESULT_PATH}/*
-fi
-
 ############ Reading init_value.txt ####################################
 initfile=init_value_disp.txt
-count=0
 cat "${SRC_PATH}/sh/${initfile}" | grep -v ^# | while read line; do
 	lambda=`echo ${line} | cut -d ',' -f1`
 	alpha=`echo ${line} | cut -d ',' -f2`
@@ -49,33 +43,17 @@ cat "${SRC_PATH}/sh/${initfile}" | grep -v ^# | while read line; do
 ##### Declare variables ################
 	params="l=${lambda}"
 	dat="dat_a=${alpha}"
+	a="a=${alpha}"
 
 #### Run #####################################
 	if [ ${code} -eq 0 ]; then
-		${SRC_PATH}/simulation.exe ${lambda} ${beta2} ${alpha}
-		${SRC_PATH}/analysis.exe ${lambda} ${beta2} ${alpha} ${loginit}
+		${SH_PATH}/run_sim.sh ${lambda} ${alpha}
+		${SH_PATH}/run_ana.sh ${lambda} ${alpha} ${loginit}
 	elif [ ${code} -eq 1 ]; then
-		${SRC_PATH}/simulation.exe ${lambda} ${beta2} ${alpha}
+		${SH_PATH}/run_sim.sh ${lambda} ${alpha}
 	elif [ ${code} -eq 2 ]; then
-		${SRC_PATH}/analysis.exe ${lambda} ${beta2} ${alpha} ${loginit}
+		${SH_PATH}/run_ana.sh ${lambda} ${alpha} ${loginit}
 	fi
-
-##### Make directory. #############
-	if [ ! -e ${RESULT_PATH}/${params} ]; then
-		mkdir ${RESULT_PATH}/${params}
-		mkdir ${RESULT_PATH}/${params}/${dat}
-	else
-		if [ ${count} -eq 0 ]; then
-			rm -rf ${RESULT_PATH}/${params}/*
-		fi
-		mkdir ${RESULT_PATH}/${params}/${dat}
-	fi
-
-############ Move directory ##############################
-	mv ./*.dat ${RESULT_PATH}/${params}/${dat}/
-	# mv ./*.txt ${RESULT_PATH}/${params}/
 
 	echo "lambda = ${lambda}, a=${alpha} was processed."
-
-	count=$(( count + 1 ))
 done

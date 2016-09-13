@@ -44,11 +44,11 @@ private:
 	// ルンゲクッタで使う
 	static double _f1(double force, double y1, double y2);
 	static double _f2(double force, double y1, double y2);
-	void _createExcitation(std::vector<double> &);
+	void _createExcitation(std::vector< std::vector<double> > &);
 
 public:
 	Simulation(double lambda, double beta2, double alpha);
-	void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector<double> &);
+	void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
 	void createDispPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
 	void createVelPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
 	void exactSolutionOfGaussianWhiteNoise();

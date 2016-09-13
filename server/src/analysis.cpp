@@ -115,7 +115,7 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
 
 	// nsga2
-	NSGA2 *n2	= new NSGA2(200, 200);
+	NSGA2 *n2	= new NSGA2(120, 500);
 	n2->run(setData);
 	n2->saveArchiveInFile("nsga2archive.txt");
 
@@ -126,41 +126,6 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 
 	return EXIT_SUCCESS;
 }
-
-/**
- * @fn 簡易的なパラメータ表記から詳細を得る
- * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param vector<double> &pValue 計算結果のパラメータ値を保存
- */
- void Analysis::getDetailParameterFromSimpleNotation(Parameter* prm, const std::vector<double> &pValue)
- {
-	std::vector<double> prm_a(NUM_GAUSS), prm_mu1(NUM_GAUSS), prm_mu2(NUM_GAUSS), prm_sigma1(NUM_GAUSS), prm_sigma2(NUM_GAUSS), prm_kappa(NUM_GAUSS);
-
-	// 重み
-	prm_a[1] = pValue[0];		// a2
-	prm_a[0] = (1. - prm_a[1]) / 2.;		// a1
-	prm_a[2] = prm_a[0];					// a3
-	// 変位
-	prm_mu1[0] = pValue[1];	// mu11
-	prm_mu1[1] = 0.;						// mu21
-	prm_mu1[2] = -1.*prm_mu1[0];			// mu31
-	prm_sigma1[0] = pValue[3];	// sigma11
-	prm_sigma1[1] = pValue[5];	// sigma21
-	prm_sigma1[2] = prm_sigma1[0];				// sigma31
-	// 速度
-	prm_mu2[0] = pValue[2];	// mu12
-	prm_mu2[1] = 0.;						// mu22
-	prm_mu2[2] = -1.*prm_mu2[0];			// mu32
-	prm_sigma2[0] = pValue[4];	// sigma12
-	prm_sigma2[1] = pValue[6];	// sigma22
-	prm_sigma2[2] = prm_sigma2[0];				// sigma32
-	// 共分散
-	prm_kappa[0] = pValue[7];		// kappa123
-	prm_kappa[1] = pValue[8];		// kappa223
-	prm_kappa[2] = pValue[9];		// kappa323
-
-	prm->setParameter(prm_a, prm_mu1, prm_mu2, prm_sigma1, prm_sigma2, prm_kappa);
- }
 
 /**
  * @fn 最小二乗法を解いて解析解を求める
@@ -262,72 +227,6 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 }
 
 /**
- * @fn 変位のPDFを求める
- * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param vector<double> &x X軸の情報を保存（領域確保済み）
- * @param vector<double> &y Y軸の情報を保存（領域確保済み）
- * @param int xmin X軸の最小値
- */
-void Analysis::createDispPdf(Parameter* prm, std::vector<double> &x, std::vector<double> &y, double xmin)
-{
-	// std::cout << "Culculate the displacement pdf.\n" << std::endl;
-
-	unsigned int i;
-	double range = 0.01;
-	double integration = 0.;
-
-	for (i = 0; i*range <= std::fabs(xmin)*2; ++i) {
-		x[i]	= xmin + i*range;
-		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*range);
-		integration += range*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu1"), prm->getParameter("sigma1"), xmin + i*range);
-	}
-
-	std::cout << "y1 integration = " << integration << ".\n" << std::endl;
-}
-
-/**
- * @fn 閾値通過率の分布を求める
- * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param vector<double> &x X軸の情報を保存（領域確保済み）
- * @param vector<double> &y Y軸の情報を保存（領域確保済み）
- * @param int xmin X軸の最大値
- */
-void Analysis::createLevelCrossing(Parameter *prm, std::vector<double> &x, std::vector<double> &y, int xmax)
-{
-	// std::cout << "Culculate the level crossing(.dat).\n" << std::endl;
-
-	unsigned int i;
-
-	for (i = 0; i*0.01 < xmax; ++i) {
-		x[i] = (double)i*0.01;
-		y[i] = this->_culcLevelCrossing((double)i*0.01, prm);
-	}
-}
-
-/**
- * @fn 速度のPDFを求める
- * @param Parameter* prm モーメント方程式から求めたパラメータ
- * @param vector<double> &x X軸の情報を保存（領域確保済み）
- * @param vector<double> &y Y軸の情報を保存（領域確保済み）
- * @param int xmin X軸の最小値
- */
-void Analysis::createVelPdf(Parameter *prm, std::vector<double> &x, std::vector<double> &y, double xmin)
-{
-	std::cout << "Creating a file of the velocity varience(.dat).\n" << std::endl;
-
-	unsigned int i;
-	double integration = 0.;
-
-	for (i = 0; i*0.01 <= std::fabs(xmin)*2; ++i)
-	{
-		x[i]	= xmin + i*0.01;
-		y[i]	= this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), xmin);
-		integration += 0.01*this->_createGaussianPdf(prm->getParameter("a"), prm->getParameter("mu2"), prm->getParameter("sigma2"), xmin);
-	}
-	printf("y integration = %lf \n",integration);
-}
-
-/**
  * 等価線形化法により初期値を計算
  * 線形の連立方程式Ax=Bを解く
  */
@@ -386,60 +285,6 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 	std::cout << "roop(_culcInitValue):" <<  tmp << std::endl;
 	std::cout << "sigma_x=" << sqrt(Exx) << ", sigma_y=" << sqrt(Eyy) << ", rho_xy=" << Exy/sqrt(Exx*Eyy) << "\n" << std::endl;
 	return;
-}
-
-/**
- * @fn 1変数のガウス分布を足し合わせる
- * @param double a[] 重み
- * @param double mu[] 平均
- * @param double sigma[] 分散
- * @param double x 変数
- * @return pdf 確率密度関数
- */
-double Analysis::_createGaussianPdf(const std::vector<double> &a, const std::vector<double> &mu, const std::vector<double> &sigma, double x) 
-{
-	double pdf = 0.;
-	unsigned int i;
-
-	for (i = 0; i < NUM_GAUSS; ++i)
-		pdf += a[i]*(1./sqrt(2.*PI)/sigma[i])*exp(-1.*pow((x-mu[i]),2)/2./pow(sigma[i],2));
-
-	return pdf;
-}
-
-/**
- * @fn 閾値通過率を計算
- * @param double pp_xi 閾値
- * @param vector<double> &a 重み
- * @param vector<double> &mu1 変位の平均
- * @param vector<double> &mu2 速度の平均
- * @param vector<double> &sigma1 変位の分散
- * @param vector<double> &sigma2 速度の分散
- * @param vector<double> &kappa
- */
-double Analysis::_culcLevelCrossing(double pp_xi, Parameter* prm)
-{
-	double prob = 0.;
-	unsigned int i;
-	double pp_c = 0., pp_g = 0., pp_sigma = 0.;
-
-	std::vector<double> a		= prm->getParameter("a");
-	std::vector<double> mu1		= prm->getParameter("mu1");
-	std::vector<double> mu2		= prm->getParameter("mu2");
-	std::vector<double> sigma1	= prm->getParameter("sigma1");
-	std::vector<double> sigma2	= prm->getParameter("sigma2");
-	std::vector<double> kappa	= prm->getParameter("kappa");
-
-	for (i = 0; i < NUM_GAUSS; ++i) {
-		pp_c		= kappa[i]/sigma1[i]/sigma2[i];
-		pp_g		= mu2[i] + pp_c*sigma2[i]*(pp_xi - mu1[i])/sigma1[i];
-		pp_sigma	= sigma2[i]*sqrt(1. - pow(pp_c,2));
-		// 閾値通過率
-		prob	+= a[i]*exp(-1.*pow((pp_xi - mu1[i]),2)/2./pow(sigma1[i],2)) /2./PI/sigma1[i]/sigma2[i]/sqrt(1. - pow(pp_c,2))* (pow(pp_sigma,2)*exp(-pow(pp_g,2)/2./pow(pp_sigma,2))
-						+ sqrt(PI/2.)*pp_g*pp_sigma*(1. + erf(pp_g/sqrt(2.)/pp_sigma)));
-	}
-
-	return prob;
 }
 
 /**
@@ -551,7 +396,6 @@ int main(int argc, char *argv[])
 	/* GAで解く */
 	std::vector<Parameter*> prm;
 	std::vector<GAIndividual> pops;
-
 	// 方程式を解く
 	ana->GeneticAlgorithm(pops);
 	// E[y1^2]でソート
@@ -559,33 +403,9 @@ int main(int argc, char *argv[])
 	sort(pops.begin(), pops.end(), [&key](const GAIndividual &a, const GAIndividual &b){
 		return (a.mValue[key] == b.mValue[key]) ? (a.index < b.index) : (a.mValue[key] < b.mValue[key]);
 	});
-
 	// 描画のためのデータ生成	
-	filename	= "gsay1pdf.dat";
+	filename	= "ana_gsay1pdf.dat";
 	ana->outputAllPopsIntoFile(filename, pops);
-	// unsigned int i;
-	// int xminDisp	= -6;
-	// int xmaxFCross	= 8;
-	// for (i = 0; i < pops.size(); ++i) {
-	// 	Parameter* p = new Parameter();
-	// 	p->allocParameter();
-
-	// 	Analysis::getDetailParameterFromSimpleNotation(p, pops[i].pValue);
-	// 	if (!p->validate()) continue;
-	// 	/* 変位のPDFを求める */
-	// 	std::vector<double> dispX(abs(xminDisp)*2*100), dispY(abs(xminDisp)*2*100);
-	// 	ana->createDispPdf(p, dispX, dispY, xminDisp);
-	// 	filename	= "gsay1pdf_" + std::to_string(i) + ".dat";
-	// 	ana->outputPopsIntoFile(filename, pops[i], dispX, dispY);
-	// 	/* 閾値通過率を求める */
-	// 	std::vector<double> fCrossX(abs(xmaxFCross)*100), fCrossY(abs(xmaxFCross)*100);
-	// 	ana->createLevelCrossing(p, fCrossX, fCrossY, xmaxFCross);
-	// 	filename	= "firstcross_" + std::to_string(i) + ".dat";
-	// 	// ana->outputPopsIntoFile(filename, pops[i], fCrossX, fCrossY);
-
-	// 	p->freeParameter();
-	// 	delete p;
-	// }
 
 	delete ana;
 	
