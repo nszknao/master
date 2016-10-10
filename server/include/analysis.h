@@ -38,18 +38,6 @@
 #define GGD_KAPPA 2.	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
 
 
-class Parameter
-{
-private:
-	std::vector<double> _a, _mu1, _mu2, _sigma1, _sigma2, _kappa;
-public:
-	void setParameter(std::vector<double> &, std::vector<double> &, std::vector<double> &, std::vector<double> &, std::vector<double> &, std::vector<double> &);
-	void allocParameter();
-	void freeParameter();
-	bool validate();
-	std::vector<double> getParameter(std::string);
-};
-
 class Analysis
 {
 private:
@@ -57,7 +45,7 @@ private:
 	void _culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy);
 
 public:
-	Analysis(double, double, double, double, double);
+	explicit Analysis(double, double, double, double, double);
 	std::string leastSquareMethod(std::vector<double> &);
 	int GeneticAlgorithm(std::vector<GAIndividual> &);
 	void outputPopsIntoFile(const std::string, const GAIndividual &, const std::vector<double> &, const std::vector<double> &);

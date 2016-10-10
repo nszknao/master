@@ -33,8 +33,8 @@ if __name__ == "__main__":
 	plt.xlabel("Time", fontsize=18)
 	plt.ylabel("Input", fontsize=18)
 	plt.plot(forceData[0], forceData[1], lw=1, color='r')
-	plt.xlim([0, 300])
-	plt.ylim([-300, 300])
+	plt.xlim([0, 100])
+	plt.ylim([-500, 500])
 	plt.grid(which='major',color='black',linestyle='--')
 	filename	= "force.png"
 	plt.savefig(OUTPUT_PATH+"/"+filename)

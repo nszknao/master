@@ -1,57 +1,7 @@
 #include "../include/analysis.h"
-#include "../include/paramdata.h"
 #include "../include/nsga2.h"
+#include "../include/nsga3.h"
 #include "../include/common.h"
-
-void Parameter::setParameter(std::vector<double> &a_, std::vector<double> &mu1_, std::vector<double> &mu2_, std::vector<double> &sigma1_, std::vector<double> &sigma2_, std::vector<double> &kappa_)
-{
-	std::copy(a_.begin(), a_.end(), back_inserter(_a));
-	std::copy(mu1_.begin(), mu1_.end(), back_inserter(_mu1));
-	std::copy(mu2_.begin(), mu2_.end(), back_inserter(_mu2));
-	std::copy(sigma1_.begin(), sigma1_.end(), back_inserter(_sigma1));
-	std::copy(sigma2_.begin(), sigma2_.end(), back_inserter(_sigma2));
-	std::copy(kappa_.begin(), kappa_.end(), back_inserter(_kappa));
-}
-
-void Parameter::allocParameter()
-{
-	_a.reserve(NUM_GAUSS);
-	_mu1.reserve(NUM_GAUSS);
-	_mu2.reserve(NUM_GAUSS);
-	_sigma1.reserve(NUM_GAUSS);
-	_sigma2.reserve(NUM_GAUSS);
-	_kappa.reserve(NUM_GAUSS);
-}
-
-void Parameter::freeParameter()
-{
-	std::vector<double>().swap(_a);
-	std::vector<double>().swap(_mu1);
-	std::vector<double>().swap(_mu2);
-	std::vector<double>().swap(_sigma1);
-	std::vector<double>().swap(_sigma2);
-	std::vector<double>().swap(_kappa);
-}
-
-std::vector<double> Parameter::getParameter(std::string prm)
-{
-	if (prm == "a") {
-		return _a;
-	} else if (prm == "mu1") {
-		return _mu1;
-	} else if (prm == "mu2") {
-		return _mu2;
-	} else if (prm == "sigma1") {
-		return _sigma1;
-	} else if (prm == "sigma2") {
-		return _sigma2;
-	} else if (prm == "kappa") {
-		return _kappa;
-	} else {
-		std::cout << "Error: Given parameter doesn't exist." << std::endl;
-		return std::vector<double>();
-	}
-}
 
 Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, double arg_m2)
 {
@@ -66,31 +16,6 @@ Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, doub
 Analysis::~Analysis() {}
 
 /**
- * @fn パラメータの値が正常かチェックする
- * @param Parameter* prm モーメント方程式から求めたパラメータ
- */
-bool Parameter::validate()
-{
-	bool flg	= true;
-	unsigned int i;
-	for (i = 0; i < NUM_GAUSS; ++i) {
-		if (this->_a[i] < 0 || this->_a[i] > 1) {
-			flg	= false;
-		}
-		if (this->_sigma1[i] < 0) {
-			flg	= false;
-		}
-		if (this->_sigma2[i] < 0) {
-			flg	= false;
-		}
-		if (this->_kappa[i] < -1 || this->_kappa[i] > 1) {
-			flg	= false;
-		}
-	}
-	return flg;
-}
-
-/**
  * @fn NSGA2でモーメント方程式を解く
  * @param vector<double> &pValue 計算結果のパラメータ値を保存
  * @param vector<double> &oValue 計算結果の目的関数値を保存
@@ -103,7 +28,7 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
 
 	// 入力に関するモーメント
-	double dF[6];
+	std::vector<double> dF(6);
 	dF[0] = 0;
 	dF[1] = this->_alpha*S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
 	dF[2] = 0;
@@ -111,18 +36,17 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 	dF[4] = 0;
 	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 
-	// 入力や系のパラメータ
-	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
-
 	// nsga2
-	NSGA2 *n2	= new NSGA2(120, 500);
-	n2->run(setData);
-	n2->saveArchiveInFile("nsga2archive.txt");
+	// NSGA2 *n2	= new NSGA2(250, 200);
+	// n2->run(&dF[0]);
+	// pops	= n2->getFinalPops();
+	// delete n2;
 
-	pops	= n2->getFinalPops();
-
-	delete setData;
-	delete n2;
+	// nsga3
+	NSGA3 *n3	= new NSGA3();
+	n3->run();
+	pops	= n3->getFinalPops();
+	delete n3;
 
 	return EXIT_SUCCESS;
 }
@@ -140,7 +64,7 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
 
 	// 入力に関するモーメント
-	double dF[6];
+	std::vector<double> dF(6);
 	dF[0] = 0;
 	dF[1] = this->_alpha*S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
 	dF[2] = 0;
@@ -155,9 +79,6 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
 	double x_init[NUM_OF_PARAM] = { 0.5, sigma_x + this->_mu1, sigma_y + this->_mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
 	
-	// 最小二乗法で使うパラメータ
-	ParamData* setData = new ParamData(NUM_OF_MOMENTEQ, NUM_OF_PARAM, ZETA, EPSILON, dF);
-
 	// 最小二乗法を解くための関数をセット
 	gsl_multifit_function_fdf f;
 	f.f		= &MomentEq::expb_f;
@@ -165,7 +86,7 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 	f.fdf	= &MomentEq::expb_fdf;
 	f.n		= NUM_OF_MOMENTEQ;
 	f.p		= NUM_OF_PARAM;
-	f.params = setData;
+	f.params = &dF[0];
 
 	// 最小二乗法のソルバーをセット
 	const gsl_multifit_fdfsolver_type *T;
@@ -220,8 +141,6 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 
 	gsl_multifit_fdfsolver_free(s);
 	gsl_matrix_free (J);
-
-	delete setData;
 
 	return gsl_strerror(status);
 }
@@ -363,7 +282,7 @@ void Analysis::outputAllPopsIntoFile(const std::string name, const std::vector<G
  */
 int main(int argc, char *argv[])
 {
-	std::string filename	= "";
+	std::string filename;
 
 	char *ends;
 	double lambda	= strtod(argv[1],&ends);
@@ -385,25 +304,14 @@ int main(int argc, char *argv[])
 	// 	prm->allocParameter();
 	// 	ana->getDetailParameterFromSimpleNotation(prm, pValue);
 
-	// 	int xmin	= -6;
-	// 	std::vector<double> dispX(abs(xmin)*2*100), dispY(abs(xmin)*2*100);
-	// 	ana->createDispPdf(prm, dispX, dispY, xmin);
 	// 	Common::outputIntoFile((char*)"gsay1pdf.dat", dispX, dispY);
 
 	// 	delete prm;
 	// }
 
 	/* GAで解く */
-	std::vector<Parameter*> prm;
 	std::vector<GAIndividual> pops;
-	// 方程式を解く
 	ana->GeneticAlgorithm(pops);
-	// E[y1^2]でソート
-	int key	= 0;
-	sort(pops.begin(), pops.end(), [&key](const GAIndividual &a, const GAIndividual &b){
-		return (a.mValue[key] == b.mValue[key]) ? (a.index < b.index) : (a.mValue[key] < b.mValue[key]);
-	});
-	// 描画のためのデータ生成	
 	filename	= "ana_gsay1pdf.dat";
 	ana->outputAllPopsIntoFile(filename, pops);
 

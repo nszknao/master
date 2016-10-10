@@ -11,19 +11,17 @@
 
 #include <gsl/gsl_vector.h>
 
-#include "expfit.h"
-#include "paramdata.h"
-#include "common.h"
+/********** 解析条件 **********/
+#ifndef __ANALISYS_PARAMETER__
+#define __ANALISYS_PARAMETER__
+#define NUM_OF_MOMENTEQ 15
+#define NUM_OF_MOMENT 21
+#define NUM_OF_PARAM 10
+#endif // !__ANALISYS_PARAMETER__
 
 using namespace std;
 
-struct GAIndividual
-{
-	int index;
-	std::vector<double> pValue;
-	std::vector<double> oValue;
-	std::vector<double> mValue;
-};
+class GAIndividual;
 
 class NSGA2
 {
@@ -34,13 +32,11 @@ private:
 
 	void _setValueRange(std::vector<double> &, std::vector<double> &);
 	void _saveArchive(ArchiveMOO &);
-	void _allocFinalPops(int);
 
 public:
 	NSGA2(int pop, int iter);
 	~NSGA2();
-	int run(ParamData* f);
-	void saveArchiveInFile(const std::string);
+	int run(double *);
 	std::vector<GAIndividual> getFinalPops();
 };
 

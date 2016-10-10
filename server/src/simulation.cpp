@@ -103,9 +103,9 @@ void Simulation::culcRungeKutta(std::vector<double> &t, std::vector< std::vector
 
 /**
  * @fn 変位の確率密度関数を生成
- * @param std::vector< std::vector<double> > &y1 応答変位が格納された２次元配列
- * @param std::vector<double> &x X軸の情報を保存
- * @param std::vector<double> &y Y軸の情報を保存
+ * @param vector< vector<double> > &y1 応答変位が格納された２次元配列
+ * @param vector<double> &x X軸の情報を保存
+ * @param vector<double> &y Y軸の情報を保存
  **/
 void Simulation::createDispPdf(const std::vector< std::vector<double> > &y1, std::vector<double> &x, std::vector<double> &y)
 {
@@ -156,9 +156,9 @@ void Simulation::createDispPdf(const std::vector< std::vector<double> > &y1, std
 
 /**
  * @fn 速度の確率密度関数を生成
- * @param std::vector< std::vector<double> > &y2 応答速度が格納された２次元配列
- * @param std::vector<double> &x X軸の情報を保存
- * @param std::vector<double> &y Y軸の情報を保存
+ * @param vector< vector<double> > &y2 応答速度が格納された２次元配列
+ * @param vector<double> &x X軸の情報を保存
+ * @param vector<double> &y Y軸の情報を保存
  **/
 void Simulation::createVelPdf(const std::vector< std::vector<double> > &y2, std::vector<double> &x, std::vector<double> &y)
 {
@@ -169,7 +169,7 @@ void Simulation::createVelPdf(const std::vector< std::vector<double> > &y2, std:
 	int n_dx, size = 0;
 	double pdf_y2, integral_y2 = 0.;
 	std::vector< std::vector<double> > pdf_buffer;
-	Common::resize2DemensionalVector(pdf_buffer, 3000, NUM_OF_SAMPLES);
+	Common::resize2DemensionalVector(pdf_buffer, 5000, NUM_OF_SAMPLES);
 
 	for (i = 0; i<NUM_OF_SAMPLES; ++i)
 	{
@@ -207,24 +207,24 @@ void Simulation::createVelPdf(const std::vector< std::vector<double> > &y2, std:
 	std::cout << "integral of pdf_y2 = " << integral_y2 << ".\n" << std::endl;
 }
 
-/* ガウス性ホワイトノイズを受ける系の厳密解 */
-void Simulation::exactSolutionOfGaussianWhiteNoise()
+/**
+ * @fn ガウス性ホワイトノイズを受ける系の厳密解
+ * @param vector<double> &x X軸の情報を保存
+ * @param vector<double> &y Y軸の情報を保存
+ */
+void Simulation::exactSolutionOfGaussianWhiteNoise(std::vector<double> &x, std::vector<double> &y)
 {
 	cout << "Culculate exact solution excited Gaussian white noise." << endl;
 
-	// カウント変数
-	size_t tmp;
-
-	FILE *x_Gpdf;
-	x_Gpdf = fopen("y1_Gpdf.dat", "w");
+	unsigned int i;
 
 	// 第二修正ベッセル関数
 	double K_nu;
 	double bessel_p, bessel_q;
 	double bessel_C, bessel_arg;
 
-	// 確率密度関数の厳密解epsilon
-	double exact_gauss_pdf;
+	// 確率密度関数の厳密解
+	double exact_gauss_pdf	= 0.;
 	double integral_gauss_pdf	= 0.;
 
 	bessel_p = 2.*ZETA;
@@ -234,17 +234,15 @@ void Simulation::exactSolutionOfGaussianWhiteNoise()
 	K_nu = gsl_sf_bessel_Knu(0.25, bessel_arg);
 	bessel_C = 2.*sqrt(bessel_q / bessel_p)*exp(-bessel_arg) / K_nu;
 
-	for (tmp = 0; (_y1min + tmp*dx) <= _y1max; tmp++)
-	{
-		exact_gauss_pdf = bessel_C*exp(-bessel_p*pow(_y1min + tmp*dx, 2) - bessel_q*pow(_y1min + tmp*dx, 4));
+	for (i = 0; (_y1min + i*dx) <= _y1max; i++) {
+		exact_gauss_pdf = bessel_C*exp(-bessel_p*pow(_y1min + i*dx, 2) - bessel_q*pow(_y1min + i*dx, 4));
 		integral_gauss_pdf += exact_gauss_pdf*dx;
-		// 厳密解の記録
-		fprintf(x_Gpdf, "%lf %lf\n", (_y1min + tmp*dx), exact_gauss_pdf);
+		// TODO:領域確保してから値を代入
+		x.push_back(_y1min + i*dx);
+		y.push_back(exact_gauss_pdf);
 	}
 
 	std::cout << "integral of exact_gauss_pdf = " << integral_gauss_pdf << ".\n" << std::endl;
-
-	fclose(x_Gpdf);
 }
 
 double Simulation::_f1(double force, double y1, double y2)
@@ -278,6 +276,7 @@ int main(int argc, char *argv[])
 	std::vector<double> t;
 	std::vector< std::vector<double> > y1, y2, forces;
 	sim->culcRungeKutta(t, y1, y2, forces);
+	// ファイルへ出力
 	filename	= "sim_force.dat";
 	Common::outputIntoFile(filename, t, forces[0]);
 	filename	= "sim_force_gaussian.dat";
@@ -286,11 +285,20 @@ int main(int argc, char *argv[])
 	Common::outputIntoFile(filename, t, forces[2]);
 	filename	= "sim_x1.dat";
 	Common::outputIntoFile(filename, t, y1[0]);
+	filename	= "sim_x2.dat";
+	Common::outputIntoFile(filename, t, y2[0]);
 	/* 変位のPDFを求める */
 	std::vector<double> dispX, dispY;
 	sim->createDispPdf(y1, dispX, dispY);
+	// ファイルへ出力
 	filename	= "sim_y1pdf.dat";
 	Common::outputIntoFile(filename, dispX, dispY);
+	/* 速度のPDFを求める */
+	std::vector<double> velX, velY;
+	sim->createVelPdf(y2, velX, velY);
+	// ファイルへ出力
+	filename	= "sim_y2pdf.dat";
+	Common::outputIntoFile(filename, velX, velY);
 	delete sim;
 
 	std::cout << "analysis.cpp has done.\n" << std::endl;

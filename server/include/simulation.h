@@ -51,7 +51,7 @@ public:
 	void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
 	void createDispPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
 	void createVelPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
-	void exactSolutionOfGaussianWhiteNoise();
+	void exactSolutionOfGaussianWhiteNoise(std::vector<double> &, std::vector<double> &);
 };
 
 #endif // !__RESEARCH_H_INCLUDE_
