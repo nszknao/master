@@ -4,3 +4,4 @@
 /server/dat/
 /server/*.txt
 *.exe
+/server/src/nsga3cpp/Results
