@@ -22,11 +22,14 @@ code=$1
 ############ Compile-force #############################################
 if [ ${code} -eq 0 ]; then
 	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/simulation.cpp -o ${SRC_PATH}/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
-	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/nsga3.cpp ${SRC_PATH}/src/nsga3cpp/src/*.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/nsga3.cpp ${SRC_PATH}/src/nsga3cpp/src/*.cpp -o ${SRC_PATH}/exe/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 elif [ ${code} -eq 1 ]; then
-	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/simulation.cpp -o ${SRC_PATH}/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/simulation.cpp -o ${SRC_PATH}/exe/simulation.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
 elif [ ${code} -eq 2 ]; then
-	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/nsga3.cpp ${SRC_PATH}/src/nsga3cpp/src/*.cpp -o ${SRC_PATH}/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+	g++48 -Wall -g -O0 -I /opt/shark-2.3.4/usr/local/include ${SRC_PATH}/src/analysis.cpp ${SRC_PATH}/src/expfit.cpp ${SRC_PATH}/src/nsga2.cpp ${SRC_PATH}/src/common.cpp ${SRC_PATH}/src/nsga3.cpp ${SRC_PATH}/src/nsga3cpp/src/*.cpp -o ${SRC_PATH}/exe/analysis.exe -std=c++11 -lm -lgsl -lgslcblas -lshark -lpthread
+fi
+if [ $? -gt 0 ]; then
+	exit 1
 fi
 
 ############ Reading init_value.txt ####################################

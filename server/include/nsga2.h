@@ -10,14 +10,8 @@
 #include <MOO-EALib/ArchiveMOO.h>
 
 #include <gsl/gsl_vector.h>
-
-/********** 解析条件 **********/
-#ifndef __ANALISYS_PARAMETER__
-#define __ANALISYS_PARAMETER__
-#define NUM_OF_MOMENTEQ 15
-#define NUM_OF_MOMENT 21
-#define NUM_OF_PARAM 10
-#endif // !__ANALISYS_PARAMETER__
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_eigen.h>
 
 using namespace std;
 
@@ -27,11 +21,13 @@ class NSGA2
 {
 private:
 	std::vector<GAIndividual> _finalPops;
-	unsigned _dimension, _popSize, _iterations;
+	unsigned int  _dimension, _popSize, _iterations;
 	ArchiveMOO _archive;
 
 	void _setValueRange(std::vector<double> &, std::vector<double> &);
 	void _saveArchive(ArchiveMOO &);
+	static gsl_matrix *_correlationMatrix(const gsl_matrix *);
+	std::vector<unsigned int> _dimensionReduction(gsl_vector *, gsl_matrix *);
 
 public:
 	NSGA2(int pop, int iter);

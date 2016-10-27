@@ -25,7 +25,7 @@ params="l=${lambda}"
 a="a=${alpha}"
 
 #### Run #####################################
-${SRC_PATH}/simulation.exe ${lambda} ${beta2} ${alpha}
+${SRC_PATH}/exe/simulation.exe ${lambda} ${beta2} ${alpha}
 
 ##### Make directory. #############
 if [ ! -e ${DAT_PATH}/${params} ]; then

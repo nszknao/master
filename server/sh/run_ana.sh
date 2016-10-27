@@ -27,7 +27,7 @@ dat="dat_a=${alpha}"
 fig="fig_a=${alpha}"
 
 #### Run #####################################
-${SRC_PATH}/analysis.exe ${lambda} ${beta2} ${alpha} ${initValue}
+${SRC_PATH}/exe/analysis.exe ${lambda} ${beta2} ${alpha} ${initValue}
 
 ##### Make directory. #############
 if [ ! -e ${RESULT_PATH}/${params} ]; then

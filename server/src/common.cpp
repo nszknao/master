@@ -3,6 +3,16 @@
 Common::Common(){}
 Common::~Common(){}
 
+/********** 系の係数・入力条件**********/
+const double Common::S0 = 1./(2.*M_PI);
+const double Common::EPSILON = 0.3;
+const double Common::ZETA = 0.05;
+
+/********** 解析条件 **********/
+const std::size_t Common::NUM_OF_MOMENTEQ = 15;
+const std::size_t Common::NUM_OF_MOMENT = 21;
+const std::size_t Common::NUM_OF_PARAM = 10;
+
 /**
  * @fn ファイルに出力する
  * @param string name ファイル名

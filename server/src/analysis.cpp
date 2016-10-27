@@ -1,7 +1,11 @@
 #include "../include/analysis.h"
+#include "../include/expfit.h"
 #include "../include/nsga2.h"
 #include "../include/nsga3.h"
 #include "../include/common.h"
+#include "../include/ga_individual.h"
+
+const double Analysis::GGD_KAPPA = 2.;	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
 
 Analysis::Analysis(double arg_l, double arg_b, double arg_a, double arg_m1, double arg_m2)
 {
@@ -22,31 +26,31 @@ Analysis::~Analysis() {}
  */
 int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 {
-	std::cout << "Get analysis solution using NSGA2.\n" << std::endl;
+	std::cout << "Get analysis solution using Genetic Algorithm.\n" << std::endl;
 
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
+	double ggd_a = sqrt(gsl_sf_gamma(1. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(3. / Analysis::GGD_KAPPA), -1.)*this->_beta2);
 
 	// 入力に関するモーメント
 	std::vector<double> dF(6);
 	dF[0] = 0;
-	dF[1] = this->_alpha*S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
+	dF[1] = this->_alpha*Common::S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
 	dF[2] = 0;
-	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
 	dF[4] = 0;
-	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
 
 	// nsga2
-	// NSGA2 *n2	= new NSGA2(250, 200);
-	// n2->run(&dF[0]);
-	// pops	= n2->getFinalPops();
-	// delete n2;
+	NSGA2 *n2	= new NSGA2(120, 2500);
+	n2->run(&dF[0]);
+	pops	= n2->getFinalPops();
+	delete n2;
 
 	// nsga3
-	NSGA3 *n3	= new NSGA3();
-	n3->run();
-	pops	= n3->getFinalPops();
-	delete n3;
+	// NSGA3 *n3	= new NSGA3();
+	// n3->run();
+	// pops	= n3->getFinalPops();
+	// delete n3;
 
 	return EXIT_SUCCESS;
 }
@@ -61,42 +65,42 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 
 	unsigned int i;
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*this->_beta2);
+	double ggd_a = sqrt(gsl_sf_gamma(1. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(3. / Analysis::GGD_KAPPA), -1.)*this->_beta2);
 
 	// 入力に関するモーメント
 	std::vector<double> dF(6);
 	dF[0] = 0;
-	dF[1] = this->_alpha*S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
+	dF[1] = this->_alpha*Common::S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
 	dF[2] = 0;
-	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
 	dF[4] = 0;
-	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
+	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
 
 	// 等価線形化法で初期値を計算
 	double sigma_x, sigma_y, rho_xy;
 	this->_culcInitValue(&sigma_x, &sigma_y, &rho_xy);
 
 	/*  初期値         {a,   μ1,           μ2,          σ11,     σ12,     σ21,     σ22,     k1,                    k2, k3}*/
-	double x_init[NUM_OF_PARAM] = { 0.5, sigma_x + this->_mu1, sigma_y + this->_mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
+	std::vector<double> x_init{ 0.5, sigma_x + this->_mu1, sigma_y + this->_mu2, sigma_x, sigma_y, sigma_x, sigma_y, rho_xy*sigma_x*sigma_y, 0., 0. };
 	
 	// 最小二乗法を解くための関数をセット
 	gsl_multifit_function_fdf f;
 	f.f		= &MomentEq::expb_f;
 	f.df	= &MomentEq::expb_df;
 	f.fdf	= &MomentEq::expb_fdf;
-	f.n		= NUM_OF_MOMENTEQ;
-	f.p		= NUM_OF_PARAM;
+	f.n		= Common::NUM_OF_MOMENTEQ;
+	f.p		= Common::NUM_OF_MOMENT;
 	f.params = &dF[0];
 
 	// 最小二乗法のソルバーをセット
 	const gsl_multifit_fdfsolver_type *T;
 	gsl_multifit_fdfsolver *s;
 	T = gsl_multifit_fdfsolver_lmsder;
-	s = gsl_multifit_fdfsolver_alloc(T, NUM_OF_MOMENTEQ, NUM_OF_PARAM);
+	s = gsl_multifit_fdfsolver_alloc(T, Common::NUM_OF_MOMENTEQ, Common::NUM_OF_MOMENT);
 
 	// 計算開始
 	gsl_vector_view x;
-	x = gsl_vector_view_array(x_init, NUM_OF_PARAM);
+	x = gsl_vector_view_array(&x_init[0], Common::NUM_OF_MOMENT);
 	gsl_multifit_fdfsolver_set(s, &f, &x.vector);
 	size_t iter = 0;
 	int status;
@@ -108,20 +112,20 @@ std::string Analysis::leastSquareMethod(std::vector<double> &pValue)
 	} while (status == GSL_CONTINUE && iter < 10000);
 
 	// 計算結果
-	pValue.resize(NUM_OF_PARAM);
-	for (i = 0; i < NUM_OF_PARAM; ++i) {
+	pValue.resize(Common::NUM_OF_MOMENT);
+	for (i = 0; i < Common::NUM_OF_MOMENT; ++i) {
 		pValue[i]	= gsl_vector_get(s->x, i);
 	}
 
 	// TODO:何をやっているのか見直す
-	gsl_matrix *J = gsl_matrix_alloc(NUM_OF_MOMENTEQ, NUM_OF_PARAM);
+	gsl_matrix *J = gsl_matrix_alloc(Common::NUM_OF_MOMENTEQ, Common::NUM_OF_MOMENT);
 	gsl_multifit_fdfsolver_jac(s, J);
-	gsl_matrix *covar = gsl_matrix_alloc(NUM_OF_PARAM, NUM_OF_PARAM);
+	gsl_matrix *covar = gsl_matrix_alloc(Common::NUM_OF_PARAM, Common::NUM_OF_MOMENT);
 	gsl_multifit_covar(J, 0.0, covar);
 
 #define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
 	double chi = gsl_blas_dnrm2(s->f);
-	double dof = NUM_OF_MOMENTEQ - NUM_OF_PARAM;
+	double dof = Common::NUM_OF_MOMENTEQ - Common::NUM_OF_PARAM;
 	double c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
 	std::cout << "roop(iter): " << iter << std::endl;
@@ -161,8 +165,8 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 	/**
 		応答のガウス性を仮定し，等価線形化した系のモーメント方程式を解く
 			2*Exy = 0
-			-2*ke*Exx - 2*ZETA*Exy + Eyy = 0
-			-2*Exy -4*ZETA*Eyy + (alpha*2*PI*S0 + (1-alpha)*lambda*beta2)/dt = 0
+			-2*ke*Exx - 2*Common::ZETA*Exy + Eyy = 0
+			-2*Exy -4*Common::ZETA*Eyy + (alpha*2*M_PI*Common::S0 + (1-alpha)*lambda*beta2)/dt = 0
 	 */
 	for (tmp = 0; err >10e-6; tmp++)
 	{
@@ -171,14 +175,14 @@ void Analysis::_culcInitValue(double *sigma_x, double *sigma_y, double *rho_xy)
 		Exyold = Exy;
 		Eyyold = Eyy;
 
-		ke = 1.+3.*EPSILON*Exx;	// 等価線形係数 ke = 1+3εE[X^2]
+		ke = 1.+3.*Common::EPSILON*Exx;	// 等価線形係数 ke = 1+3εE[X^2]
 
 		a[0*num+0]	= 0.;	a[0*num+1]	= 2.;		a[0*num+2]	= 0.;
-		a[1*num+0]	= -ke;	a[1*num+1]	= 2.*ZETA;	a[1*num+2]	= 1.;
-		a[2*num+0]	= 0.;	a[2*num+1]	= 2.*ke;	a[2*num+2]	= 4.*ZETA;
+		a[1*num+0]	= -ke;	a[1*num+1]	= 2.*Common::ZETA;	a[1*num+2]	= 1.;
+		a[2*num+0]	= 0.;	a[2*num+1]	= 2.*ke;	a[2*num+2]	= 4.*Common::ZETA;
 		b[0]	= 0.;
 		b[1]	= 0.;
-		b[2]	= this->_alpha*2.*PI*S0 + (1.-this->_alpha)*this->_lambda*this->_beta2;
+		b[2]	= this->_alpha*2.*M_PI*Common::S0 + (1.-this->_alpha)*this->_lambda*this->_beta2;
 		
 		// LU分解の方法でモーメント方程式を解く
 		gsl_matrix_view m	= gsl_matrix_view_array(a, num, num);

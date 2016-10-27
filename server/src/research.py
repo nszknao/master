@@ -2,6 +2,7 @@
 from scipy import stats
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 import math
 import sys
 
@@ -112,6 +113,13 @@ def getDetailParameterFromSimpleNotation(simple):
 	detail['kappa'][2]	= simple[9]
 	return detail
 
+def selectMieValueOfList(l):
+	leng = len(l)
+	if leng % 2 == 0:
+		return l[int(leng/2)]
+	else:
+		return l[int((leng-1)/2)]
+
 def klDivergence(comp, true):
 	u"""KLダイバージェンスを計算する．
 	【引数】comp: 比較対象の確率分布の値リスト，true: 真値の確率分布の値リスト
@@ -154,6 +162,14 @@ if __name__ == "__main__":
 	# 	col_s	= line_s.strip().split(' ')
 	# 	simVelX.append(float(col_s[0]))
 	# 	simVelY.append(float(col_s[1]))
+
+	# ホワイトノイズのみの厳密解ファイルの読み込み
+	gDispX = []
+	gDispY = []
+	for line_s in open('/usr/local/src/master/dat/y1_Gpdf.dat'):
+		col_s	= line_s.strip().split(' ')
+		gDispX.append(float(col_s[0]))
+		gDispY.append(float(col_s[1]))
 
 	# プロット用解析解X軸
 	anaDispX	= []
@@ -200,32 +216,32 @@ if __name__ == "__main__":
 		del ind
 
 	### for 中間発表<<ここから
-	### キーを指定してソート
-	# pop	= sorted(pop, key=lambda x: x.dKL)
-	# # KLダイバージェンスと相関のあるモーメントを見つけよう
-	# dKL	= []
-	# obj	= np.zeros((NUM_OF_MOMENTEQ, len(pop)))
-	# moment	= np.zeros((NUM_OF_MOMENT, len(pop)))
-	# min_dKL	= 100
-	# min_obj	= [100000]*NUM_OF_MOMENTEQ
-	# minObjPop	= [Individual()]*NUM_OF_MOMENTEQ
-	# for i in range(0, len(pop)):
-	# 	# 散布図プロット用
-	# 	dKL.append(pop[i].dKL)
-	# 	for ii in range(0, NUM_OF_MOMENT):
-	# 		moment[ii, i]	= pop[i].m[ii]
-	# 	for ii in range(0, NUM_OF_MOMENTEQ):
-	# 		obj[ii, i]	= pop[i].o[ii]
-	# 	# KLダイバージェンス最小個体を見つける用
-	# 	if pop[i].dKL < min_dKL:
-	# 		min_dKL	= pop[i].dKL
-	# 		minDKLPop	= pop[i]
-	# 	# 各目的関数を最小にしている個体を見つける
-	# 	for ii in range(0, NUM_OF_MOMENTEQ):
-	# 		if abs(pop[i].o[ii]) < min_obj[ii]:
-	# 			min_obj[ii]	= abs(pop[i].o[ii])
-	# 			minObjPop[ii]	= pop[i]
-	### 各モーメントとの相関ランキング
+	## キーを指定してソート
+	pop	= sorted(pop, key=lambda x: x.dKL)
+	# KLダイバージェンスと相関のあるモーメントを見つけよう
+	dKL	= []
+	obj	= np.zeros((NUM_OF_MOMENTEQ, len(pop)))
+	moment	= np.zeros((NUM_OF_MOMENT, len(pop)))
+	min_dKL	= 100
+	min_obj	= [100000]*NUM_OF_MOMENTEQ
+	minObjPop	= [Individual()]*NUM_OF_MOMENTEQ
+	for i in range(0, len(pop)):
+		# 散布図プロット用
+		dKL.append(pop[i].dKL)
+		for ii in range(0, NUM_OF_MOMENT):
+			moment[ii, i]	= pop[i].m[ii]
+		for ii in range(0, NUM_OF_MOMENTEQ):
+			obj[ii, i]	= pop[i].o[ii]
+		# KLダイバージェンス最小個体を見つける用
+		if pop[i].dKL < min_dKL:
+			min_dKL	= pop[i].dKL
+			minDKLPop	= pop[i]
+		# 各目的関数を最小にしている個体を見つける
+		for ii in range(0, NUM_OF_MOMENTEQ):
+			if abs(pop[i].o[ii]) < min_obj[ii]:
+				min_obj[ii]	= abs(pop[i].o[ii])
+				minObjPop[ii]	= pop[i]
+	## 各モーメントとの相関ランキング
 	# cf	 = []
 	# for i in range(0, NUM_OF_MOMENT):
 	# 	if np.cov(moment[i]) == 0:
@@ -247,7 +263,7 @@ if __name__ == "__main__":
 	# plt.xlabel("Number of moment")
 	# plt.ylabel("Correlation coefficient")
 	# plt.savefig("/usr/local/src/master/fig/corrcoef.png")
-	### KLダイバージェンスが最小の個体
+	## KLダイバージェンスが最小の個体
 	# print("Min dKL = " + str(min_dKL))
 	# for i in range(0, NUM_OF_MOMENTEQ):
 	# 	print("Moment No." + str(i) + " = " + str(minDKLPop.o[i]))
@@ -256,21 +272,26 @@ if __name__ == "__main__":
 	# plt.xlabel("KL-Divergence")
 	# plt.ylabel("Moment")
 	# plt.savefig("/usr/local/src/master/fig/dKL-moment_scatter.png")
-	## 各目的関数を最小にしている個体情報を表示
-	# for i in range(0, len(minObjPop)):
-	# 	print("Moment No." + str(i) + ": dKL = " + str(minObjPop[i].dKL) + ", object = " + str(minObjPop[i].o[i]))
+	# 各目的関数を最小にしている個体情報を表示
 	## dKLが上位の個体情報を表示
-	# num	= 5
-	# for i in range(0, num):
-	# 	print("Pop No." + str(i) + ": dKL = " + str(pop[i].dKL))
-	# 	plt.plot(range(0, NUM_OF_MOMENTEQ), pop[i].o, label=i)
-	# 	plt.xlabel("Number of MomentEQ")
-	# 	plt.ylabel("Value of MomentEQ")
-	# 	# plt.xticks(np.arange(0, NUM_OF_MOMENTEQ, 1))
-	# 	plt.ylim([-140, 20])
-	# 	plt.grid(which='major',color='black',linestyle='--')
-	# 	plt.legend(loc='lower left')
-	# 	plt.savefig("/usr/local/src/master/fig/momentEQ5.png")
+	i = 0
+	supPop = []
+	while pop[i].dKL < 5.:
+		if pop[i].dKL < 0:
+			i += 1
+			continue
+		print("Pop No." + str(i) + ": dKL = " + str(pop[i].dKL))
+		supPop.append(pop[i].o)
+		plt.plot(range(0, NUM_OF_MOMENTEQ), pop[i].o, label=i)
+		plt.xlabel("Number of MomentEQ")
+		plt.ylabel("Value of MomentEQ")
+		# plt.xticks(np.arange(0, NUM_OF_MOMENTEQ, 1))
+		# plt.ylim([-140, 20])
+		plt.grid(which='major',color='black',linestyle='--')
+		plt.legend(loc='lower left')
+		plt.savefig("/usr/local/src/master/fig/momentEQ.png")
+		i += 1
+
 	## 指定した目的関数値の和の合計が最小の個体を選ぶ
 	# minSumObj	= 100000000.
 	# targetInd	= Individual()
@@ -292,24 +313,31 @@ if __name__ == "__main__":
 
 
 	# プロット
-	# KLダイバージェンスの理想は1を下回っているもの
-	outputPath	= "/usr/local/src/master/results"
-	for i in range(0, len(pop)):
-		int_dPdf	= culcIntegralPdf(pop[i].dPdf)
-		if (0.95 > int_dPdf) or (int_dPdf > 1.05):
-			print("PDF integral violation: " + str(int_dPdf))
-			continue
-		if pop[i].dKL > 100:
-			continue
-		plt.xlim([-6, 6])
-		plt.ylim([0.00001, 1])
-		plt.xlabel("displacement", fontsize=18)
-		plt.ylabel("Probability density", fontsize=18)
-		plt.grid(which='major',color='black',linestyle='--')
-		plt.plot(pop[i].disp, pop[i].dPdf)
-		plt.plot(simDispXForPlot, simDispYForPlot, 'o')
-		plt.legend(['Analytical solution', 'Simulation'], loc='lower center')
-		plt.yscale('log')
-		filename	= "KL=" + str(pop[i].dKL) + ", E[y1^2]=" + str(pop[i].m[0]) + ", E[y1^4]=" + str(pop[i].m[3]) + ", E[y1^6]=" + str(pop[i].m[8]) + ".png"
-		plt.savefig(outputPath+"/l="+str(arg_l)+"/fig_a="+str(arg_a)+"/"+filename)
-		plt.clf()
+	# print(pop[i].disp[len(pop[0].disp)-1])
+	# outputPath	= "/usr/local/src/master/results"
+	# for i in range(0, len(pop)):
+	# 	int_dPdf	= culcIntegralPdf(pop[i].dPdf)
+	# 	if (0.95 > int_dPdf) or (int_dPdf > 1.05):
+	# 		print("PDF integral violation: " + str(int_dPdf))
+	# 		continue
+	# 	print(pop[i].dKL)
+	# 	# if (gDispX[len(gDispX)-1] + 1. < pop[i].disp[len(pop[i].disp)-1]) or (gDispX[len(gDispX)-1] - 1. > pop[i].disp[len(pop[i].disp)-1]):
+	# 	if gDispX[len(gDispX)-1] - 1. > pop[i].disp[len(pop[i].disp)-1]:
+	# 		continue
+	# 	if selectMieValueOfList(gDispY) > selectMieValueOfList(pop[i].dPdf):
+	# 		continue
+	# 	# if pop[i].dKL > 15:
+	# 	# 	continue
+	# 	plt.xlim([-6, 6])
+	# 	plt.ylim([0.00001, 1])
+	# 	plt.xlabel("displacement", fontsize=18)
+	# 	plt.ylabel("Probability density", fontsize=18)
+	# 	plt.grid(which='major',color='black',linestyle='--')
+	# 	plt.plot(pop[i].disp, pop[i].dPdf)
+	# 	plt.plot(simDispXForPlot, simDispYForPlot, 'o')
+	# 	plt.plot(gDispX, gDispY)
+	# 	plt.legend(['Analytical solution', 'Simulation', 'Gauss-White'], loc='lower center')
+	# 	plt.yscale('log')
+	# 	filename	= "KL=" + str(pop[i].dKL) + ", E[y1^2]=" + str(pop[i].m[0]) + ", E[y1^4]=" + str(pop[i].m[3]) + ", E[y1^6]=" + str(pop[i].m[8]) + ".png"
+	# 	plt.savefig(outputPath+"/l="+str(arg_l)+"/fig_a="+str(arg_a)+"/"+filename)
+	# 	plt.clf()

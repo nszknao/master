@@ -18,7 +18,7 @@ CProblemSelf::CProblemSelf(std::size_t num_vars, std::size_t num_objs, double la
 	lbs_[0]	= 0.;	ubs_[0]	= 1.;	// a
 	lbs_[1]	= -3.;	ubs_[1]	= 3.;	// mu1
 	lbs_[2]	= -2.;	ubs_[2]	= 2.;	// mu2
-	lbs_[3]	= 0.;	ubs_[3]	= 1.;	// sigma11
+	lbs_[3]	= 0.;	ubs_[3]	= 1.5;	// sigma11
 	lbs_[4]	= 0.;	ubs_[4]	= 1.;	// sigma12
 	lbs_[5]	= 0.;	ubs_[5]	= 1.5;	// sigma21
 	lbs_[6]	= 0.;	ubs_[6]	= 1.;	// sigma22
@@ -51,19 +51,22 @@ bool CProblemSelf::Evaluate(CIndividual *indv) const
 	dF[4] = 0;
 	dF[5] = lambda_*pow((1. - alpha_), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 
-	gsl_vector *x_gsl, *f_gsl;
-
-	x_gsl   = gsl_vector_alloc(num_variables());
-	f_gsl   = gsl_vector_alloc(num_objectives());
+	gsl_vector *x_gsl = gsl_vector_alloc(num_variables());
+	gsl_vector *f_gsl = gsl_vector_alloc(15);
 	for (i = 0; i < num_variables(); ++i) {
 		gsl_vector_set(x_gsl, i, x[i]);
 	}
 	MomentEq::expb_f(x_gsl, &dF[0], f_gsl);
-	for (i = 0; i < num_objectives(); ++i) {
-		f[ i ]    = gsl_vector_get(f_gsl, i);
-	}
-
 	gsl_vector_free(x_gsl);
+
+	/******* 考慮する目的関数 *******/
+	std::vector<unsigned int> rObj{0, 4, 11, 12, 13};
+	// std::vector<unsigned int> rObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+	/******* 考慮する目的関数 *******/
+
+	for (i = 0; i < num_objectives(); ++i) {
+		f[ i ]    = gsl_vector_get(f_gsl, rObj[i]);
+	}
 	gsl_vector_free(f_gsl);
 	/***** ここまで編集 *****/
 

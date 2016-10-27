@@ -3,6 +3,7 @@
  * m_：マトリクス，v_：ベクトル，cf_：係数
  */
 #include "../include/expfit.h"
+#include "../include/common.h"
 
 /**
  * @fn GSLの非線形最小二乗法で使うモーメント方程式の関数値ベクトル
@@ -19,53 +20,54 @@ int MomentEq::expb_f (const gsl_vector *x, void *params, gsl_vector *f)
 	std::vector<double> cf_moment_eq =						// モーメント方程式 係数行列 15x21
 	{
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		-1,-2*ZETA,1,-1*EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,-2,-4*ZETA,0,-2*EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		-1,-2*Common::ZETA,1,-1*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,-2,-4*Common::ZETA,0,-2*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	       	
 		0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,-1,-2*ZETA,3,0,0,-1*EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,
-		dG[1],0,0,0,-2,-4*ZETA,2,0,0,-2*EPSILON,0,0,0,0,0,0,0,0,0,0,0, 
-		0,3*dG[1],0,0,0,-3,-6*ZETA,1,0,0,-3*EPSILON,0,0,0,0,0,0,0,0,0,0,
-		0,0,6*dG[1],0,0,0,-4,-8*ZETA,0,0,0,-4*EPSILON,0,0,0,0,0,0,0,0,0,
+		0,0,0,-1,-2*Common::ZETA,3,0,0,-1*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,
+		dG[1],0,0,0,-2,-4*Common::ZETA,2,0,0,-2*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0, 
+		0,3*dG[1],0,0,0,-3,-6*Common::ZETA,1,0,0,-3*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,
+		0,0,6*dG[1],0,0,0,-4,-8*Common::ZETA,0,0,0,-4*Common::EPSILON,0,0,0,0,0,0,0,0,0,
 
 		0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,-1,-2*ZETA,5,0,0,0,0,-1*EPSILON,0,0,0,0,0,
-		0,0,0,dG[1],0,0,0,0,0,-2,-4*ZETA,4,0,0,0,0,-2*EPSILON,0,0,0,0,
-		0,0,0,0,3*dG[1],0,0,0,0,0,-3,-6*ZETA,3,0,0,0,0,-3*EPSILON,0,0,0,
-		dG[3],0,0,0,0,6*dG[1],0,0,0,0,0,-4,-8*ZETA,2,0,0,0,0,-4*EPSILON,0,0,
-		0,5*dG[3],0,0,0,0,10*dG[1],0,0,0,0,0,-5,-10*ZETA,1,0,0,0,0,-5*EPSILON,0,
-		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*ZETA,0,0,0,0,0,-6*EPSILON
+		0,0,0,0,0,0,0,0,-1,-2*Common::ZETA,5,0,0,0,0,-1*Common::EPSILON,0,0,0,0,0,
+		0,0,0,dG[1],0,0,0,0,0,-2,-4*Common::ZETA,4,0,0,0,0,-2*Common::EPSILON,0,0,0,0,
+		0,0,0,0,3*dG[1],0,0,0,0,0,-3,-6*Common::ZETA,3,0,0,0,0,-3*Common::EPSILON,0,0,0,
+		dG[3],0,0,0,0,6*dG[1],0,0,0,0,0,-4,-8*Common::ZETA,2,0,0,0,0,-4*Common::EPSILON,0,0,
+		0,5*dG[3],0,0,0,0,10*dG[1],0,0,0,0,0,-5,-10*Common::ZETA,1,0,0,0,0,-5*Common::EPSILON,0,
+		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*Common::ZETA,0,0,0,0,0,-6*Common::EPSILON
 	};
 
 	// 求めるパラメータをセット	
-	std::vector<double> param(NUM_OF_PARAM);	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
-	for (i = 0; i < NUM_OF_PARAM; ++i)
+	std::vector<double> param(Common::NUM_OF_PARAM);	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
+	for (i = 0; i < Common::NUM_OF_PARAM; ++i)
 		param[i] = gsl_vector_get(x, i);
 	// モーメント方程式を計算
-	std::vector<double> Eg(NUM_OF_MOMENT);
+	std::vector<double> Eg(Common::NUM_OF_MOMENT);
 	MomentEq::getMomentFromParameter(param, Eg);
 	// モーメント法手式の結果を保存するvector
-	std::vector<double> v_result_moment_eq(NUM_OF_MOMENTEQ, 0.);
+	std::vector<double> v_result_moment_eq(Common::NUM_OF_MOMENTEQ, 0.);
 	// モーメント方程式を解く
-	gsl_matrix_view m_cf_moment_eq		= gsl_matrix_view_array(&cf_moment_eq[0], NUM_OF_MOMENTEQ, NUM_OF_MOMENT);
-	gsl_matrix_view m_moment			= gsl_matrix_view_array(&Eg[0], NUM_OF_MOMENT, 1);
-	gsl_matrix_view m_result_moment_eq	= gsl_matrix_view_array(&v_result_moment_eq[0], NUM_OF_MOMENTEQ, 1);
+	gsl_matrix_view m_cf_moment_eq		= gsl_matrix_view_array(&cf_moment_eq[0], Common::NUM_OF_MOMENTEQ, Common::NUM_OF_MOMENT);
+	gsl_matrix_view m_moment			= gsl_matrix_view_array(&Eg[0], Common::NUM_OF_MOMENT, 1);
+	gsl_matrix_view m_result_moment_eq	= gsl_matrix_view_array(&v_result_moment_eq[0], Common::NUM_OF_MOMENTEQ, 1);
 	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, &m_cf_moment_eq.matrix, &m_moment.matrix, 0.0, &m_result_moment_eq.matrix);
 	// 計算結果を配列に保存
-	std::vector<double> array_result_moment_eq(NUM_OF_MOMENTEQ);
-	for (i=0; i<NUM_OF_MOMENTEQ; ++i) {
+	std::vector<double> array_result_moment_eq(Common::NUM_OF_MOMENTEQ);
+	for (i=0; i<Common::NUM_OF_MOMENTEQ; ++i) {
 		array_result_moment_eq[i] = gsl_matrix_get(&m_result_moment_eq.matrix, i, 0);	// 先の行列計算の答えを配列にする
 	}
 	array_result_moment_eq[2]  += dG[1];
 	array_result_moment_eq[7]  += dG[3];
 	array_result_moment_eq[14] += dG[5];
 	// 補正係数
-	std::vector<double> k(NUM_OF_MOMENTEQ);
+	std::vector<double> k(Common::NUM_OF_MOMENTEQ);
 	k[0] = 1.26;	k[1] = 0.66;	k[2] = 1.35;	k[3] = 3.81;	k[4] = 2.53;	k[5] = 2.85;	k[6] = 5.16;	k[7] = 7.25;
 	k[8] = 19.6;	k[9] = 11.5;	k[10] = 13.7;	k[11] = 18.3;	k[12] = 26.9;	k[13] = 27.9;	k[14] = 318.;
 	// 補正係数を含めた結果をfに格納
-	for (i = 0; i < NUM_OF_MOMENTEQ; ++i) {
+	for (i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
 		gsl_vector_set(f, i, 1./k[i]*array_result_moment_eq[i]);
+		// gsl_vector_set(f, i, array_result_moment_eq[i]);
 	}
 
 	return GSL_SUCCESS;
@@ -86,51 +88,51 @@ int MomentEq::expb_df (const gsl_vector * x, void *params, gsl_matrix *J)
 	std::vector<double> cf_moment_eq =						// モーメント方程式 係数行列 15x21
 	{
 		0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		-1,-2*ZETA,1,-1*EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,-2,-4*ZETA,0,-2*EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		-1,-2*Common::ZETA,1,-1*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,-2,-4*Common::ZETA,0,-2*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	       	
 		0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,-1,-2*ZETA,3,0,0,-1*EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,-2,-4*ZETA,2,0,0,-2*EPSILON,0,0,0,0,0,0,0,0,0,0,0,
-		0,3*dG[1],0,0,0,-3,-6*ZETA,1,0,0,-3*EPSILON,0,0,0,0,0,0,0,0,0,0,
-		0,0,6*dG[1],0,0,0,-4,-8*ZETA,0,0,0,-4*EPSILON,0,0,0,0,0,0,0,0,0,
+		0,0,0,-1,-2*Common::ZETA,3,0,0,-1*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,-2,-4*Common::ZETA,2,0,0,-2*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,
+		0,3*dG[1],0,0,0,-3,-6*Common::ZETA,1,0,0,-3*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,
+		0,0,6*dG[1],0,0,0,-4,-8*Common::ZETA,0,0,0,-4*Common::EPSILON,0,0,0,0,0,0,0,0,0,
 	           
 		0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,-1,-2*ZETA,5,0,0,0,0,-1*EPSILON,0,0,0,0,0,
-		0,0,0,dG[1],0,0,0,0,0,-2,-4*ZETA,4,0,0,0,0,-2*EPSILON,0,0,0,0,
-		0,0,0,0,3*dG[1],0,0,0,0,0,-3,-6*ZETA,3,0,0,0,0,-3*EPSILON,0,0,0,
-		dG[3],0,0,0,0,6*dG[1],0,0,0,0,0,-4,-8*ZETA,2,0,0,0,0,-4*EPSILON,0,0,
-		0,5*dG[3],0,0,0,0,10*dG[1],0,0,0,0,0,-5,-10*ZETA,1,0,0,0,0,-5*EPSILON,0,
-		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*ZETA,0,0,0,0,0,-6*EPSILON
+		0,0,0,0,0,0,0,0,-1,-2*Common::ZETA,5,0,0,0,0,-1*Common::EPSILON,0,0,0,0,0,
+		0,0,0,dG[1],0,0,0,0,0,-2,-4*Common::ZETA,4,0,0,0,0,-2*Common::EPSILON,0,0,0,0,
+		0,0,0,0,3*dG[1],0,0,0,0,0,-3,-6*Common::ZETA,3,0,0,0,0,-3*Common::EPSILON,0,0,0,
+		dG[3],0,0,0,0,6*dG[1],0,0,0,0,0,-4,-8*Common::ZETA,2,0,0,0,0,-4*Common::EPSILON,0,0,
+		0,5*dG[3],0,0,0,0,10*dG[1],0,0,0,0,0,-5,-10*Common::ZETA,1,0,0,0,0,-5*Common::EPSILON,0,
+		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*Common::ZETA,0,0,0,0,0,-6*Common::EPSILON
 	};
 
 	// 求めるパラメータをセット
-	std::vector<double> param(NUM_OF_PARAM);	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
-	for(i = 0; i < NUM_OF_PARAM; i++) {
+	std::vector<double> param(Common::NUM_OF_PARAM);	// (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
+	for(i = 0; i < Common::NUM_OF_PARAM; i++) {
 	  param[i] = gsl_vector_get(x, i);
 	}
 	// ヤコビアンを計算
-	std::vector< std::vector<double> > jacoby(NUM_OF_MOMENT, std::vector<double>(NUM_OF_PARAM, 0.));
+	std::vector< std::vector<double> > jacoby(Common::NUM_OF_MOMENT, std::vector<double>(Common::NUM_OF_PARAM, 0.));
 	MomentEq::getJacobyFromParameter(param, jacoby);
 	// モーメントのヤコビアンをベクトルに変換
 	std::vector<double> v_jacoby_moment(210);
-	for (i = 0; i < NUM_OF_MOMENT; i++) {
-		for (ii = 0; ii < NUM_OF_PARAM; ii++) {
-			v_jacoby_moment[NUM_OF_PARAM*i + ii] = jacoby[i][ii] ;
+	for (i = 0; i < Common::NUM_OF_MOMENT; i++) {
+		for (ii = 0; ii < Common::NUM_OF_PARAM; ii++) {
+			v_jacoby_moment[Common::NUM_OF_PARAM*i + ii] = jacoby[i][ii] ;
 		}
 	}
 	// モーメント方程式のヤコビアンを計算
 	std::vector<double> cf_jacoby_moment_eq(150, 0.);
-	gsl_matrix_view m_cf_jacoby_moment_eq	= gsl_matrix_view_array(&cf_jacoby_moment_eq[0], NUM_OF_MOMENTEQ, NUM_OF_PARAM);
-	gsl_matrix_view m_cf_moment_eq			= gsl_matrix_view_array(&cf_moment_eq[0], NUM_OF_MOMENTEQ, NUM_OF_MOMENT);
-	gsl_matrix_view m_jacoby_moment			= gsl_matrix_view_array(&v_jacoby_moment[0], NUM_OF_MOMENT, NUM_OF_PARAM);
+	gsl_matrix_view m_cf_jacoby_moment_eq	= gsl_matrix_view_array(&cf_jacoby_moment_eq[0], Common::NUM_OF_MOMENTEQ, Common::NUM_OF_PARAM);
+	gsl_matrix_view m_cf_moment_eq			= gsl_matrix_view_array(&cf_moment_eq[0], Common::NUM_OF_MOMENTEQ, Common::NUM_OF_MOMENT);
+	gsl_matrix_view m_jacoby_moment			= gsl_matrix_view_array(&v_jacoby_moment[0], Common::NUM_OF_MOMENT, Common::NUM_OF_PARAM);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, &m_cf_moment_eq.matrix, &m_jacoby_moment.matrix, 0.0, &m_cf_jacoby_moment_eq.matrix);
 	// 補正係数
-	std::vector<double> k(NUM_OF_MOMENTEQ);
+	std::vector<double> k(Common::NUM_OF_MOMENTEQ);
 	k[0] = 1.26;	k[1] = 0.66;	k[2] = 1.35;	k[3] = 3.81;	k[4] = 2.53;	k[5] = 2.85;	k[6] = 5.16;	k[7] = 7.25;
 	k[8] = 19.6;	k[9] = 11.5;	k[10] = 13.7;	k[11] = 18.3;	k[12] = 26.9;	k[13] = 27.9;	k[14] = 318.;
 	// 補正係数を含めた結果をjに格納
-	for(i = 0; i < NUM_OF_MOMENTEQ; i++) {
+	for(i = 0; i < Common::NUM_OF_MOMENTEQ; i++) {
 		for(ii = 0; ii < 10; ii++) {
 			gsl_matrix_set(J, i, ii, k[i]*gsl_matrix_get(&m_cf_jacoby_moment_eq.matrix,i,ii));
 		}
@@ -249,7 +251,7 @@ void MomentEq::getMomentFromParameter(const std::vector<double> &p, std::vector<
 		+ p[0]*(45*p[8]*pow(p[6]*p[6]*p[5],2) + 60*pow(p[8],3)*pow(p[6],2));	// y_1^3*y_w^5
 
 	// // 補正係数
-	// std::vector<double> k(NUM_OF_MOMENTEQ);
+	// std::vector<double> k(Common::NUM_OF_MOMENTEQ);
 	// k[0] = 1.26;	k[1] = 0.66;	k[2] = 1.35;	k[3] = 3.81;	k[4] = 2.53;	k[5] = 2.85;	k[6] = 5.16;	k[7] = 7.25;
 	// k[8] = 19.6;	k[9] = 11.5;	k[10] = 13.7;	k[11] = 18.3;	k[12] = 26.9;	k[13] = 27.9;	k[14] = 318.;
 

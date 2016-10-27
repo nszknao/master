@@ -14,30 +14,17 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_sf.h>
 
-#include "common.h"
-
 using namespace std;
-
-
-#ifndef __OSCILLATOR_AND_EXCITATION_PARAMETER__
-#define __OSCILLATOR_AND_EXCITATION_PARAMETER__
-/********** 系の係数・入力条件（不変）**********/
-#define PI M_PI
-#define S0 1./(2.*PI)
-#define EPSILON 0.3
-#define ZETA 0.05
-#endif // !__OSCILLATOR_AND_EXCITATION_PARAMETER__
-
-/********** 計算条件 **********/
-#define SAMPLE_LENGTH 131072	// 131072,65536
-#define NUM_OF_SAMPLES 100		// 入力の標本数
-#define dt 0.01		// 時間刻み幅
-#define dx 0.01		// pdfの横軸の刻み幅
-
 
 class Simulation
 {
 private:
+	/********** 計算条件 **********/
+	static const std::size_t SAMPLE_LENGTH;
+	static const std::size_t NUM_OF_SAMPLES;	// 入力の標本数
+	static const double dt;	// 時間刻み幅
+	static const double dx;	// pdfの横軸の刻み幅
+
 	double _lambda, _beta2, _alpha, _sigma;
 	// pdfの横軸の最小値，最大値
 	double _y1min, _y1max, _y2max, _y2min;

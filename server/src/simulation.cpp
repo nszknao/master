@@ -1,6 +1,12 @@
 #include "../include/simulation.h"
 #include "../include/common.h"
 
+/********** 計算条件 **********/
+const std::size_t SAMPLE_LENGTH = 131072;	// 131072,65536
+const std::size_t NUM_OF_SAMPLES = 100;	// 入力の標本数
+const double dt = 0.01;	// 時間刻み幅
+const double dx = 0.01;	// pdfの横軸の刻み幅
+
 Simulation::Simulation(double lambda, double beta2, double alpha)
 {
 	this->_lambda	= lambda;
@@ -27,7 +33,7 @@ void Simulation::_createExcitation(std::vector< std::vector<double> > &force)
 	double pSt = sqrt(1 - _alpha);
 
 	// ホワイトノイズの分散
-	double sigma	= sqrt(2.*M_PI*S0 / dt);
+	double sigma	= sqrt(2.*M_PI*Common::S0 / dt);
 
 	Common::resize2DemensionalVector(force, 3, SAMPLE_LENGTH);
 	for (i = 0; i < SAMPLE_LENGTH; ++i) {
@@ -227,8 +233,8 @@ void Simulation::exactSolutionOfGaussianWhiteNoise(std::vector<double> &x, std::
 	double exact_gauss_pdf	= 0.;
 	double integral_gauss_pdf	= 0.;
 
-	bessel_p = 2.*ZETA;
-	bessel_q = ZETA*EPSILON;
+	bessel_p = 2.*Common::ZETA;
+	bessel_q = Common::ZETA*Common::EPSILON;
 	bessel_arg = pow(bessel_p, 2) / (8.*bessel_q);
 
 	K_nu = gsl_sf_bessel_Knu(0.25, bessel_arg);
@@ -252,7 +258,7 @@ double Simulation::_f1(double force, double y1, double y2)
 
 double Simulation::_f2(double force, double y1, double y2)
 {
-	return force - 2.*ZETA*y2 - y1 - EPSILON*y1*y1*y1;
+	return force - 2.*Common::ZETA*y2 - y1 - Common::EPSILON*y1*y1*y1;
 }
 
 /**
