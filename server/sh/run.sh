@@ -37,8 +37,6 @@ initfile=init_value_disp.txt
 cat "${SRC_PATH}/sh/${initfile}" | grep -v ^# | while read line; do
 	lambda=`echo ${line} | cut -d ',' -f1`
 	alpha=`echo ${line} | cut -d ',' -f2`
-	lininit=`echo ${line} | cut -d ',' -f3`
-	loginit=`echo ${line} | cut -d ',' -f4`
 
 	beta2=`echo "scale=7; 1 / ${lambda}" | bc`
 	echo "lambda = ${lambda}, a=${alpha} is processing."
@@ -51,11 +49,11 @@ cat "${SRC_PATH}/sh/${initfile}" | grep -v ^# | while read line; do
 #### Run #####################################
 	if [ ${code} -eq 0 ]; then
 		${SH_PATH}/run_sim.sh ${lambda} ${alpha}
-		${SH_PATH}/run_ana.sh ${lambda} ${alpha} ${loginit}
+		${SH_PATH}/run_ana.sh ${lambda} ${alpha}
 	elif [ ${code} -eq 1 ]; then
 		${SH_PATH}/run_sim.sh ${lambda} ${alpha}
 	elif [ ${code} -eq 2 ]; then
-		${SH_PATH}/run_ana.sh ${lambda} ${alpha} ${loginit}
+		${SH_PATH}/run_ana.sh ${lambda} ${alpha}
 	fi
 
 	echo "lambda = ${lambda}, a=${alpha} was processed."

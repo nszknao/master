@@ -12,11 +12,8 @@
 class MomentEq
 {
 public:
-	static int expb_f(const gsl_vector *x, void *params, gsl_vector *f);
-	static int expb_df(const gsl_vector * x, void *params, gsl_matrix *J);
-	static int expb_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *J);
+	static std::vector<double> expb_f(const std::vector<double> &, const std::vector<double> &dG, const std::vector<std::size_t> &f);
 	static void getMomentFromParameter(const std::vector<double> &, std::vector<double> &);
-	static void getJacobyFromParameter(const std::vector<double> &, std::vector< std::vector<double> > &);
 };
 
 #endif // !__EXPFIT_H_INCLUDE_

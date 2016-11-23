@@ -37,7 +37,7 @@ bool CProblemSelf::Evaluate(CIndividual *indv) const
 	f.resize(num_objectives(), 0);
 
 	/***** ここから編集 *****/
-	unsigned int i;
+    std::size_t i;
 	double beta2	= 1. / lambda_;
 	// パルス振幅（generalized Gauss distribution）に関するパラメータ
 	double ggd_a = sqrt(gsl_sf_gamma(1. / GGD_KAPPA)*pow(gsl_sf_gamma(3. / GGD_KAPPA), -1.)*beta2);
@@ -51,23 +51,14 @@ bool CProblemSelf::Evaluate(CIndividual *indv) const
 	dF[4] = 0;
 	dF[5] = lambda_*pow((1. - alpha_), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / GGD_KAPPA)*pow(gsl_sf_gamma(1. / GGD_KAPPA), -1.));
 
-	gsl_vector *x_gsl = gsl_vector_alloc(num_variables());
-	gsl_vector *f_gsl = gsl_vector_alloc(15);
-	for (i = 0; i < num_variables(); ++i) {
-		gsl_vector_set(x_gsl, i, x[i]);
-	}
-	MomentEq::expb_f(x_gsl, &dF[0], f_gsl);
-	gsl_vector_free(x_gsl);
-
 	/******* 考慮する目的関数 *******/
-	std::vector<unsigned int> rObj{0, 4, 11, 12, 13};
+	std::vector<std::size_t> rObj{0, 4, 11, 12, 13};
 	// std::vector<unsigned int> rObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 	/******* 考慮する目的関数 *******/
+    for (i = 0; i < rObj.size(); ++i) {
+        f[i] = MomentEq::expb_f(x, dF, rObj)[i];
+    }
 
-	for (i = 0; i < num_objectives(); ++i) {
-		f[ i ]    = gsl_vector_get(f_gsl, rObj[i]);
-	}
-	gsl_vector_free(f_gsl);
 	/***** ここまで編集 *****/
 
 	return true;

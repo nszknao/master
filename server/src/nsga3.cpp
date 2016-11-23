@@ -45,7 +45,7 @@ int NSGA3::run()
 
 
 		// ----- Run the algorithm to solve the designated function -----
-		const size_t NumRuns = 1; // 20 is the setting in NSGA-III paper
+		const size_t NumRuns = 10; // 20 is the setting in NSGA-III paper
 		for (size_t r=0; r<NumRuns; r+=1)
 		{
 			srand(r); cout << "Solving " << problem->name() << " ... Run: " << r << endl;
