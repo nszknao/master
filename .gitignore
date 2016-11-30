@@ -5,3 +5,5 @@
 /server/*.txt
 *.exe
 /server/src/nsga3cpp/Results
+/server/tmp
+/server/fig_for_thesis
