@@ -21,19 +21,19 @@ const std::size_t Common::NUM_OF_PARAM = 10;
  */
 void Common::outputIntoFile(const std::string name, const std::vector<double> &x, const std::vector<double> &y)
 {
-	std::cout << "Creating a file.\n" << std::endl;
+    std::cout << "Creating a file.\n" << std::endl;
 
-	// 値の数をチェック
-	if (x.size() != y.size()) {
-		std::cout << "Error: Do not match vector size." << std::endl;
-		exit(EXIT_FAILURE);
-	}
+    // 値の数をチェック
+    if (x.size() != y.size()) {
+        std::cout << "Error: Do not match vector size." << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-	std::ofstream ofs(name);
-	unsigned int i;
-	for (i = 0; i < x.size(); ++i) {
-		ofs << x[i] << " " << y[i] << std::endl;
-	}
+    std::ofstream ofs(name);
+    unsigned int i;
+    for (i = 0; i < x.size(); ++i) {
+        ofs << x[i] << " " << y[i] << std::endl;
+    }
 }
 
 /**
@@ -44,10 +44,10 @@ void Common::outputIntoFile(const std::string name, const std::vector<double> &x
  */
 void Common::resize2DemensionalVector(std::vector< std::vector< double > > &v, unsigned int s1, unsigned int s2)
 {
-	unsigned int i;
-	v.resize(s1);
-	for (i = 0; i < s1; ++i) {
-		v[i].resize(s2);
+    unsigned int i;
+    v.resize(s1);
+    for (i = 0; i < s1; ++i) {
+        v[i].resize(s2);
     }
 }
 
@@ -58,13 +58,13 @@ void Common::resize2DemensionalVector(std::vector< std::vector< double > > &v, u
  */
 bool Common::isOverSpecifyValue(const std::vector<double> &v, double value)
 {
-	bool flg = false;
-	unsigned int i;
+    bool flg = false;
+    unsigned int i;
 
-	for (i = 0; i < v.size(); ++i) {
-		if (v[i] >= value || v[i] < -1*value)
-			flg	= true;
-	}
+    for (i = 0; i < v.size(); ++i) {
+        if (v[i] >= value || v[i] < -1*value)
+            flg = true;
+    }
 
-	return flg;
+    return flg;
 }

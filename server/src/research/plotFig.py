@@ -2,6 +2,7 @@
 u"""個体群に関するいろいろな図を作成します．"""
 import matplotlib.pyplot as plt
 import common as cmn
+import math
 from matplotlib.font_manager import FontProperties
 
 fp = FontProperties(fname='/usr/share/fonts/TakaoGothic.ttf')
@@ -25,29 +26,46 @@ def plotDispPdf_Ana_Sim_Gauss(ind, sim, gwn, savePath):
     plt.plot(gwn.dispx, gwn.dispy)
     plt.legend(['Analytical solution', 'Simulation', 'Gauss-White'], loc='lower center')
     plt.yscale('log')
-    filename    = "KL=" + str(cmn.klDivergence(cmn.createDispPdf(sim.dispx, ind.detailPrm), sim.dispy)) + ", E[y1^2]=" + str(ind.m[0]) + ", E[y1^4]=" + str(ind.m[3]) + ", E[y1^6]=" + str(ind.m[8]) + ".png"
-    plt.savefig(savePath + "/" + filename)
+    filename    = "KL=" + str(cmn.klDivergence(cmn.createDispPdf(sim.dispx, ind.detailPrm), sim.dispy)) + ".eps"
+    plt.savefig(savePath + "/" + filename, format="eps", dpi=300)
     plt.clf()
 
 def plotRelation_KLDivergence_Objective(pop, sim, savePath):
     u"""KLダイバージェンスと目的関数値の二乗誤差を散布図にプロット
     【引数】pop: 個体群，sim: シミュレーション解，savePath: 保存先のパス"""
+    meanSdList = cmn.getStandardDeviationList(pop)
     squareObjList = []
     dKLList = []
     for i in range(len(pop)):
-        sumSquareObj = 0.
+        squareValue = 0.
         for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ")):
-            sumSquareObj += pop[i].o[ii]**2
-        squareObjList.append(sumSquareObj)
+            squareValue += ((pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii])**2
+        squareObjList.append(squareValue)
         dKLList.append(cmn.klDivergence(cmn.createDispPdf(sim.dispx, pop[i].detailPrm), sim.dispy))
     
     plt.scatter(squareObjList, dKLList)
+    plt.xlim([0, 20])
+    plt.ylim([0, 50])
     plt.title(u'KLダイバージェンスと目的関数値の二乗誤差の関係', fontproperties=fp)
-    plt.xlabel('KL-Divergence')
-    plt.ylabel('Square Objective Value')
+    plt.xlabel('Square Objective Value')
+    plt.ylabel('KL-Divergence')
+    plt.grid(which='major',color='black',linestyle='--')
 
-    figname = "Relation_of_KLDivergence-SquareObjectiveValue"
-    plt.savefig(savePath + "/" + figname)
+    figname = "Relation_of_KLDivergence-SquareObjectiveValue.eps"
+    plt.savefig(savePath + "/" + figname, format="eps", dpi=300)
     plt.clf()
 
+def plotObjectiveValue(pop, savePath):
+    u"""個体の目的関数値をプロット
+    【引数】ind: 個体，savePath: 保存先のパス"""
+    meanSdList = cmn.getStandardDeviationList(pop)
+    plt.title(u'個体の目的関数値', fontproperties=fp)
+    for i in range(len(pop)):
+        plt.plot(range(len(pop[i].o)), [(pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii] for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
+    plt.xlabel('Objective Number')
+    plt.ylabel('Objective Value')
+    plt.grid(which='major',color='black',linestyle='--')
 
+    filename = "ObjectiveValue.eps"
+    plt.savefig(savePath + "/" + filename, format="eps", dpi=300)
+    plt.clf()

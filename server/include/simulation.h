@@ -14,31 +14,29 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_sf.h>
 
-using namespace std;
-
 class Simulation
 {
 private:
-	/********** ŒvZğŒ **********/
-	static const std::size_t SAMPLE_LENGTH;
-	static const std::size_t NUM_OF_SAMPLES;	// “ü—Í‚Ì•W–{”
-	static const double dt;	// ŠÔ‚İ•
-	static const double dx;	// pdf‚Ì‰¡²‚Ì‚İ•
+    /********** è¨ˆç®—æ¡ä»¶ **********/
+    static const std::size_t SAMPLE_LENGTH;
+    static const std::size_t NUM_OF_SAMPLES;    // å…¥åŠ›ã®æ¨™æœ¬æ•°
+    static const double dt; // æ™‚é–“åˆ»ã¿å¹…
+    static const double dx; // pdfã®æ¨ªè»¸åˆ»ã¿å¹…
 
-	double _lambda, _beta2, _alpha, _sigma;
-	// pdf‚Ì‰¡²‚ÌÅ¬’lCÅ‘å’l
-	double _y1min, _y1max, _y2max, _y2min;
-	// ƒ‹ƒ“ƒQƒNƒbƒ^‚Åg‚¤
-	static double _f1(double force, double y1, double y2);
-	static double _f2(double force, double y1, double y2);
-	void _createExcitation(std::vector< std::vector<double> > &);
+    double _lambda, _beta2, _alpha, _sigma;
+    // pdfã®æ¨ªè»¸æœ€å°å€¤ï¼Œæœ€å¤§å€¤
+    double _y1min, _y1max, _y2max, _y2min;
+    // ãƒ«ãƒ³ã‚²ã‚¯ãƒƒã‚¿ã§ä½¿ã†
+    static double _f1(double force, double y1, double y2);
+    static double _f2(double force, double y1, double y2);
+    void _createExcitation(std::vector< std::vector<double> > &);
 
 public:
-	Simulation(double lambda, double beta2, double alpha);
-	void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
-	void createDispPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
-	void createVelPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
-	void exactSolutionOfGaussianWhiteNoise(std::vector<double> &, std::vector<double> &);
+    Simulation(double lambda, double beta2, double alpha);
+    void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
+    void createDispPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
+    void createVelPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
+    void exactSolutionOfGaussianWhiteNoise(std::vector<double> &, std::vector<double> &);
 };
 
 #endif // !__RESEARCH_H_INCLUDE_

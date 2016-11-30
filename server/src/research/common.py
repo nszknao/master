@@ -192,6 +192,26 @@ def getPopFromFile(arg_l, arg_a):
     
     return pop
 
+def getStandardDeviationList(pop):
+    u"""個体群の不偏標準偏差を求める
+    【引数】pop: 個体群
+    【戻り値】meanSdList: 2次元配列で，0が平均・1が不偏標準偏差のリスト"""
+    meanSdList = [[0 for i in range(NUM_OF_MOMENTEQ)] for ii in range(2)]
+    # 平均
+    for i in range(NUM_OF_MOMENTEQ):
+        sumObj = 0.
+        for ii in range(len(pop)):
+            sumObj += pop[ii].o[i]
+        meanSdList[0][i] = sumObj / len(pop)
+    # 分散
+    for i in range(NUM_OF_MOMENTEQ):
+        sumSquareObj = 0.
+        for ii in range(len(pop)):
+            sumSquareObj += (pop[ii].o[i] - meanSdList[0][i])**2
+        meanSdList[1][i] = math.sqrt(sumSquareObj / (len(pop)))
+
+    return meanSdList
+
 #---- private ----
 def _getFileNum(path):
     u"""指定したディレクトリ配下のファイル数をカウント
@@ -241,70 +261,3 @@ def _getDetailParameterFromSimpleNotation(simple):
     detail['kappa'][2]  = simple[9]
     return detail
 
- 
-
-
-
-
-
-
-
-   # 主成分分析
-    # pcaAnalysis(supPop)
-    # sys.exit()
-    ### for 中間発表<<ここから
-    ## KLダイバージェンスと相関のあるモーメントを見つけよう
-    # dKL   = []
-    # obj   = np.zeros((NUM_OF_MOMENTEQ, len(pop)))
-    # moment    = np.zeros((NUM_OF_MOMENT, len(pop)))
-    # min_dKL   = 100
-    # min_obj   = [100000]*NUM_OF_MOMENTEQ
-    # minObjPop = [Individual()]*NUM_OF_MOMENTEQ
-    # for i in range(0, len(pop)):
-    #   # 散布図プロット用
-    #   dKL.append(pop[i].dKL)
-    #   for ii in range(0, NUM_OF_MOMENT):
-    #       moment[ii, i]   = pop[i].m[ii]
-    #   for ii in range(0, NUM_OF_MOMENTEQ):
-    #       obj[ii, i]  = pop[i].o[ii]
-    #   # KLダイバージェンス最小個体を見つける用
-    #   if pop[i].dKL < min_dKL:
-    #       min_dKL = pop[i].dKL
-    #       minDKLPop   = pop[i]
-    #   # 各目的関数を最小にしている個体を見つける
-    #   for ii in range(0, NUM_OF_MOMENTEQ):
-    #       if abs(pop[i].o[ii]) < min_obj[ii]:
-    #           min_obj[ii] = abs(pop[i].o[ii])
-    #           minObjPop[ii]   = pop[i]
-    ## KLダイバージェンスが最小の個体
-    # print("Min dKL = " + str(min_dKL))
-    # for i in range(0, NUM_OF_MOMENTEQ):
-    #   print("Moment No." + str(i) + " = " + str(minDKLPop.o[i]))
-    ## dKLが上位の個体情報を表示
-    # i = 0
-    # supPop = []
-    # while pop[i].dKL < 5.:
-    #   if pop[i].dKL < 0:
-    #       i += 1
-    #       continue
-    #   print("Pop No." + str(i) + ": dKL = " + str(pop[i].dKL))
-    #   supPop.append(pop[i].o)
-    #   plt.plot(range(0, NUM_OF_MOMENTEQ), pop[i].o, label=i)
-    #   plt.xlabel("Number of MomentEQ")
-    #   plt.ylabel("Value of MomentEQ")
-    #   # plt.xticks(np.arange(0, NUM_OF_MOMENTEQ, 1))
-    #   # plt.ylim([-140, 20])
-    #   plt.grid(which='major',color='black',linestyle='--')
-    #   plt.legend(loc='lower left')
-    #   plt.savefig("/usr/local/src/master/fig/momentEQ.png")
-    #   i += 1
-#    plt.plot(range(0, NUM_OF_MOMENTEQ), pop[0].o, label=pop[0].dKL)
-#    plt.xlabel("Number of MomentEQ")
-#    plt.ylabel("Value of MomentEQ")
-#    plt.xticks(np.arange(0, NUM_OF_MOMENTEQ, 1))
-#    plt.grid(which='major',color='black',linestyle='--')
-#    plt.legend(loc='lower left')
-#    plt.savefig("/usr/local/src/master/fig/momentEQ.png")
-#    plt.clf()
-
-    ### for 中間発表>>ここまで

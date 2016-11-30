@@ -36,21 +36,78 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
 	dF[4] = 0;
 	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
+    
+    // 目的関数を選ぶ
+    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    // std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7};
 
-	// nsga2
-	NSGA2 *n2	= new NSGA2(120, 2500);
-	n2->run(dF);
-	cout    << "hogehoge2" << endl << endl;
-	pops	= n2->getFinalPops();
+	// 目的関数の重み計算用NSGA2
+    MomentEq meq1;
+    meq1.setPrmdG(dF);
+    meq1.setObjList(selectedObj);
+    NSGA2 *n2_	= new NSGA2(1000, 0);
+    n2_->run(&meq1);
+    std::vector<GAIndividual> pops_ = n2_->getFinalPops();
+    if (n2_ != NULL) {delete n2_; n2_ = NULL;}
+    std::vector< std::vector<double> > objWeight = this->_getNormalizeObjectList(pops_);
+    std::cout << "mean" << std::endl;
+    for (std::size_t i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
+        std::cout << objWeight[0][i] << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "sd" << std::endl;
+    for (std::size_t i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
+        std::cout << objWeight[1][i] << " ";
+    }
+    std::cout << std::endl;
+    
+    MomentEq meq2;
+    meq2.setPrmdG(dF);
+    meq2.setObjList(selectedObj);
+//    meq2.setObjWeight(objWeight);
+    // NSGA2
+    NSGA2 *n2 = new NSGA2(120, 2000);
+    n2->run(&meq2);
+    pops = n2->getFinalPops();
     if (n2 != NULL) {delete n2; n2 = NULL;}
 
-	// nsga3
-	// NSGA3 *n3	= new NSGA3();
-	// n3->run();
-	// pops	= n3->getFinalPops();
-	// delete n3;
+    // nsga3
+//    NSGA3 *n3	= new NSGA3();
+//    n3->run(&meq2);
+//    pops = n3->getFinalPops();
+//    if (n3 != NULL) {delete n3; n3 = NULL;}
 
 	return EXIT_SUCCESS;
+}
+
+/**
+ * @fn 個体群から目的関数の重み用の標準偏差リストを作成する
+ * @param vector<GAIndividual> &pops 個体群
+ * @return vector< vector<double> > list 目的関数の正規化用リスト（0: 平均，1: 標準偏差）
+ */
+std::vector< std::vector<double> >
+Analysis::_getNormalizeObjectList(const std::vector<GAIndividual> &pops)
+{
+    std::size_t i, ii;
+    double sumObj, sumSquareObj;
+
+    std::vector< std::vector<double> > list(2, std::vector<double>(Common::NUM_OF_MOMENTEQ, 0));
+    
+    for (i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
+        // 平均
+        sumObj = 0.;
+        for (ii = 0; ii < pops.size(); ++ii) {
+            sumObj += pops[ii].oValue[i];
+        }
+        list[0][i] = sumObj / pops.size();
+        // 標準偏差
+        sumSquareObj = 0.;
+        for (ii = 0; ii < pops.size(); ++ii) {
+            sumSquareObj += pow((pops[ii].oValue[i] - list[0][i]), 2);
+        }
+        list[1][i] = sqrt(sumSquareObj / (pops.size()-1.));
+    }
+    return list;
 }
 
 /**

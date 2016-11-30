@@ -12,6 +12,7 @@
 using namespace std;
 
 class GAIndividual;
+class MomentEq;
 
 class NSGA2
 {
@@ -25,7 +26,7 @@ private:
 
 public:
 	explicit NSGA2(std::size_t, std::size_t);
-	int run(std::vector<double> &);
+	int run(MomentEq *);
 	std::vector<GAIndividual> getFinalPops();
 	~NSGA2();
 };

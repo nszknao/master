@@ -5,10 +5,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
-#include "ga_individual.h"
+#include <vector>
 
 class CPopulation;
+class GAIndividual;
+class MomentEq;
 
 class NSGA3
 {
@@ -18,7 +19,7 @@ private:
 
 public:
 	~NSGA3();
-	int run();
+	int run(MomentEq *);
 	std::vector<GAIndividual> getFinalPops();
 };
 

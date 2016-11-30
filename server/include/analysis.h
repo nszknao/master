@@ -19,6 +19,7 @@ class Analysis
 private:
 	static const double GGD_KAPPA;
 	double _lambda, _beta2, _alpha;
+    std::vector< std::vector<double> > _getNormalizeObjectList(const std::vector<GAIndividual> &);
 
 public:
 	explicit Analysis(double, double, double);

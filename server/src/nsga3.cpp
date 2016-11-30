@@ -9,6 +9,7 @@
 #include "nsga3cpp/src/aux_misc.h"
 
 #include "../include/expfit.h"
+#include "../include/ga_individual.h"
 
 using namespace std;
 
@@ -20,7 +21,7 @@ NSGA3::~NSGA3()
 /**
  * @fn NSGA3を実行する
  */
-int NSGA3::run()
+int NSGA3::run(MomentEq *meq)
 {
 	// 設定ファイルの存在確認
 	ifstream exp_list("/usr/local/src/master/src/nsga3cpp/explist.ini");
@@ -37,32 +38,27 @@ int NSGA3::run()
 		CNSGAIII nsgaiii;	// alg_nsgaiii.h
 		BProblem *problem = 0;	// problem_base.h
 
-		SetupExperiment(nsgaiii, &problem, exp_ini);	// exp_experiment.h
+		SetupExperiment(nsgaiii, &problem, exp_ini, meq);	// exp_experiment.h
 		// IGD(Inverted Generational Distance)
 		// IGDは得られたパレートフロントが，どの程度パレート最適フロントに類似しているかを表す．
 		// @link http://www.is.doshisha.ac.jp/academic/papers/pdf/09/2009mthesis/2009luy.pdf
 		ofstream IGD_results(nsgaiii.name() + "-" + problem->name() + "-IGD.txt"); // output file for IGD values per run
 
 
-		// ----- Run the algorithm to solve the designated function -----
-		const size_t NumRuns = 10; // 20 is the setting in NSGA-III paper
-		for (size_t r=0; r<NumRuns; r+=1)
-		{
-			srand(r); cout << "Solving " << problem->name() << " ... Run: " << r << endl;
+	// ----- Run the algorithm to solve the designated function -----
+		cout << "Solving " << problem->name() << " ... Run" << endl;
 
-			// --- Solve
-			CPopulation solutions;	// alg_population.h
-			nsgaiii.Solve(&solutions, *problem);
+		// --- Solve
+		CPopulation solutions;	// alg_population.h
+		nsgaiii.Solve(&solutions, *problem);
 
-			// --- Output the result
-			string logfname = "/usr/local/src/master/src/nsga3cpp/Results/" + nsgaiii.name() + "-" + problem->name() + "-Run" + IntToStr(r) + ".txt"; // e.g. NSGAIII-DTLZ1(3)-Run0.txt
-			SaveScatterData(logfname, solutions, ldAll);	// log.h
+		// --- Output the result
+		string logfname = "/usr/local/src/master/src/nsga3cpp/Results/" + nsgaiii.name() + "-" + problem->name() + "-Run.txt"; // e.g. NSGAIII-DTLZ1(3)-Run0.txt
+		SaveScatterData(logfname, solutions, ldAll);	// log.h
 
-			// --- Store the result
-			if (r == NumRuns-1) {
-				this->_savePopulation(solutions);
-			}
-		}
+		// --- Store the result
+		this->_savePopulation(solutions);
+
 		delete problem;
 
 	}// while - there are more experiments to carry out

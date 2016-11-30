@@ -16,16 +16,16 @@ NSGA2::~NSGA2()
 
 /**
  * @fn NSGA2を実行する
- * @param vecto<double> &dF 入力や系のパラメータ
+ * @param MomentEq meq モーメント方程式の情報
  */
-int NSGA2::run(std::vector<double> &dF)
+int NSGA2::run(MomentEq *meq)
 {
 	std::size_t i, t;
 
 	// 突然変異と交叉のパラメータ
 	double crossProb = 0.85;             // crossover probability
-	double flipProb = 1. / Common::NUM_OF_MOMENTEQ;   // mutation probability
-	// double flipProb = 0.01;   // mutation probability
+	//double flipProb = 1. / Common::NUM_OF_MOMENTEQ;   // mutation probability
+	double flipProb = 0.01;   // mutation probability
 
 	// 変数の定義域を設定
 	std::vector<double> lower(Common::NUM_OF_PARAM), upper(Common::NUM_OF_PARAM);
@@ -36,10 +36,10 @@ int NSGA2::run(std::vector<double> &dF)
 	PopulationMOO offsprings(_popSize, ChromosomeT< double >(Common::NUM_OF_PARAM));
 
 	// 最小化のタスク
-	parents   .setMinimize();
+	parents.setMinimize();
 	offsprings.setMinimize();
 
-	// 最終的なアーカイブ集団
+	// 最終的なアーカイ集団
 	_archive.setMaxArchive(_popSize);
 	_archive.minimize();
 
@@ -47,25 +47,22 @@ int NSGA2::run(std::vector<double> &dF)
 	for (i = 0; i < parents.size(); ++i)
 	   dynamic_cast< ChromosomeT< double >& >( parents[ i ][ 0 ] ).initialize(0, 1.);
    
-    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-	// std::vector<std::size_t> selectedObj{0, 2, 4, 7};	// lambda=0.09, alpha=0.4
-	
 	// 目的関数の個数をセット
-	parents   .setNoOfObj(selectedObj.size());
-	offsprings.setNoOfObj(selectedObj.size());
+	parents   .setNoOfObj(meq->getObjNum());
+	offsprings.setNoOfObj(meq->getObjNum());
 
-	// 初期個体を生成
-	std::vector<double> func(selectedObj.size());
+    // 初期個体を生成
+	std::vector<double> func(meq->getObjNum());
 	ChromosomeT< double > dblchrom;
     for (i = 0; i < parents.size(); ++i) {
  		// モーメント方程式を解く
 		dblchrom    = dynamic_cast< ChromosomeT< double > &>(parents[ i ][ 0 ]);
-		func = MomentEq::expb_f(dblchrom, dF, selectedObj);
+		func = meq->expb_f(dblchrom);
 		// 目的関数
 		parents[ i ].setMOOFitnessValues(func);
 	}
 
-	cout << "NSGA2: start" << endl;
+	cout << "NSGA2: start (Number of object:" << meq->getObjNum() << ")" << endl;
 	for (t = 1; t <= _iterations; ++t) {
 		cout << "generation: " << t << endl;
 
@@ -88,7 +85,7 @@ int NSGA2::run(std::vector<double> &dF)
 		for (i = 0; i < parents.size(); ++i) {
 			// モーメント方程式を解く
 			dblchrom    = dynamic_cast< ChromosomeT< double > &>(offsprings[ i ][ 0 ]);
-			func = MomentEq::expb_f(dblchrom, dF, selectedObj);
+			func = meq->expb_f(dblchrom);
 			// 目的関数
 			offsprings[ i ].setMOOFitnessValues(func);
 		}

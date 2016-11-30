@@ -8,11 +8,9 @@
 /**
  * @fn GSLの非線形最小二乗法で使うモーメント方程式の関数値ベクトル
  * @param vector<double> x 方程式のパラメータ (a, μ1, μ2, σ11, σ12, σ21, σ22, k1, k2, k3)
- * @param vector<double> dF 系や入力のパラメータ
- * @param vector<std::size_t> &f 必要な目的関数の番号
  */
 std::vector<double>
-MomentEq::expb_f (const std::vector<double> &x, const std::vector<double> &dG, const std::vector<std::size_t> &f)
+MomentEq::expb_f (const std::vector<double> &x)
 {
     std::size_t i;
 
@@ -24,17 +22,17 @@ MomentEq::expb_f (const std::vector<double> &x, const std::vector<double> &dG, c
 	       	
 		0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,-1,-2*Common::ZETA,3,0,0,-1*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0,0,
-		dG[1],0,0,0,-2,-4*Common::ZETA,2,0,0,-2*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0, 
-		0,3*dG[1],0,0,0,-3,-6*Common::ZETA,1,0,0,-3*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,
-		0,0,6*dG[1],0,0,0,-4,-8*Common::ZETA,0,0,0,-4*Common::EPSILON,0,0,0,0,0,0,0,0,0,
+		_dG[1],0,0,0,-2,-4*Common::ZETA,2,0,0,-2*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,0, 
+		0,3*_dG[1],0,0,0,-3,-6*Common::ZETA,1,0,0,-3*Common::EPSILON,0,0,0,0,0,0,0,0,0,0,
+		0,0,6*_dG[1],0,0,0,-4,-8*Common::ZETA,0,0,0,-4*Common::EPSILON,0,0,0,0,0,0,0,0,0,
 
 		0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,-1,-2*Common::ZETA,5,0,0,0,0,-1*Common::EPSILON,0,0,0,0,0,
-		0,0,0,dG[1],0,0,0,0,0,-2,-4*Common::ZETA,4,0,0,0,0,-2*Common::EPSILON,0,0,0,0,
-		0,0,0,0,3*dG[1],0,0,0,0,0,-3,-6*Common::ZETA,3,0,0,0,0,-3*Common::EPSILON,0,0,0,
-		dG[3],0,0,0,0,6*dG[1],0,0,0,0,0,-4,-8*Common::ZETA,2,0,0,0,0,-4*Common::EPSILON,0,0,
-		0,5*dG[3],0,0,0,0,10*dG[1],0,0,0,0,0,-5,-10*Common::ZETA,1,0,0,0,0,-5*Common::EPSILON,0,
-		0,0,15*dG[3],0,0,0,0,15*dG[1],0,0,0,0,0,-6,-12*Common::ZETA,0,0,0,0,0,-6*Common::EPSILON
+		0,0,0,_dG[1],0,0,0,0,0,-2,-4*Common::ZETA,4,0,0,0,0,-2*Common::EPSILON,0,0,0,0,
+		0,0,0,0,3*_dG[1],0,0,0,0,0,-3,-6*Common::ZETA,3,0,0,0,0,-3*Common::EPSILON,0,0,0,
+		_dG[3],0,0,0,0,6*_dG[1],0,0,0,0,0,-4,-8*Common::ZETA,2,0,0,0,0,-4*Common::EPSILON,0,0,
+		0,5*_dG[3],0,0,0,0,10*_dG[1],0,0,0,0,0,-5,-10*Common::ZETA,1,0,0,0,0,-5*Common::EPSILON,0,
+		0,0,15*_dG[3],0,0,0,0,15*_dG[1],0,0,0,0,0,-6,-12*Common::ZETA,0,0,0,0,0,-6*Common::EPSILON
 	};
 
 	// モーメント方程式を計算
@@ -52,24 +50,27 @@ MomentEq::expb_f (const std::vector<double> &x, const std::vector<double> &dG, c
 	for (i=0; i<Common::NUM_OF_MOMENTEQ; ++i) {
 		array_result_moment_eq[i] = gsl_matrix_get(&m_result_moment_eq.matrix, i, 0);	// 先の行列計算の答えを配列にする
 	}
-	array_result_moment_eq[2]  += dG[1];
-	array_result_moment_eq[7]  += dG[3];
-	array_result_moment_eq[14] += dG[5];
+	array_result_moment_eq[2]  += _dG[1];
+	array_result_moment_eq[7]  += _dG[3];
+	array_result_moment_eq[14] += _dG[5];
  	
-    // 補正係数
-	std::vector<double> k(Common::NUM_OF_MOMENTEQ);
-	k[0] = 1.26;	k[1] = 0.66;	k[2] = 1.35;	k[3] = 3.81;	k[4] = 2.53;	k[5] = 2.85;	k[6] = 5.16;	k[7] = 7.25;
-	k[8] = 19.6;	k[9] = 11.5;	k[10] = 13.7;	k[11] = 18.3;	k[12] = 26.9;	k[13] = 27.9;	k[14] = 318.;
 	// 指定した目的関数の値をセット
     std::vector<double> obj;
-    obj.reserve(f.size());
-    for (i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
-        if (i == f[i]) {
-            //obj.push_back(1./k[i]array_result_moment_eq[i]);
-            obj.push_back(array_result_moment_eq[i]);
+    obj.reserve(_objList.size());
+    if (_objWeight.size() == 0) {
+        for (i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
+            if (i == _objList[i]) {
+                obj.push_back(array_result_moment_eq[i]);
+            }
+        }
+    } else {
+        for (i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
+            if (i == _objList[i]) {
+                obj.push_back((array_result_moment_eq[i]-_objWeight[0][i]) / _objWeight[1][i]);
+                // obj.push_back(array_result_moment_eq[i] / _objWeight[1][i]);
+            }
         }
     }
-
     return obj;
 }
 
@@ -82,15 +83,14 @@ void MomentEq::getMomentFromParameter(const std::vector<double> &p, std::vector<
 {
 	// ２次モーメント
 	m[0] = (1 - p[0])*(pow(p[3],2) + pow(p[1],2)) + p[0]*pow(p[5],2);	// y_1^2
-	// m[1] = (1 - p[0])/2*((p[7] + p[1]*p[2]) + (p[9] + p[1]*p[2])) + p[0]*p[8];	// y_1*y_2
-	m[1] = 0.0000001;	// y_1*y_2
+	m[1] = (1 - p[0])/2*((p[7] + p[1]*p[2]) + (p[9] + p[1]*p[2])) + p[0]*p[8];	// y_1*y_2
+	// m[1] = 0.0000001;	// y_1*y_2
 	m[2] = (1 - p[0])*(pow(p[4],2) + pow(p[2],2)) + p[0]*pow(p[6],2);	// y_2^2
 
 	// ４次モーメント
 	m[3] = (1 - p[0])*(3*pow(p[3],4) + 6*pow(p[1],2)*pow(p[3],2) + pow(p[1],4)) + 3*p[0]*pow(p[5],4);	// y_1^4
-	// m[4] = (1 - p[0])/2*((3*pow(p[3],2)*(p[7] + p[1]*p[2]) + pow(p[1],2)*(3*p[7] + p[1]*p[2]))
-	// 	+ (3*pow(p[3],2)*(p[9] + p[1]*p[2]) + pow(p[1],2)*(3*p[9] + p[1]*p[2]))) + 3*p[0]*pow(p[5],2)*p[8];	// y_1^3*y_2
-	m[4] = 0.0000001;	// y_1^3*y_2	
+	m[4] = (1 - p[0])/2*((3*pow(p[3],2)*(p[7] + p[1]*p[2]) + pow(p[1],2)*(3*p[7] + p[1]*p[2])) + (3*pow(p[3],2)*(p[9] + p[1]*p[2]) + pow(p[1],2)*(3*p[9] + p[1]*p[2]))) + 3*p[0]*pow(p[5],2)*p[8];	// y_1^3*y_2
+	// m[4] = 0.0000001;	// y_1^3*y_2	
 	m[5] = (1 - p[0])/2*((pow(p[3],2)*pow(p[4],2) + pow(p[1],2)*pow(p[4],2) + pow(p[2],2)*pow(p[3],2) + 2*pow(p[7],2) + 4*p[7]*p[1]*p[2] + pow(p[1],2)*pow(p[2],2))
 		+ (pow(p[3],2)*pow(p[4],2) + pow(p[1],2)*pow(p[4],2) + pow(p[2],2)*pow(p[3],2) + 2*pow(p[9],2) + 4*p[9]*p[1]*p[2] + pow(p[1],2)*pow(p[2],2)))
 		+ p[0]*(pow(p[5],2)*pow(p[6],2) + 2*pow(p[8],2));	// y_1^2*y_2^2
@@ -101,10 +101,8 @@ void MomentEq::getMomentFromParameter(const std::vector<double> &p, std::vector<
 	
 	// ６次モーメント
 	m[8] = (1 - p[0])*(15*pow(p[3],6) + 45*pow(p[3],4)*pow(p[1],2) + 15*pow(p[3],2)*pow(p[1],4) + pow(p[1],6)) + 15*p[0]*pow(p[5],6);						// y_1^6
-	// m[9] = (1 - p[0])/2*((15*pow(p[3],4)*(p[7] + p[1]*p[2]) + pow(p[1],5)*p[2] + 5*pow(p[1],4)*p[7] + 10*pow(p[1],3)*p[2]*pow(p[3],2) + 30*p[7]*pow(p[1],2)*pow(p[3],2))
-	// 	+ (15*pow(p[3],4)*(p[9] + p[1]*p[2]) + pow(p[1],5)*p[2] + 5*pow(p[1],4)*p[9] + 10*pow(p[1],3)*p[2]*pow(p[3],2) + 30*p[9]*pow(p[1],2)*pow(p[3],2)))
-	// 	+ 15*p[0]*pow(p[5],4)*p[8];	// y_1^5*y_2
-	m[9] = 0.0000001;	// y_1^5*y_2
+	m[9] = (1 - p[0])/2*((15*pow(p[3],4)*(p[7] + p[1]*p[2]) + pow(p[1],5)*p[2] + 5*pow(p[1],4)*p[7] + 10*pow(p[1],3)*p[2]*pow(p[3],2) + 30*p[7]*pow(p[1],2)*pow(p[3],2)) + (15*pow(p[3],4)*(p[9] + p[1]*p[2]) + pow(p[1],5)*p[2] + 5*pow(p[1],4)*p[9] + 10*pow(p[1],3)*p[2]*pow(p[3],2) + 30*p[9]*pow(p[1],2)*pow(p[3],2))) + 15*p[0]*pow(p[5],4)*p[8];	// y_1^5*y_2
+	// m[9] = 0.0000001;	// y_1^5*y_2
 	m[10] = (1 - p[0])/2*((3*pow(p[3],4)*pow(p[4],2) + 12*pow(p[3]*p[7],2)+ 3*pow(p[2],2)*pow(p[3],4) + 6*pow(p[1]*p[2]*p[3],2) + pow(p[1],4)*pow(p[2],2) + 24*p[1]*p[2]*pow(p[3],2)*p[7]
 		+ 8*pow(p[1],3)*p[2]*p[7] + 6*pow(p[1]*p[3]*p[4],2) + 12*pow(p[1]*p[7],2) + pow(p[1],4)*pow(p[4],2))
 		+ (3*pow(p[3],4)*pow(p[4],2) + 12*pow(p[3]*p[9],2)+ 3*pow(p[2],2)*pow(p[3],4) + 6*pow(p[1]*p[2]*p[3],2) + pow(p[1],4)*pow(p[2],2) + 24*p[1]*p[2]*pow(p[3],2)*p[9]
@@ -173,4 +171,24 @@ void MomentEq::getMomentFromParameter(const std::vector<double> &p, std::vector<
 		+ 60*pow(p[9],2)*pow(p[2],3)*p[1] + 45*p[1]*p[2]*pow(p[4]*p[4]*p[3],2) + 180*pow(p[9],2)*p[1]*p[2]*pow(p[4],2) + 15*p[9]*pow(p[2]*p[2]*p[3],2)
 		+ 90*p[9]*pow(p[2]*p[3]*p[4],2) + 60*pow(p[9],3)*pow(p[2],2) + 45*p[9]*pow(p[4]*p[4]*p[3],2) + 60*pow(p[9],3)*pow(p[4],2)))
 		+ p[0]*(45*p[8]*pow(p[6]*p[6]*p[5],2) + 60*pow(p[8],3)*pow(p[6],2));	// y_1^3*y_w^5
+}
+
+void MomentEq::setPrmdG(const std::vector<double> &p)
+{
+    _dG = p;
+}
+
+void MomentEq::setObjList(const std::vector<std::size_t> &p)
+{
+    _objList = p;
+}
+
+void MomentEq::setObjWeight(const std::vector< std::vector<double> > &p)
+{
+    _objWeight = p;
+}
+
+std::size_t MomentEq::getObjNum()
+{
+    return _objList.size();
 }
