@@ -3,6 +3,7 @@ import numpy as np
 import math
 import sys
 import os
+from scipy import integrate
 
 NUM_OF_GAUSS    = 3     # 足し合わせるガウス分布の数
 NUM_OF_MOMENT   = 21
@@ -51,7 +52,7 @@ def createLevelCrossingRate(xi, prm):
     【戻り値】prob: 閾値通過率"""
     prob = 0.
     for i in range(0, NUM_OF_GAUSS):
-        pp_c = prm['kappa'][i]/prm['sigma1'][i]/prm['sigma2'][i]
+        pp_c = prm['rho'][i]*prm['sigma1'][i]*prm['sigma2'][i]/prm['sigma1'][i]/prm['sigma2'][i]
         pp_g = prm['mu2'][i] + pp_c*prm['sigma2'][i]*(xi - prm['mu1'][i])/prm['sigma1'][i]
         pp_sigma    = prm['sigma2'][i]*math.sqrt(1. - pp_c**2)
         # 閾値通過率
@@ -254,10 +255,10 @@ def _getDetailParameterFromSimpleNotation(simple):
     detail['sigma2'][0] = simple[4]
     detail['sigma2'][1] = simple[6]
     detail['sigma2'][2] = simple[4]
-    # 共分散
-    detail['kappa'] = [0]*NUM_OF_GAUSS
-    detail['kappa'][0]  = simple[7]
-    detail['kappa'][1]  = simple[8]
-    detail['kappa'][2]  = simple[9]
+    # 共分散係数
+    detail['rho'] = [0]*NUM_OF_GAUSS
+    detail['rho'][0]  = simple[7]
+    detail['rho'][1]  = simple[8]
+    detail['rho'][2]  = simple[9]
     return detail
 

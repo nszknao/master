@@ -5,7 +5,7 @@
 #include "../include/common.h"
 #include "../include/ga_individual.h"
 
-const double Analysis::GGD_KAPPA = 2.;	// 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
+const double Analysis::GGD_KAPPA = 2.;  // 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
 
 Analysis::Analysis(double arg_l, double arg_b, double arg_a)
 :_lambda(arg_l),
@@ -23,29 +23,29 @@ Analysis::~Analysis() {}
  */
 int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
 {
-	std::cout << "Get analysis solution using Genetic Algorithm.\n" << std::endl;
+    std::cout << "Get analysis solution using Genetic Algorithm.\n" << std::endl;
 
-	// パルス振幅（generalized Gauss distribution）に関するパラメータ
-	double ggd_a = sqrt(gsl_sf_gamma(1. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(3. / Analysis::GGD_KAPPA), -1.)*this->_beta2);
+    // パルス振幅（generalized Gauss distribution）に関するパラメータ
+    double ggd_a = sqrt(gsl_sf_gamma(1. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(3. / Analysis::GGD_KAPPA), -1.)*this->_beta2);
 
-	// 入力に関するモーメント
-	std::vector<double> dF(6);
-	dF[0] = 0;
-	dF[1] = this->_alpha*Common::S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
-	dF[2] = 0;
-	dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
-	dF[4] = 0;
-	dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
+    // 入力に関するモーメント
+    std::vector<double> dF(6);
+    dF[0] = 0;
+    dF[1] = this->_alpha*Common::S0 + this->_lambda*(1. - this->_alpha)*this->_beta2;
+    dF[2] = 0;
+    dF[3] = this->_lambda*pow((1. - this->_alpha), 2.)*(pow(ggd_a, 4.)*gsl_sf_gamma(5. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
+    dF[4] = 0;
+    dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
     
     // 目的関数を選ぶ
-    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-    // std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7};
+//    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7};
 
-	// 目的関数の重み計算用NSGA2
+    // 目的関数の重み計算用NSGA2
     MomentEq meq1;
     meq1.setPrmdG(dF);
     meq1.setObjList(selectedObj);
-    NSGA2 *n2_	= new NSGA2(1000, 0);
+    NSGA2 *n2_  = new NSGA2(1000, 0);
     n2_->run(&meq1);
     std::vector<GAIndividual> pops_ = n2_->getFinalPops();
     if (n2_ != NULL) {delete n2_; n2_ = NULL;}
@@ -72,12 +72,12 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
     if (n2 != NULL) {delete n2; n2 = NULL;}
 
     // nsga3
-//    NSGA3 *n3	= new NSGA3();
+//    NSGA3 *n3 = new NSGA3();
 //    n3->run(&meq2);
 //    pops = n3->getFinalPops();
 //    if (n3 != NULL) {delete n3; n3 = NULL;}
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 /**
@@ -124,23 +124,23 @@ void Analysis::outputAllPopsIntoFile(const std::string name, const std::vector<G
 {
     std::size_t i, ii;
 
-	std::ofstream ofs(name);
-	for (i = 0; i < pops.size(); ++i) {
-		for (ii = 0; ii < pops[i].mValue.size(); ++ii) {
-			ofs << pops[i].mValue[ii] << " " << std::flush;
-		}
-		for (ii = 0; ii < pops[i].oValue.size(); ++ii) {
-			ofs << pops[i].oValue[ii] << " " << std::flush;
-		}
-		for (ii = 0; ii < pops[i].pValue.size(); ++ii) {
-			if (ii == pops[i].pValue.size()-1) {
-				ofs << pops[i].pValue[ii] << std::flush;				
-			} else {
-				ofs << pops[i].pValue[ii] << " " << std::flush;				
-			}
-		}
-		ofs << std::endl;
-	}
+    std::ofstream ofs(name);
+    for (i = 0; i < pops.size(); ++i) {
+        for (ii = 0; ii < pops[i].mValue.size(); ++ii) {
+            ofs << pops[i].mValue[ii] << " " << std::flush;
+        }
+        for (ii = 0; ii < pops[i].oValue.size(); ++ii) {
+            ofs << pops[i].oValue[ii] << " " << std::flush;
+        }
+        for (ii = 0; ii < pops[i].pValue.size(); ++ii) {
+            if (ii == pops[i].pValue.size()-1) {
+                ofs << pops[i].pValue[ii] << std::flush;                
+            } else {
+                ofs << pops[i].pValue[ii] << " " << std::flush;             
+            }
+        }
+        ofs << std::endl;
+    }
 }
 
 /**
@@ -148,31 +148,37 @@ void Analysis::outputAllPopsIntoFile(const std::string name, const std::vector<G
  */
 int main(int argc, char *argv[])
 {
-	std::string filename;
+    std::string filename;
 
-	char *ends;
-	double lambda	= strtod(argv[1],&ends);
-	double beta2	= strtod(argv[2],&ends);
-	double alpha	= strtod(argv[3],&ends);
+    char *ends;
+    double lambda   = strtod(argv[1],&ends);
+    double beta2    = strtod(argv[2],&ends);
+    double alpha    = strtod(argv[3],&ends);
 
-	std::size_t i;
-	std::size_t roop = 10;	// 実験回数
-	for (i = 0; i < roop; ++i) {
-		std::cout << "--------------------\n" << std::endl;
-		std::cout << "analysis.cpp started.\n" << std::endl;
-		
-		Analysis *ana	= new Analysis(lambda, beta2, alpha);
+    std::size_t i;
+    std::size_t roop = 5;  // 実験回数
+    for (i = 0; i < roop; ++i) {
+        std::cout << "--------------------\n" << std::endl;
+        std::cout << "analysis.cpp started.\n" << std::endl;
+        
+        try {
+            Analysis *ana   = new Analysis(lambda, beta2, alpha);
 
-		/* GAで解く */
-		std::vector<GAIndividual> pops;
-		ana->GeneticAlgorithm(pops);
-		filename	= "ana_gsay1pdf_" + std::to_string(i) + ".dat";
-		ana->outputAllPopsIntoFile(filename, pops);
-
-		delete ana;
-		
-		std::cout << "analysis.cpp has done.\n" << std::endl;
-		std::cout << "--------------------\n" << std::endl;
-	}
-	return 0;
+            /* GAで解く */
+            std::vector<GAIndividual> pops;
+            ana->GeneticAlgorithm(pops);
+            filename    = "ana_gsay1pdf_" + std::to_string(i) + ".dat";
+            ana->outputAllPopsIntoFile(filename, pops);
+    
+            delete ana;
+        } catch(std::exception e) {
+            std::cout << e.what() << std::endl;
+        } catch(SharkException e) {
+            std::cout << e.what() << std::endl;
+        }
+                
+        std::cout << "analysis.cpp has done.\n" << std::endl;
+        std::cout << "--------------------\n" << std::endl;
+    }
+    return 0;
 }

@@ -114,6 +114,21 @@ def getMinSquareObjectInd(pop):
             minSquareInd = pop[i]
     return minSquareInd
 
+def getAroundSpecifiedSquareObjectValue(pop, minValue, maxValue):
+    u"""目的関数の二乗和が指定した値の範囲の個体を選択
+    【引数】pop: 個体群，minValue: 最小値，maxValue: 最大値
+    【戻り値】selectedPop: 選ばれた個体群"""
+    meanSdList = cmn.getStandardDeviationList(pop)
+    selectedPop = []
+    for i in range(len(pop)):
+        squareValue = 0.
+        for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ")):
+            squareValue += ((pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii])**2
+        if (squareValue >= minValue) and (squareValue <= maxValue):
+            selectedPop.append(pop[i])
+    return selectedPop
+
+
 # ---- private ----
 def _getKeyInList(targetList, value):
     u"""リスト中で，指定した値を持つキーを返す

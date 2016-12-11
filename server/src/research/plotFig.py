@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 u"""個体群に関するいろいろな図を作成します．"""
 import matplotlib.pyplot as plt
+import matplotlib.ticker as tick
 import common as cmn
 import math
 from matplotlib.font_manager import FontProperties
@@ -45,14 +46,15 @@ def plotRelation_KLDivergence_Objective(pop, sim, savePath):
     
     plt.scatter(squareObjList, dKLList)
     plt.xlim([0, 20])
-    plt.ylim([0, 50])
+    plt.ylim([0.0001, 100])
+    plt.yscale('log')
+    plt.gca().xaxis.set_major_locator(tick.MultipleLocator(1))
     plt.title(u'KLダイバージェンスと目的関数値の二乗誤差の関係', fontproperties=fp)
     plt.xlabel('Square Objective Value')
     plt.ylabel('KL-Divergence')
     plt.grid(which='major',color='black',linestyle='--')
 
-    figname = "Relation_of_KLDivergence-SquareObjectiveValue.eps"
-    plt.savefig(savePath + "/" + figname, format="eps", dpi=300)
+    plt.savefig(savePath, format="eps", dpi=300)
     plt.clf()
 
 def plotObjectiveValue(pop, savePath):
@@ -60,12 +62,29 @@ def plotObjectiveValue(pop, savePath):
     【引数】ind: 個体，savePath: 保存先のパス"""
     meanSdList = cmn.getStandardDeviationList(pop)
     plt.title(u'個体の目的関数値', fontproperties=fp)
-    for i in range(len(pop)):
-        plt.plot(range(len(pop[i].o)), [(pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii] for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
+    #plt.plot(range(len(pop[0].o)), [(pop[100].o[i]-meanSdList[0][i])/meanSdList[1][i] for i in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
+    for ii in range(1):
+        plt.plot(range(len(pop[0].o)), [(pop[ii].o[i]-meanSdList[0][i])/meanSdList[1][i] for i in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
     plt.xlabel('Objective Number')
     plt.ylabel('Objective Value')
+    plt.ylim([-0.2, 1.6])
+    plt.gca().yaxis.set_major_locator(tick.MultipleLocator(0.2))
     plt.grid(which='major',color='black',linestyle='--')
 
-    filename = "ObjectiveValue.eps"
-    plt.savefig(savePath + "/" + filename, format="eps", dpi=300)
+    plt.savefig(savePath, format="eps", dpi=300)
+    plt.clf()
+
+def plotMomentValue(ind, savePath):
+    u"""個体のモーメント値をプロット
+    【引数】ind: 個体，savePath: 保存先のパス"""
+    plt.title(u'個体のモーメント値', fontproperties=fp)
+    plt.plot(range(len(ind.m)), ind.m)
+    plt.xlabel('Moment')
+    plt.ylabel('Moment Value')
+    plt.xticks(range(len(ind.m)), MOMENT_ARRAY, rotation=45)
+    plt.ylim([-1500, 1500])
+    plt.gca().yaxis.set_major_locator(tick.MultipleLocator(300))
+    plt.grid(which='major',color='black',linestyle='--')
+
+    plt.savefig(savePath, format="eps", dpi=300)
     plt.clf()
