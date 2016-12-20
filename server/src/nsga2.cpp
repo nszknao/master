@@ -127,16 +127,16 @@ int NSGA2::run(MomentEq *meq)
  */
 void NSGA2::_setValueRange(std::vector<double> &lower, std::vector<double> &upper)
 {
-    lower[0] = 0.33;   upper[0] = 1.;   // a
-    lower[1] = -3.;  upper[1] = 3.;   // mu1
-    lower[2] = -2.;  upper[2] = 2.;   // mu2
-    lower[3] = 0.5;   upper[3] = 1.5;  // sigma11
-    lower[4] = 0.5;   upper[4] = 1.;   // sigma12
-    lower[5] = 0.5;   upper[5] = 1.5;  // sigma21
-    lower[6] = 0.5;   upper[6] = 1.;   // sigma22
-    lower[7] = -1.;  upper[7] = 1.;   // rho1
-    lower[8] = -1.;  upper[8] = 1.;   // rho2
-    lower[9] = -1.;  upper[9] = 1.;   // rho3
+    lower[0] = 0.3; upper[0] = 1.;   // a
+    lower[1] = -3.; upper[1] = 3.;   // mu1
+    lower[2] = -2.; upper[2] = 2.;   // mu2
+    lower[3] = 0.5; upper[3] = 1.5;  // sigma11
+    lower[4] = 0.5; upper[4] = 1.;   // sigma12
+    lower[5] = 0.5; upper[5] = 1.5;  // sigma21
+    lower[6] = 0.5; upper[6] = 1.;   // sigma22
+    lower[7] = -0.5;   upper[7] = 0.5;   // rho1
+    lower[8] = -0.5;   upper[8] = 0.5;   // rho2
+    lower[9] = -0.5;   upper[9] = 0.5;   // rho3
 }
 
 /**

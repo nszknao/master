@@ -25,7 +25,7 @@ public:
     Common();
     ~Common();
     static void outputIntoFile(const std::string, const std::vector<double> &, const std::vector<double> &);
-    static void resize2DemensionalVector(std::vector< std::vector< double > > &, unsigned int, unsigned int);
+    static void resize2DemensionalVector(std::vector< std::vector< double > > &, std::size_t, std::size_t);
     static bool isOverSpecifyValue(const std::vector<double> &, double);
 };
 

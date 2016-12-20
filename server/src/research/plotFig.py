@@ -27,8 +27,7 @@ def plotDispPdf_Ana_Sim_Gauss(ind, sim, gwn, savePath):
     plt.plot(gwn.dispx, gwn.dispy)
     plt.legend(['Analytical solution', 'Simulation', 'Gauss-White'], loc='lower center')
     plt.yscale('log')
-    filename    = "KL=" + str(cmn.klDivergence(cmn.createDispPdf(sim.dispx, ind.detailPrm), sim.dispy)) + ".eps"
-    plt.savefig(savePath + "/" + filename, format="eps", dpi=300)
+    plt.savefig(savePath, format="eps", dpi=300)
     plt.clf()
 
 def plotRelation_KLDivergence_Objective(pop, sim, savePath):
@@ -40,18 +39,53 @@ def plotRelation_KLDivergence_Objective(pop, sim, savePath):
     for i in range(len(pop)):
         squareValue = 0.
         for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ")):
-            squareValue += ((pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii])**2
+#            squareValue += ((pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii])**2
+#            squareValue += abs((pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii])
+#            squareValue += (pop[i].o[ii]/meanSdList[1][ii])**2
+            squareValue += abs(pop[i].o[ii]/meanSdList[1][ii])
         squareObjList.append(squareValue)
         dKLList.append(cmn.klDivergence(cmn.createDispPdf(sim.dispx, pop[i].detailPrm), sim.dispy))
     
     plt.scatter(squareObjList, dKLList)
-    plt.xlim([0, 20])
-    plt.ylim([0.0001, 100])
+    plt.xlim([0, 5])
+    plt.ylim([0.0001, 50])
     plt.yscale('log')
     plt.gca().xaxis.set_major_locator(tick.MultipleLocator(1))
     plt.title(u'KLダイバージェンスと目的関数値の二乗誤差の関係', fontproperties=fp)
     plt.xlabel('Square Objective Value')
     plt.ylabel('KL-Divergence')
+    plt.grid(which='major',color='black',linestyle='--')
+
+    plt.savefig(savePath, format="eps", dpi=300)
+    plt.clf()
+
+def plotSpecificObjectValue(pop, key, savePath):
+    objList = []
+    for i in range(50):
+        objList.append(pop[i].o[key])
+
+    plt.scatter(range(50), objList)
+#    plt.xlim([0, 10])
+#    plt.ylim([0.0001, 50])
+    plt.title(u'特定の目的関数値', fontproperties=fp)
+    plt.ylabel('Specific Objective Value')
+    plt.xlabel('Number')
+    plt.grid(which='major',color='black',linestyle='--')
+
+    plt.savefig(savePath, format="eps", dpi=300)
+    plt.clf()
+
+   
+
+def plotIndObjectiveValue(ind, meanSdList, savePath):
+    u"""個体の目的関数値をプロット
+    【引数】ind: 個体，savePath: 保存先のパス"""
+    plt.title(u'個体の目的関数値', fontproperties=fp)
+    plt.plot(range(len(ind.o)), [(ind.o[i]-meanSdList[0][i])/meanSdList[1][i] for i in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
+    plt.xlabel('Objective Number')
+    plt.ylabel('Objective Value')
+    plt.ylim([-0.2, 1.6])
+    plt.gca().yaxis.set_major_locator(tick.MultipleLocator(0.2))
     plt.grid(which='major',color='black',linestyle='--')
 
     plt.savefig(savePath, format="eps", dpi=300)
@@ -64,11 +98,11 @@ def plotObjectiveValue(pop, savePath):
     plt.title(u'個体の目的関数値', fontproperties=fp)
     #plt.plot(range(len(pop[0].o)), [(pop[100].o[i]-meanSdList[0][i])/meanSdList[1][i] for i in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
     for ii in range(1):
-        plt.plot(range(len(pop[0].o)), [(pop[ii].o[i]-meanSdList[0][i])/meanSdList[1][i] for i in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
+        plt.plot(range(len(pop[0].o)), [pop[ii].o[i]/meanSdList[1][i] for i in range(cmn.getConstValue("NUM_OF_MOMENTEQ"))])
     plt.xlabel('Objective Number')
     plt.ylabel('Objective Value')
-    plt.ylim([-0.2, 1.6])
-    plt.gca().yaxis.set_major_locator(tick.MultipleLocator(0.2))
+    plt.ylim([-0.4, 0.4])
+    plt.gca().yaxis.set_major_locator(tick.MultipleLocator(0.1))
     plt.grid(which='major',color='black',linestyle='--')
 
     plt.savefig(savePath, format="eps", dpi=300)

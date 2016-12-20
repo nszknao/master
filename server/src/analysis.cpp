@@ -13,7 +13,6 @@ _beta2(arg_b),
 _alpha(arg_a)
 {}
 
-// デストラクタ
 Analysis::~Analysis() {}
 
 /**
@@ -38,8 +37,8 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
     dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
     
     // 目的関数を選ぶ
-//    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+//    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7};
 
     // 目的関数の重み計算用NSGA2
     MomentEq meq1;
@@ -66,7 +65,7 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
     meq2.setObjList(selectedObj);
 //    meq2.setObjWeight(objWeight);
     // NSGA2
-    NSGA2 *n2 = new NSGA2(120, 2000);
+    NSGA2 *n2 = new NSGA2(110, 2500);
     n2->run(&meq2);
     pops = n2->getFinalPops();
     if (n2 != NULL) {delete n2; n2 = NULL;}

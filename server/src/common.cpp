@@ -16,8 +16,8 @@ const std::size_t Common::NUM_OF_PARAM = 10;
 /**
  * @fn ファイルに出力する
  * @param string name ファイル名
- * @param vector &x X軸情報
- * @param vector &y Y軸情報
+ * @param vector<double> &x X軸情報
+ * @param vector<double> &y Y軸情報
  */
 void Common::outputIntoFile(const std::string name, const std::vector<double> &x, const std::vector<double> &y)
 {
@@ -38,11 +38,11 @@ void Common::outputIntoFile(const std::string name, const std::vector<double> &x
 
 /**
  * @fn 2次元vectorのリサイズ
- * @param std::vector< std::vector< double > > &v 2次元vector
- * @param unsigned int s1 行数
- * @param unsigned int s2 列数
+ * @param vector< vector< double > > &v 2次元vector
+ * @param size_t s1 行数
+ * @param size_t s2 列数
  */
-void Common::resize2DemensionalVector(std::vector< std::vector< double > > &v, unsigned int s1, unsigned int s2)
+void Common::resize2DemensionalVector(std::vector< std::vector< double > > &v, std::size_t s1, std::size_t s2)
 {
     unsigned int i;
     v.resize(s1);

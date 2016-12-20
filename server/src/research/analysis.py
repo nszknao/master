@@ -106,9 +106,7 @@ def getMinSquareObjectInd(pop):
     minSquareValue = 100000000.
     minSquareInd = cmn.Individual()
     for i in range(len(pop)):
-        squareValue = 0.
-        for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ")):
-            squareValue += ((pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii])**2
+        squareValue = cmn.getSquareObjectiveValue(pop[i], meanSdList)
         if squareValue < minSquareValue:
             minSquareValue = squareValue
             minSquareInd = pop[i]
@@ -121,13 +119,10 @@ def getAroundSpecifiedSquareObjectValue(pop, minValue, maxValue):
     meanSdList = cmn.getStandardDeviationList(pop)
     selectedPop = []
     for i in range(len(pop)):
-        squareValue = 0.
-        for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ")):
-            squareValue += ((pop[i].o[ii]-meanSdList[0][ii])/meanSdList[1][ii])**2
+        squareValue = cmn.getSquareObjectiveValue(pop[i], meanSdList)
         if (squareValue >= minValue) and (squareValue <= maxValue):
             selectedPop.append(pop[i])
     return selectedPop
-
 
 # ---- private ----
 def _getKeyInList(targetList, value):

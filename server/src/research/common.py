@@ -10,8 +10,6 @@ NUM_OF_MOMENT   = 21
 NUM_OF_MOMENTEQ = 15
 NUM_OF_PARAM    = 10
 
-OBJECTIVE_WEIGHT = [1.26, 0.66, 1.35, 3.18, 2.53, 2.85, 5.16, 7.25, 19.6, 11.5, 13.7, 18.3, 26.9, 27.9, 318.]
-
 dx  = 0.01  # pdfpdfのX軸刻み幅
 
 class Individual:
@@ -209,9 +207,24 @@ def getStandardDeviationList(pop):
         sumSquareObj = 0.
         for ii in range(len(pop)):
             sumSquareObj += (pop[ii].o[i] - meanSdList[0][i])**2
-        meanSdList[1][i] = math.sqrt(sumSquareObj / (len(pop)))
+        if sumSquareObj == 0:
+            meanSdList[1][i] = 1.
+        else:
+            meanSdList[1][i] = math.sqrt(sumSquareObj / (len(pop)))
 
     return meanSdList
+
+def getSquareObjectiveValue(ind, meanSdList):
+    u"""個体の目的関数の二乗誤差を取得
+    【引数】ind: 個体，meanSdList: 平均と不偏標準偏差のリスト
+    【戻り値】squareValue: 目的関数の二乗誤差"""
+    squareValue = 0.
+    for i in range(NUM_OF_MOMENTEQ):
+        if meanSdList[1][i] == 0:
+            squareValue += ind.o[i]**2
+        else:
+            squareValue += (ind.o[i]/meanSdList[1][i])**2
+    return squareValue
 
 #---- private ----
 def _getFileNum(path):
