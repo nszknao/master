@@ -20,7 +20,7 @@ Analysis::~Analysis() {}
  * @param vector<double> &pValue 計算結果のパラメータ値を保存
  * @param vector<double> &oValue 計算結果の目的関数値を保存
  */
-int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
+std::vector<GAIndividual> Analysis::GeneticAlgorithm(std::size_t pop, std::size_t gen)
 {
     std::cout << "Get analysis solution using Genetic Algorithm.\n" << std::endl;
 
@@ -37,46 +37,35 @@ int Analysis::GeneticAlgorithm(std::vector<GAIndividual> &pops)
     dF[5] = this->_lambda*pow((1. - this->_alpha), 3.)*(pow(ggd_a, 6.)*gsl_sf_gamma(7. / Analysis::GGD_KAPPA)*pow(gsl_sf_gamma(1. / Analysis::GGD_KAPPA), -1.));
     
     // 目的関数を選ぶ
-    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-//    std::vector<std::size_t> selectedObj{0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<std::size_t> selectedObj{1, 2, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14};
 
     // 目的関数の重み計算用NSGA2
-    MomentEq meq1;
-    meq1.setPrmdG(dF);
-    meq1.setObjList(selectedObj);
-    NSGA2 *n2_  = new NSGA2(1000, 0);
-    n2_->run(&meq1);
-    std::vector<GAIndividual> pops_ = n2_->getFinalPops();
-    if (n2_ != NULL) {delete n2_; n2_ = NULL;}
-    std::vector< std::vector<double> > objWeight = this->_getNormalizeObjectList(pops_);
-    std::cout << "mean" << std::endl;
-    for (std::size_t i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
-        std::cout << objWeight[0][i] << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "sd" << std::endl;
-    for (std::size_t i = 0; i < Common::NUM_OF_MOMENTEQ; ++i) {
-        std::cout << objWeight[1][i] << " ";
-    }
-    std::cout << std::endl;
-    
+//    MomentEq meq1;
+//    meq1.setPrmdG(dF);
+//    meq1.setObjList(selectedObj);
+//    NSGA2 *n2_  = new NSGA2(1000, 0);
+//    n2_->run(&meq1);
+//    std::vector<GAIndividual> pops_ = n2_->getFinalPops();
+//    if (n2_ != NULL) {delete n2_; n2_ = NULL;}
+//    std::vector< std::vector<double> > objWeight = this->_getNormalizeObjectList(pops_);
+   
     MomentEq meq2;
     meq2.setPrmdG(dF);
     meq2.setObjList(selectedObj);
 //    meq2.setObjWeight(objWeight);
     // NSGA2
-    NSGA2 *n2 = new NSGA2(110, 2500);
+    NSGA2 *n2 = new NSGA2(pop, gen);
     n2->run(&meq2);
-    pops = n2->getFinalPops();
+    std::vector<GAIndividual> pops = n2->getFinalPops();
     if (n2 != NULL) {delete n2; n2 = NULL;}
 
     // nsga3
 //    NSGA3 *n3 = new NSGA3();
 //    n3->run(&meq2);
-//    pops = n3->getFinalPops();
+//    std::vector<GAIndividual> pops = n3->getFinalPops();
 //    if (n3 != NULL) {delete n3; n3 = NULL;}
 
-    return EXIT_SUCCESS;
+    return pops;
 }
 
 /**
@@ -165,7 +154,21 @@ int main(int argc, char *argv[])
 
             /* GAで解く */
             std::vector<GAIndividual> pops;
-            ana->GeneticAlgorithm(pops);
+            if (i == 0) {
+                pops = ana->GeneticAlgorithm(120, 1000);
+            }
+            else if (i == 1) {
+                pops = ana->GeneticAlgorithm(150, 1500);
+            }
+            else if (i == 2) {
+                pops = ana->GeneticAlgorithm(150, 2000);
+            }
+            else if (i == 3) {
+                pops = ana->GeneticAlgorithm(200, 2000);
+            }
+            else if (i == 4) {
+                pops = ana->GeneticAlgorithm(200, 2500);
+            }
             filename    = "ana_gsay1pdf_" + std::to_string(i) + ".dat";
             ana->outputAllPopsIntoFile(filename, pops);
     

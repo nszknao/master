@@ -5,7 +5,7 @@
 const std::size_t Simulation::SAMPLE_LENGTH = 131072; // 131072,65536
 const std::size_t Simulation::NUM_OF_SAMPLES = 100; // 入力の標本数
 const double Simulation::dt = 0.01; // 時間刻み幅
-const double Simulation::dx = 0.01; // pdfの横軸の刻み幅
+const std::size_t Simulation::PDF_NUM_OF_PARTITIONS = 100; // 応答分布の変位・速度分割数
 
 Simulation::Simulation(double lambda, double beta2, double alpha):
 _lambda(lambda),
@@ -35,6 +35,7 @@ void Simulation::_createExcitation(std::vector< std::vector<double> > &force)
     double sigma = sqrt(2.*M_PI*Common::S0 / dt);
 
     Common::resize2DemensionalVector(force, 3, SAMPLE_LENGTH);
+    #pragma omp parallel for
     for (i = 0; i < SAMPLE_LENGTH; ++i) {
         force[0][i] = wSt*gsl_ran_gaussian(r, sigma) + pSt*gsl_ran_bernoulli(r, dt*_lambda)*gsl_ran_gaussian(rp, sqrt(_beta2)) / dt;
         force[1][i] = wSt*gsl_ran_gaussian(r, sigma);
@@ -117,36 +118,30 @@ void Simulation::createDispPdf(const std::vector< std::vector<double> > &y1, std
 
     std::size_t i, ii, iii;
 
-    std::size_t n_dx1, size = 0;
-    double pdf_y1, integral_y1 = 0.;
-    std::vector< std::vector<double> > pdf_buffer;
-    Common::resize2DemensionalVector(pdf_buffer, NUM_OF_SAMPLES, 3000);
+    std::size_t n_dx;
+    double dx = (_y1max - _y1min)/PDF_NUM_OF_PARTITIONS;
+    std::vector< std::vector<double> > pdf_buffer(NUM_OF_SAMPLES, std::vector<double>(NUM_OF_SAMPLES, PDF_NUM_OF_PARTITIONS+1));
 
-    for (i = 0; i < NUM_OF_SAMPLES; ++i)
-    {
-        for (ii = 0; (_y1min + ii*dx) <= _y1max; ++ii)
-        {
-            // vectorのresize用
-            if (i == 0) size++;
-
+    for (i = 0; i < NUM_OF_SAMPLES; ++i) {
+        for (ii = 0; (_y1min + ii*dx) <= _y1max; ++ii) {
             // 幅dxに含まれる回数
             // TODO:バッファに追加した値を除外することで速度向上
-            n_dx1 = 0;
-            for (iii = 0; iii < SAMPLE_LENGTH; ++iii)
-                if ((y1[i][iii] < (_y1min + (ii + 1)*dx)) && (y1[i][iii] >= (_y1min + ii*dx)))
-                    n_dx1++;
-            
-            pdf_buffer[i][ii] = (double)n_dx1 / SAMPLE_LENGTH / dx;
+            n_dx = 0;
+            for (iii = 0; iii < SAMPLE_LENGTH; ++iii) {
+                if ((y1[i][iii] < (_y1min + (ii + 1)*dx)) && (y1[i][iii] >= (_y1min + ii*dx))) n_dx++;
+            }
+            pdf_buffer[i][ii] = (double)n_dx / (SAMPLE_LENGTH*dx);
         }
     }
 
-    x.resize(size);
-    y.resize(size);
-    for (i = 0; (_y1min + i*dx) <= _y1max; ++i)
-    {
+    double pdf_y1, integral_y1 = 0.;
+    x.resize(PDF_NUM_OF_PARTITIONS+1);
+    y.resize(PDF_NUM_OF_PARTITIONS+1);
+    for (i = 0; (_y1min + i*dx) <= _y1max; ++i) {
         pdf_y1 = 0.;
-        for (ii = 0; ii < NUM_OF_SAMPLES; ++ii)
+        for (ii = 0; ii < NUM_OF_SAMPLES; ++ii) {
             pdf_y1 += pdf_buffer[ii][i];
+        }
         pdf_y1 = (double)pdf_y1 / NUM_OF_SAMPLES;
 
         x[i]    = _y1min + i*dx;
@@ -170,45 +165,100 @@ void Simulation::createVelPdf(const std::vector< std::vector<double> > &y2, std:
 
     std::size_t i, ii, iii;
 
-    std::size_t n_dx, size = 0;
-    double pdf_y2, integral_y2 = 0.;
-    std::vector< std::vector<double> > pdf_buffer;
-    Common::resize2DemensionalVector(pdf_buffer, 5000, NUM_OF_SAMPLES);
+    std::size_t n_dx;
+    double dx = (_y2max - _y2min)/(PDF_NUM_OF_PARTITIONS+100);
+    std::vector< std::vector<double> > pdf_buffer(NUM_OF_SAMPLES, std::vector<double>(NUM_OF_SAMPLES, PDF_NUM_OF_PARTITIONS+101));
 
-    for (i = 0; i<NUM_OF_SAMPLES; ++i)
-    {
-        for (ii = 0; (_y2min + ii*dx) <= _y2max; ++ii)
-        {
-            // vectorのresize用
-            if (i == 0) size++;
-
+    for (i = 0; i < NUM_OF_SAMPLES; ++i) {
+        for (ii = 0; (_y2min + ii*dx) <= _y2max; ++ii) {
             // 幅dxに含まれる回数
             n_dx = 0;
-            for (iii = 0; iii<SAMPLE_LENGTH; ++iii)
-                if ((y2[i][iii] < (_y2min + (ii + 1)*dx)) && (y2[i][iii] >= (_y2min + ii*dx)))
-                    n_dx++;
-
-            pdf_buffer[ii][i] = (double)n_dx / SAMPLE_LENGTH / dx;
+            for (iii = 0; iii < SAMPLE_LENGTH; ++iii) {
+                if ((y2[i][iii] < (_y2min + (ii + 1)*dx)) && (y2[i][iii] >= (_y2min + ii*dx))) n_dx++;
+            }
+            pdf_buffer[i][ii] = (double)n_dx / (SAMPLE_LENGTH*dx);
         }
     }
 
-    x.resize(size);
-    y.resize(size);
+    double pdf_y2, integral_y2 = 0.;
+    x.resize(PDF_NUM_OF_PARTITIONS+101);
+    y.resize(PDF_NUM_OF_PARTITIONS+101);
     for (i = 0; (_y2min + i*dx) <= _y2max; ++i) {
         pdf_y2 = 0.;
-        for (ii = 0; ii<NUM_OF_SAMPLES; ++ii)
-        {
-            pdf_y2 += pdf_buffer[i][ii];
+        for (ii = 0; ii < NUM_OF_SAMPLES; ++ii) {
+            pdf_y2 += pdf_buffer[ii][i];
         }
         pdf_y2 = (double)pdf_y2 / NUM_OF_SAMPLES;
 
-        x[i]    = _y2min + i*dx;
-        y[i]    = pdf_y2;
+        x[i] = _y2min + i*dx;
+        y[i] = pdf_y2;
 
         integral_y2 += pdf_y2*dx;
     }
 
     std::cout << "integral of pdf_y2 = " << integral_y2 << ".\n" << std::endl;
+}
+
+/**
+ * @fn 結合確率密度関数を生成
+ * @param vector< vector<double> > &y1 応答変位が格納された２次元配列
+ * @param vector< vector<double> > &y2 応答速度が格納された２次元配列
+ * @param vector<double> &x X軸の情報を保存
+ * @param vector<double> &y Y軸の情報を保存
+ * @param vector<double> &z Z軸の情報を保存
+ **/
+void Simulation::createJointPdf(const std::vector< std::vector<double> > &y1, const std::vector< std::vector<double> > &y2, std::vector<double> &x, std::vector<double> &y, std::vector<double> &z)
+{
+    std::cout << "Creating a file of the joint pdf(.dat).\n" << std::endl;
+
+    std::size_t i, ii, iii, iiii;
+
+    /* 逐次処理のスレッドに関する情報を表示 */
+    std::cout << "現在使用中のスレッド数は「" << omp_get_num_threads() << "」です。" << std::endl;
+    std::cout << "使用可能なスレッド数は最大「" << omp_get_max_threads() << "」です。" << std::endl;
+    
+    std::size_t n_dx;
+    double dx_y1 = (_y1max - _y1min)/PDF_NUM_OF_PARTITIONS;
+    double dx_y2 = (_y2max - _y2min)/PDF_NUM_OF_PARTITIONS;
+    std::vector< std::vector< std::vector<double> > > pdf_buffer;
+    Common::resize3DemensionalVector(pdf_buffer, PDF_NUM_OF_PARTITIONS+1, PDF_NUM_OF_PARTITIONS+1, NUM_OF_SAMPLES);
+
+    for (i = 0; i<NUM_OF_SAMPLES; ++i) {
+        std::cout << "sample: " << i << std::endl;
+        for (ii = 0; (_y1min + ii*dx_y1) <= _y1max; ++ii) {
+            for (iii = 0; (_y2min + iii*dx_y2) <= _y2max; ++iii) {
+                // 幅dxに含まれる回数
+                n_dx = 0;
+                for (iiii = 0; iiii<SAMPLE_LENGTH; ++iiii) {
+                    if ((y1[i][iiii] < (_y1min + (ii + 1)*dx_y1)) && (y1[i][iiii] >= (_y1min + ii*dx_y1)) && (y2[i][iiii] < (_y2min + (iii + 1)*dx_y2)) && (y2[i][iiii] >= (_y2min + iii*dx_y2))) n_dx++;
+                }
+    
+                pdf_buffer[ii][iii][i] = (double)n_dx / SAMPLE_LENGTH / (dx_y1*dx_y2);
+            }
+        }
+   }
+
+    x.resize(PDF_NUM_OF_PARTITIONS+1);
+    y.resize(PDF_NUM_OF_PARTITIONS+1);
+    z.resize((PDF_NUM_OF_PARTITIONS+1)*(PDF_NUM_OF_PARTITIONS+1));
+    double pdf_joint, integral_joint = 0.;
+    for (i = 0; (_y1min + i*dx_y1) <= _y1max; ++i) {
+        for (ii = 0; (_y2min + ii*dx_y2) <= _y2max; ++ii) {
+            pdf_joint = 0.;
+            for (iii = 0; iii<NUM_OF_SAMPLES; ++iii) {
+                pdf_joint += pdf_buffer[i][ii][iii];
+            }
+            if (i == 0) {
+                y[ii] = _y2min + ii*dx_y2;
+            }
+            pdf_joint = (double)pdf_joint / NUM_OF_SAMPLES;
+            z[i*(PDF_NUM_OF_PARTITIONS+1) + ii] = pdf_joint;            
+            integral_joint += pdf_joint*(dx_y1*dx_y2);
+        }
+        x[i] = _y1min + i*dx_y1;
+    }
+
+    std::cout << "integral of pdf_joint = " << integral_joint << ".\n" << std::endl;
 }
 
 /**
@@ -230,20 +280,23 @@ void Simulation::exactSolutionOfGaussianWhiteNoise(std::vector<double> &x, std::
     // 確率密度関数の厳密解
     double exact_gauss_pdf  = 0.;
     double integral_gauss_pdf   = 0.;
-
+    
     bessel_p = 2.*Common::ZETA;
     bessel_q = Common::ZETA*Common::EPSILON;
     bessel_arg = pow(bessel_p, 2) / (8.*bessel_q);
 
     K_nu = gsl_sf_bessel_Knu(0.25, bessel_arg);
     bessel_C = 2.*sqrt(bessel_q / bessel_p)*exp(-bessel_arg) / K_nu;
-
-    for (i = 0; (_y1min + i*dx) <= _y1max; i++) {
-        exact_gauss_pdf = bessel_C*exp(-bessel_p*pow(_y1min + i*dx, 2) - bessel_q*pow(_y1min + i*dx, 4));
-        integral_gauss_pdf += exact_gauss_pdf*dx;
-        // TODO:領域確保してから値を代入
-        x.push_back(_y1min + i*dx);
-        y.push_back(exact_gauss_pdf);
+    
+    double y1min = -5., y1max = 5.;
+    double dx_y1 = (y1max - y1min)/PDF_NUM_OF_PARTITIONS;
+    x.resize(PDF_NUM_OF_PARTITIONS);
+    y.resize(PDF_NUM_OF_PARTITIONS);
+    for (i = 0; (y1min + i*dx_y1) <= y1max; i++) {
+        exact_gauss_pdf = bessel_C*exp(-bessel_p*pow(y1min + i*dx_y1, 2) - bessel_q*pow(y1min + i*dx_y1, 4));
+        x[i] = y1min + i*dx_y1;
+        y[i] = exact_gauss_pdf;
+        integral_gauss_pdf += exact_gauss_pdf*dx_y1;
     }
 
     std::cout << "integral of exact_gauss_pdf = " << integral_gauss_pdf << ".\n" << std::endl;
@@ -280,29 +333,36 @@ int main(int argc, char *argv[])
     std::vector<double> t;
     std::vector< std::vector<double> > y1, y2, forces;
     sim->culcRungeKutta(t, y1, y2, forces);
-    // ファイルへ出力
-    filename    = "sim_force.dat";
+    filename = "sim_force.dat";
     Common::outputIntoFile(filename, t, forces[0]);
-    filename    = "sim_force_gaussian.dat";
+    filename = "sim_force_gaussian.dat";
     Common::outputIntoFile(filename, t, forces[1]);
-    filename    = "sim_force_pulse.dat";
+    filename = "sim_force_pulse.dat";
     Common::outputIntoFile(filename, t, forces[2]);
-    filename    = "sim_x1.dat";
+    filename = "sim_x1.dat";
     Common::outputIntoFile(filename, t, y1[0]);
-    filename    = "sim_x2.dat";
+    filename = "sim_x2.dat";
     Common::outputIntoFile(filename, t, y2[0]);
     /* 変位のPDFを求める */
     std::vector<double> dispX, dispY;
     sim->createDispPdf(y1, dispX, dispY);
-    // ファイルへ出力
-    filename    = "sim_y1pdf.dat";
+    filename = "sim_y1pdf.dat";
     Common::outputIntoFile(filename, dispX, dispY);
     /* 速度のPDFを求める */
     std::vector<double> velX, velY;
     sim->createVelPdf(y2, velX, velY);
-    // ファイルへ出力
-    filename    = "sim_y2pdf.dat";
+    filename = "sim_y2pdf.dat";
     Common::outputIntoFile(filename, velX, velY);
+    /* 結合PDFを求める */
+    std::vector<double> jointX, jointY, jointZ;
+    sim->createJointPdf(y1, y2, jointX, jointY, jointZ);
+    filename = "sim_jointpdf.dat";
+    Common::output3DIntoFile(filename, jointX, jointY, jointZ);
+    /* ホワイトノイズを受ける系の応答分布の厳密解を求める */
+//    std::vector<double> gwnDispX, gwnDispY;
+//    sim->exactSolutionOfGaussianWhiteNoise(gwnDispX, gwnDispY);
+//    filename = "sim_y1Gpdf.dat";
+//    Common::outputIntoFile(filename, gwnDispX, gwnDispY);
     delete sim;
 
     std::cout << "analysis.cpp has done.\n" << std::endl;

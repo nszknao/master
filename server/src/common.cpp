@@ -30,9 +30,50 @@ void Common::outputIntoFile(const std::string name, const std::vector<double> &x
     }
 
     std::ofstream ofs(name);
-    unsigned int i;
+    std::size_t i;
     for (i = 0; i < x.size(); ++i) {
         ofs << x[i] << " " << y[i] << std::endl;
+    }
+}
+
+/**
+ * @fn ファイルに出力する
+ * @param string name ファイル名
+ * @param vector<double> &x X軸情報
+ * @param vector<double> &y Y軸情報
+ * @param vector<double> &z Z軸情報
+ */
+void Common::output3DIntoFile(const std::string name, const std::vector<double> &x, const std::vector<double> &y, const std::vector<double> &z)
+{
+    std::cout << "Creating a file.\n" << std::endl;
+
+    // 値の数をチェック
+    if ((x.size() != y.size()) || (pow(y.size(),2) != z.size()) || (z.size() != pow(x.size(),2))) {
+        std::cout << "Error: Do not match vector size." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    std::ofstream ofs(name);
+    std::size_t i, ii;
+    // 1行目
+    ofs << "X" << ",";
+    for (i = 0; i < x.size(); ++i) {
+        if (i == x.size()-1) {
+            ofs << x[i] << std::endl;
+        } else {
+            ofs << x[i] << ",";
+        }
+    }
+    // 2行目以降
+    for (i = 0; i < y.size(); ++i) {
+        ofs << y[i] << ",";
+        for (ii = 0; ii < x.size(); ++ii) {
+            if (ii == x.size()-1) {
+                ofs << z[i*x.size() + ii] << std::endl;
+            } else {
+                ofs << z[i*x.size() + ii] << ",";
+            }
+        }
     }
 }
 
@@ -44,10 +85,29 @@ void Common::outputIntoFile(const std::string name, const std::vector<double> &x
  */
 void Common::resize2DemensionalVector(std::vector< std::vector< double > > &v, std::size_t s1, std::size_t s2)
 {
-    unsigned int i;
+    std::size_t i;
     v.resize(s1);
     for (i = 0; i < s1; ++i) {
         v[i].resize(s2);
+    }
+}
+
+/**
+ * @fn 3次元vectorのリサイズ
+ * @param vector< vector< vector<double> > > &v 3次元vector
+ * @param size_t s1 行数
+ * @param size_t s2 列数
+ * @param size_t s3 何か
+ */
+void Common::resize3DemensionalVector(std::vector< std::vector< std::vector<double> > > &v, std::size_t s1, std::size_t s2, std::size_t s3)
+{
+    std::size_t i, ii;
+    v.resize(s1);
+    for (i = 0; i < s1; ++i) {
+        v[i].resize(s2);
+        for (ii = 0; ii < s2; ++ii) {
+            v[i][ii].resize(s3);
+        }
     }
 }
 
@@ -59,7 +119,7 @@ void Common::resize2DemensionalVector(std::vector< std::vector< double > > &v, s
 bool Common::isOverSpecifyValue(const std::vector<double> &v, double value)
 {
     bool flg = false;
-    unsigned int i;
+    std::size_t i;
 
     for (i = 0; i < v.size(); ++i) {
         if (v[i] >= value || v[i] < -1*value)

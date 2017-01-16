@@ -29,12 +29,12 @@ ${SRC_PATH}/exe/simulation.exe ${lambda} ${beta2} ${alpha}
 
 ##### Make directory. #############
 if [ ! -e ${DAT_PATH}/${params} ]; then
-	mkdir ${DAT_PATH}/${params}
-	mkdir ${DAT_PATH}/${params}/${a}
+    mkdir ${DAT_PATH}/${params}
+    mkdir ${DAT_PATH}/${params}/${a}
 elif [ ! -e ${DAT_PATH}/${params}/${a} ]; then
-	mkdir ${DAT_PATH}/${params}/${a}
+    mkdir ${DAT_PATH}/${params}/${a}
 else
-	rm -rf ${DAT_PATH}/${params}/${a}/*
+    rm -rf ${DAT_PATH}/${params}/${a}/*
 fi
 
 ############ Move directory ##############################

@@ -91,7 +91,8 @@ def getSpecifiedKLPop(pop, sim, kl):
     【戻り値】selectedPop: 得られた個体群"""
     selectedPop = []
     for i in range(len(pop)):
-        dKL = cmn.klDivergence(cmn.createDispPdf(sim.dispx, pop[i].detailPrm), sim.dispy)
+        tmp_dPdf = [cmn.createDispPdf(sim.dispx[ii], pop[i].detailPrm) for ii in range(len(sim.dispx))]
+        dKL = cmn.klDivergence(tmp_dPdf, sim.dispy)
         if dKL < 0:
             continue
         if dKL < kl:
@@ -123,6 +124,31 @@ def getAroundSpecifiedSquareObjectValue(pop, minValue, maxValue):
         if (squareValue >= minValue) and (squareValue <= maxValue):
             selectedPop.append(pop[i])
     return selectedPop
+
+def culcEquivalentLinearizationMethod(pop, lmd, alp):
+    u"""等価線形化した系のモーメント方程式を解いて，近似応答分布ともっとも近しいモーメントを持つ個体を選ぶ
+    【引数】pop: 個体群，lmd: lambdaの値，alp: alphaの値
+    【戻り値】pop[0]: 近似応答分布ともっとも近しいモーメントを持つ個体"""
+    EPSILON = 0.3
+    ZETA = 0.05
+    
+    err = 10000.
+    ke = 10.
+    while(err > 1.0E-6):
+        old_ke = ke
+        A = np.array([
+            [4.*ZETA*ke, 0, 0, 0, 0],
+            [0, -1.*ke, 3., 0, 0],
+            [0, 0, -4.*ZETA, 2., 0],
+            [0, 0, -3.*ke, -6.*ZETA, 1.],
+            [0, 0, 0, 4.*ke, 8.*ZETA]
+          ])
+        b = np.array([1, 0, -1./(4.*ZETA*ke), 0, 6./(4.*ZETA) + 3.*pow(1.-alp,2)/lmd])
+        Exx, Exxxx, Exxyy, Exyyy, Eyyyy = np.linalg.solve(A, b)
+        ke = EPSILON*Exxxx/Exx + 1.
+        err = abs(ke - old_ke)
+    sorted(pop, key=lambda x:(abs(Exx - x.m[0]), abs(Exxxx/Exx**2 - x.m[3]/x.m[0]**2)))
+    return pop[0]
 
 # ---- private ----
 def _getKeyInList(targetList, value):

@@ -13,19 +13,8 @@ CProblemSelf::CProblemSelf(MomentEq *meq):
     meq_(meq)
 {
     // define the domain of variables here
-    lbs_.resize(Common::NUM_OF_PARAM);
-    ubs_.resize(Common::NUM_OF_PARAM);
-
-    lbs_[0] = 0.3;   ubs_[0] = 1.;   // a
-    lbs_[1] = -3.;  ubs_[1] = 3.;   // mu1
-    lbs_[2] = -2.;  ubs_[2] = 2.;   // mu2
-    lbs_[3] = 0.;   ubs_[3] = 1.5;  // sigma11
-    lbs_[4] = 0.;   ubs_[4] = 1.;   // sigma12
-    lbs_[5] = 0.;   ubs_[5] = 1.5;  // sigma21
-    lbs_[6] = 0.;   ubs_[6] = 1.;   // sigma22
-    lbs_[7] = -1.;  ubs_[7] = 1.;   // rho1
-    lbs_[8] = -1.;  ubs_[8] = 1.;   // rho2
-    lbs_[9] = -1.;  ubs_[9] = 1.;   // rho3
+    lbs_ = meq_->getLowerObj();
+    ubs_ = meq_->getUpperObj();
 }
 // -----------------------------------------------------------
 bool CProblemSelf::Evaluate(CIndividual *indv) const

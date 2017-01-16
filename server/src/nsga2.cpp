@@ -23,13 +23,12 @@ int NSGA2::run(MomentEq *meq)
     std::size_t i, t;
 
     // 突然変異と交叉のパラメータ
-    double crossProb = 0.85;             // crossover probability
-    //double flipProb = 1. / Common::NUM_OF_MOMENTEQ;   // mutation probability
-    double flipProb = 0.01;   // mutation probability
+    double crossProb = 0.9;             // crossover probability
+    double flipProb = 1. / Common::NUM_OF_MOMENTEQ;   // mutation probability
+//    double flipProb = 0.01;   // mutation probability
 
-    // 変数の定義域を設定
-    std::vector<double> lower(Common::NUM_OF_PARAM), upper(Common::NUM_OF_PARAM);
-    this->_setValueRange(lower, upper);
+    std::vector<double> lower = meq->getLowerObj();
+    std::vector<double> upper = meq->getUpperObj();
 
     // 親子の個体群を定義
     PopulationMOO parents(_popSize, ChromosomeT< double >(Common::NUM_OF_PARAM));
@@ -44,15 +43,16 @@ int NSGA2::run(MomentEq *meq)
     _archive.minimize();
 
     // 親個体群の初期化
-    for (i = 0; i < parents.size(); ++i)
-       dynamic_cast< ChromosomeT< double >& >( parents[ i ][ 0 ] ).initialize(lower, upper);
+    for (i = 0; i < parents.size(); ++i) {
+        dynamic_cast< ChromosomeT< double >& >( parents[ i ][ 0 ] ).initialize(lower, upper);
+    }
    
     // 目的関数の個数をセット
     parents   .setNoOfObj(meq->getObjNum());
     offsprings.setNoOfObj(meq->getObjNum());
 
     // 初期個体を生成
-    std::vector<double> func(meq->getObjNum());
+    std::vector<double> func(meq->getObjNum()); // temporary addressエラー回避のために必要
     ChromosomeT< double > dblchrom;
     for (i = 0; i < parents.size(); ++i) {
         // モーメント方程式を解く
@@ -65,7 +65,6 @@ int NSGA2::run(MomentEq *meq)
     cout << "NSGA2: start (Number of object:" << meq->getObjNum() << ")" << endl;
     for (t = 1; t <= _iterations; ++t) {
         cout << "generation: " << t << endl;
-
         // 親個体を子個体にコピー
         offsprings.selectBinaryTournamentMOO(parents);
 
@@ -94,13 +93,13 @@ int NSGA2::run(MomentEq *meq)
         parents.selectCrowdedMuPlusLambda(offsprings);
 
         // 10世代おきに劣解をアーカイブから除く
-        if (!(t % 10)) {
-            _archive.cleanArchive();
-            for (i = 0; i < parents.size(); ++i) {
-                _archive.addArchive(parents[ i ]);
-            }
-            _archive.nonDominatedSolutions();
-        }
+//        if (!(t % 10)) {
+//            _archive.cleanArchive();
+//            for (i = 0; i < parents.size(); ++i) {
+//                _archive.addArchive(parents[ i ]);
+//            }
+//            _archive.nonDominatedSolutions();
+//        }
     } // 繰り返し
     cout << "NSGA2: end\n" << endl;
 
@@ -118,25 +117,6 @@ int NSGA2::run(MomentEq *meq)
     _archive.cleanArchive();
 
     return EXIT_SUCCESS;
-}
-
-/**
- * @fn 変数の範囲を指定する
- * @param vector<double> &lower 下限（領域確保済み）
- * @param vector<double> &upper 上限（領域確保済み）
- */
-void NSGA2::_setValueRange(std::vector<double> &lower, std::vector<double> &upper)
-{
-    lower[0] = 0.3; upper[0] = 1.;   // a
-    lower[1] = -3.; upper[1] = 3.;   // mu1
-    lower[2] = -2.; upper[2] = 2.;   // mu2
-    lower[3] = 0.5; upper[3] = 1.5;  // sigma11
-    lower[4] = 0.5; upper[4] = 1.;   // sigma12
-    lower[5] = 0.5; upper[5] = 1.5;  // sigma21
-    lower[6] = 0.5; upper[6] = 1.;   // sigma22
-    lower[7] = -0.5;   upper[7] = 0.5;   // rho1
-    lower[8] = -0.5;   upper[8] = 0.5;   // rho2
-    lower[9] = -0.5;   upper[9] = 0.5;   // rho3
 }
 
 /**
@@ -171,9 +151,7 @@ void NSGA2::_saveArchive(ArchiveMOO &archive)
         individual.operator=(archive.readArchive(i));
         chrom   = dynamic_cast< ChromosomeT< double > &>(individual[0]);
         // モーメント値
-        std::vector<double> m;
-        m.resize(Common::NUM_OF_MOMENT);
-        MomentEq::getMomentFromParameter(chrom, m);
+        std::vector<double> m = MomentEq::getMomentFromParameter(chrom);
         _finalPops[i].mValue.resize(m.size());
         for (ii = 0; ii < m.size(); ++ii) {
             _finalPops[i].mValue[ii]    = m[ii];

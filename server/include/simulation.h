@@ -14,6 +14,8 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_sf.h>
 
+#include <omp.h>
+
 class Simulation
 {
 private:
@@ -21,7 +23,7 @@ private:
     static const std::size_t SAMPLE_LENGTH;
     static const std::size_t NUM_OF_SAMPLES;    // 入力の標本数
     static const double dt; // 時間刻み幅
-    static const double dx; // pdfの横軸刻み幅
+    static const std::size_t PDF_NUM_OF_PARTITIONS; // 応答分布の変位・速度分割数
 
     double _lambda, _beta2, _alpha, _sigma;
     // pdfの横軸最小値，最大値
@@ -36,6 +38,7 @@ public:
     void culcRungeKutta(std::vector<double> &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
     void createDispPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
     void createVelPdf(const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &);
+    void createJointPdf(const std::vector< std::vector<double> > &, const std::vector< std::vector<double> > &, std::vector<double> &, std::vector<double> &, std::vector<double> &);
     void exactSolutionOfGaussianWhiteNoise(std::vector<double> &, std::vector<double> &);
 };
 

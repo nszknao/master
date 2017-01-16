@@ -12,17 +12,22 @@
 class MomentEq
 {
 private:
-    std::vector<double> _dG;
+    std::vector<double> _dG, _lower, _upper;
     std::vector< std::vector<double> > _objWeight;
     std::vector<std::size_t> _objList;
+    void _setObjRange();
 
 public:
-	std::vector<double> expb_f(const std::vector<double> &);
-	static void getMomentFromParameter(const std::vector<double> &, std::vector<double> &);
+    std::vector<double> expb_f(const std::vector<double> &);
+    static std::vector<double> getMomentFromParameter(const std::vector<double> &);
     void setPrmdG(const std::vector<double> &);
     void setObjList(const std::vector<std::size_t> &);
     void setObjWeight(const std::vector< std::vector<double> > &);
     std::size_t getObjNum();
+    std::vector<double> getLowerObj();
+    std::vector<double> getUpperObj();
+    explicit MomentEq();
+    ~MomentEq();
 };
 
 #endif // !__EXPFIT_H_INCLUDE_

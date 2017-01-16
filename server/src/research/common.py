@@ -3,6 +3,7 @@ import numpy as np
 import math
 import sys
 import os
+import csv
 from scipy import integrate
 
 NUM_OF_GAUSS    = 3     # 足し合わせるガウス分布の数
@@ -20,7 +21,7 @@ class Individual:
 
 class Simulation:
     u"""シミュレーション解の情報を格納
-    メンバ: dispx[], dispy[], velx[], vely[]"""
+    メンバ: dispx[], dispy[], velx[], vely[], disp3d[], vel3d[], pdf3d[]"""
 
 class GWhiteNoise:
     u"""ガウス性ホワイトノイズ解の情報を格納
@@ -39,10 +40,7 @@ def culcIntegralPdf(pdf):
     u"""PDFの積分値を計算します．
     【引数】pdf: 確率分布の値リスト
     【戻り値】integration: 積分値"""
-    integrantion    = 0.
-    for i in range(len(pdf)):
-        integrantion    += pdf[i]*dx
-    return integrantion
+    return sum(pdf)*dx
 
 def createLevelCrossingRate(xi, prm):
     u"""閾値通過率を計算します．
@@ -75,24 +73,27 @@ def createDispPdf(x, prm):
     u"""パラメータから変位応答を計算します．
     【引数】x: はシミュレーションから取得，prm: 詳細のパラメータ
     【戻り値】pdf: 変位応答分布の値リスト"""
-    pdf = []
-    for i in range(0, len(x)):
-        tmp_pdf = 0.
-        for ii in range(0, NUM_OF_GAUSS):
-            tmp_pdf += prm['a'][ii]*(1./math.sqrt(2.*math.pi)/prm['sigma1'][ii])*math.exp(-1.*(x[i]-prm['mu1'][ii])**2/2./prm['sigma1'][ii]**2)
-        pdf.append(tmp_pdf)
+    pdf = 0.
+    for i in range(0, NUM_OF_GAUSS):
+        pdf += prm['a'][i]*(1./math.sqrt(2.*math.pi)/prm['sigma1'][i])*math.exp(-1.*(x-prm['mu1'][i])**2/2./prm['sigma1'][i]**2)
     return pdf
 
 def createVelPdf(x, prm):
-    u"""パラメータから変位応答を計算します．
+    u"""パラメータから速度応答を計算します．
     【引数】x: はシミュレーションから取得，prm: 詳細のパラメータ
     【戻り値】pdf: 速度応答分布の値リスト"""
-    pdf = []
-    for i in range(0, len(x)):
-        tmp_pdf = 0.
-        for ii in range(0, NUM_OF_GAUSS):
-            tmp_pdf += prm['a'][ii]*(1./math.sqrt(2.*math.pi)/prm['sigma2'][ii])*math.exp(-1.*(x[i]-prm['mu2'][ii])**2/2./prm['sigma2'][ii]**2)
-        pdf.append(tmp_pdf)
+    pdf = 0.
+    for i in range(0, NUM_OF_GAUSS):
+        pdf += prm['a'][i]*(1./math.sqrt(2.*math.pi)/prm['sigma2'][i])*math.exp(-1.*(x-prm['mu2'][i])**2/2./prm['sigma2'][i]**2)
+    return pdf
+
+def create3DPdf(x, y, prm):
+    u"""パラメータから3次元応答分布を計算します．
+    【引数】x: はシミュレーションから取得，prm: 詳細のパラメータ
+    【戻り値】pdf: 応答分布の値リスト"""
+    pdf = 0
+    for i in range(0, NUM_OF_GAUSS):
+        pdf += prm['a'][i]*(1./(2.*math.pi*prm['sigma1'][i]*prm['sigma2'][i]*math.sqrt(1.-prm['rho'][i]**2))) * math.exp(-1.*((x-prm['mu1'][i])**2/prm['sigma1'][i]**2 - 2.*prm['rho'][i]*(x-prm['mu1'][i])*(y-prm['mu2'][i])/prm['sigma1'][i]/prm['sigma2'][i] + (y-prm['mu2'][i])**2/prm['sigma2'][i]**2)/(2.*(1.-prm['rho'][i]**2)))
     return pdf
 
 def klDivergence(comp, true):
@@ -118,24 +119,39 @@ def getSimulationFromFile(arg_l, arg_a):
     # 変位
     sim.dispx = []
     sim.dispy = []
-    lineCount   = 0
     for line_s in open('/usr/local/src/master/dat/l='+str(arg_l)+'/a='+str(arg_a)+'/sim_y1pdf.dat'):
-        if lineCount % 10 == 0:
-            col_s   = line_s.strip().split(' ')
-            sim.dispx.append(float(col_s[0]))
-            sim.dispy.append(float(col_s[1]))
-        lineCount   += 1
+        col_s   = line_s.strip().split(' ')
+        sim.dispx.append(float(col_s[0]))
+        sim.dispy.append(float(col_s[1]))
 
     # 速度
     sim.velx = []
     sim.vely = []
-    lineCount = 0
     for line_s in open('/usr/local/src/master/dat/l='+str(arg_l)+'/a='+str(arg_a)+'/sim_y2pdf.dat'):
-        if lineCount % 10 == 0:
-            col_s   = line_s.strip().split(' ')
-            sim.velx.append(float(col_s[0]))
-            sim.vely.append(float(col_s[1]))
+        col_s   = line_s.strip().split(' ')
+        sim.velx.append(float(col_s[0]))
+        sim.vely.append(float(col_s[1]))
+
+    # 結合
+    sim.disp3d = []
+    sim.vel3d = []
+    sim.pdf3d = []
+    f = open('/usr/local/src/master/dat/l='+str(arg_l)+'/a='+str(arg_a)+'/sim_jointpdf.dat', 'r')
+    dataReader = csv.reader(f)
+    lineCount = 0    
+    for row in dataReader:
+        if lineCount == 0:
+            del row[0]
+            sim.disp3d = [float(row[i]) for i in range(len(row))]            
+        else :
+            row = [float(row[i]) for i in range(len(row))]
+            sim.vel3d.append(row.pop(0))
+            if len(sim.pdf3d) == 0:
+                sim.pdf3d = np.array([row])
+            else :
+                sim.pdf3d = np.append(sim.pdf3d, np.array([row]), axis=0)
         lineCount += 1
+    
     return sim
 
 def getGWhiteNoiseFromFile():
@@ -143,7 +159,7 @@ def getGWhiteNoiseFromFile():
     # ホワイトノイズのみの厳密解ファイルの読み込み
     gwn.dispx = []
     gwn.dispy = []
-    for line_s in open('/usr/local/src/master/dat/y1_Gpdf.dat'):
+    for line_s in open('/usr/local/src/master/dat/sim_y1Gpdf.dat'):
         col_s = line_s.strip().split(' ')
         gwn.dispx.append(float(col_s[0]))
         gwn.dispy.append(float(col_s[1]))
@@ -153,7 +169,7 @@ def getPopFromFile(arg_l, arg_a):
     # プロット用解析解X軸
     # for文の中で１回づつ読み込むのは無駄だから上で宣言しておく
     anaDispX = [i for i in drange(-6, 6, dx)]
-    # anaVelX   = [i for i in drange(-12, 12, dx)]
+    anaVelX   = [i for i in drange(-12, 12, dx)]
 
     # 解析ファイル読み込み
     fileNum = _getFileNum('/usr/local/src/master/results/l='+str(arg_l)+'/dat_a='+str(arg_a)+'/')
@@ -173,17 +189,26 @@ def getPopFromFile(arg_l, arg_a):
             #--- 変位 ---
             ind.disp = anaDispX
             #--- 速度 ---
-            # ind.vel   = anaVelX
+            ind.vel = anaVelX
             #--- 変位応答分布 ---
-            ind.dPdf  = createDispPdf(anaDispX, ind.detailPrm)
+            tmp_dPdf = []
+            for ii in range(len(anaDispX)):
+                tmp_dPdf.append(createDispPdf(anaDispX[ii], ind.detailPrm))
+            ind.dPdf = tmp_dPdf
+#            ind.dPdf = [createDispPdf(anaDispX[ii], ind.detailPrm) for ii in range(len(anaDispX))]
             #--- 速度応答分布 ---
-            # vPdfForKL = createDispPdf(simVelX, detailPrm)
-            # ind.dPdf  = createVelPdf(anaVelX, detailPrm)
+            tmp_vPdf = []
+            for ii in range(len(anaVelX)):
+                tmp_vPdf.append(createVelPdf(anaVelX[ii], ind.detailPrm))
+            ind.vPdf = tmp_vPdf
+#            ind.vPdf = [createVelPdf(anaVelX[ii], ind.detailPrm) for ii in range(len(anaVelX))]
             
             # PDFの積分がおかしいものを除去
             sumDispPdf = culcIntegralPdf(ind.dPdf)
-            # if sumDispPdf > 1.00005 or sumDispPdf < 0.99995:
             if sumDispPdf > 1.05 or sumDispPdf < 0.95:
+                continue
+            sumVelPdf = culcIntegralPdf(ind.vPdf)
+            if sumVelPdf > 1.05 or sumVelPdf < 0.95:
                 continue
 
             pop.append(ind)
@@ -225,6 +250,19 @@ def getSquareObjectiveValue(ind, meanSdList):
         else:
             squareValue += (ind.o[i]/meanSdList[1][i])**2
     return squareValue
+
+def getKurtosisValue(x, y, dt):
+    if len(x) != len(y):
+        print("ERROR: Wrong size of x and y")
+        sys.exit()
+    mean = np.dot(x, y)*dt
+    
+    center = x - np.array([mean]*len(x))
+    th2Moment = np.dot(np.power(center, 2), y)*dt
+    th4Moment = np.dot(np.power(center, 4), y)*dt
+
+    kurtosis = th4Moment / th2Moment**2 - 3.
+    return
 
 #---- private ----
 def _getFileNum(path):
