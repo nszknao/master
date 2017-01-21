@@ -17,18 +17,18 @@ class MomentEq;
 class NSGA2
 {
 private:
-	std::vector<GAIndividual> _finalPops;
-	std::size_t _popSize, _iterations;
-	ArchiveMOO _archive;
+    std::vector<GAIndividual> _finalPops;
+    std::size_t _popSize, _iterations;
+    ArchiveMOO _archive;
 
-	void _setValueRange(std::vector<double> &, std::vector<double> &);
-	void _saveArchive(ArchiveMOO &);
+    void _setValueRange(std::vector<double> &, std::vector<double> &);
+    void _saveArchive(ArchiveMOO &);
 
 public:
-	explicit NSGA2(std::size_t, std::size_t);
-	int run(MomentEq *);
-	std::vector<GAIndividual> getFinalPops();
-	~NSGA2();
+    explicit NSGA2(std::size_t, std::size_t);
+    int run(MomentEq *);
+    std::vector<GAIndividual> getFinalPops();
+    ~NSGA2();
 };
 
 #endif // !__NSGA2_H_INCLUDE_

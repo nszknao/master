@@ -7,10 +7,15 @@
 #include <cstring>
 #include <cmath>
 #include <vector>
+
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_sf.h>
+
+#include <jMetalCpp_ssNSGAII.h>
+#include <jMetalCpp_NSGAII.h>
+#include <jMetalCpp_GDE3.h>
 
 class GAIndividual;
 

@@ -14,13 +14,13 @@ class MomentEq;
 class NSGA3
 {
 private:
-	std::vector<GAIndividual> _finalPops;
-	void _savePopulation(const CPopulation &);
+    std::vector<GAIndividual> _finalPops;
+    void _savePopulation(const CPopulation &);
 
 public:
-	~NSGA3();
-	int run(MomentEq *);
-	std::vector<GAIndividual> getFinalPops();
+    ~NSGA3();
+    int run(MomentEq *);
+    std::vector<GAIndividual> getFinalPops();
 };
 
 #endif // !__NSGA3_H_INCLUDE_

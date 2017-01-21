@@ -91,8 +91,10 @@ def getSpecifiedKLPop(pop, sim, kl):
     【戻り値】selectedPop: 得られた個体群"""
     selectedPop = []
     for i in range(len(pop)):
-        tmp_dPdf = [cmn.createDispPdf(sim.dispx[ii], pop[i].detailPrm) for ii in range(len(sim.dispx))]
-        dKL = cmn.klDivergence(tmp_dPdf, sim.dispy)
+#        tmp_dPdf = [cmn.createDispPdf(sim.dispx[ii], pop[i].detailPrm) for ii in range(len(sim.dispx))]
+#        dKL = cmn.klDivergence(tmp_dPdf, sim.dispy)
+        tmp_jPdf = cmn.create3DPdf(np.meshgrid(sim.disp3d, sim.vel3d)[0], np.meshgrid(sim.disp3d, sim.vel3d)[1], pop[i].detailPrm)
+        dKL = cmn.klDivergence(np.reshape(tmp_jPdf, len(sim.disp3d)*len(sim.vel3d)), np.reshape(sim.pdf3d, len(sim.disp3d)*len(sim.vel3d)))
         if dKL < 0:
             continue
         if dKL < kl:
@@ -147,7 +149,10 @@ def culcEquivalentLinearizationMethod(pop, lmd, alp):
         Exx, Exxxx, Exxyy, Exyyy, Eyyyy = np.linalg.solve(A, b)
         ke = EPSILON*Exxxx/Exx + 1.
         err = abs(ke - old_ke)
-    sorted(pop, key=lambda x:(abs(Exx - x.m[0]), abs(Exxxx/Exx**2 - x.m[3]/x.m[0]**2)))
+    sorted(pop, key=lambda x:(abs(Exx - x.m[0]), abs(ke*Exx - x.m[2]), abs(Exxxx/Exx**2 - x.m[3]/x.m[0]**2), abs(Eyyyy/(ke*Exx)**2 - x.m[7]/x.m[2]**2)))
+#    sorted(pop, key=lambda x:(abs(ke*Exx - x.m[2]), abs(Exx - x.m[0]), abs(Eyyyy - x.m[7]), abs(Exxxx/Exx**2 - x.m[3]/x.m[0]**2)))
+#    sorted(pop, key=lambda x:(abs(Exxxx/Exx**2 - x.m[3]/x.m[0]**2), abs(Eyyyy/(ke*Exx)**2 - x.m[7]/x.m[2]**2), abs(Exx - x.m[0]), abs(ke*Exx - x.m[2])))
+#    sorted(pop, key=lambda x:(abs(Exx - x.m[0]), abs(ke*Exx - x.m[2])))
     return pop[0]
 
 # ---- private ----

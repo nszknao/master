@@ -11,7 +11,7 @@ const double Common::ZETA = 0.05;
 /********** 解析条件 **********/
 const std::size_t Common::NUM_OF_MOMENTEQ = 15;
 const std::size_t Common::NUM_OF_MOMENT = 21;
-const std::size_t Common::NUM_OF_PARAM = 10;
+const std::size_t Common::NUM_OF_PARAM = 7;
 
 /**
  * @fn ファイルに出力する

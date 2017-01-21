@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*- 
 import numpy as np
-import math
 import sys
 import os
 import csv
@@ -8,8 +7,8 @@ from scipy import integrate
 
 NUM_OF_GAUSS    = 3     # 足し合わせるガウス分布の数
 NUM_OF_MOMENT   = 21
-NUM_OF_MOMENTEQ = 15
-NUM_OF_PARAM    = 10
+NUM_OF_MOMENTEQ = 12
+NUM_OF_PARAM    = 7
 
 dx  = 0.01  # pdfpdfのX軸刻み幅
 
@@ -28,32 +27,27 @@ class GWhiteNoise:
     メンバ: dispx[], dispy[]"""
 
 #---- public ----
-def drange(begin, end, step):
-    u"""小数刻みでrangeできるように拡張
-    【引数】begin: 開始の値，end: 終了の値，step: ステップ幅"""
-    n = begin
-    while n+step < end:
-        yield n
-        n += step
-
-def culcIntegralPdf(pdf):
-    u"""PDFの積分値を計算します．
-    【引数】pdf: 確率分布の値リスト
+def culcIntegralJointPdf(prm):
+    u"""結合確率密度関数の積分値を計算します．
+    【引数】ind: 個体
     【戻り値】integration: 積分値"""
-    return sum(pdf)*dx
+    integration = 0.
+    for i in range(NUM_OF_GAUSS):
+        integration += prm['a'][i]*integrate.dblquad(lambda x, y: (1./(2.*np.pi*prm['sigma1'][i]*prm['sigma2'][i])) * np.exp(-1.*((x-prm['mu1'][i])**2/prm['sigma1'][i]**2 + (y-prm['mu2'][i])**2/prm['sigma2'][i]**2)/2.), -np.inf, np.inf, lambda y: -np.inf, lambda y: np.inf)[0]
+    return integration
 
 def createLevelCrossingRate(xi, prm):
     u"""閾値通過率を計算します．
     【引数】xi: 閾値，prm: 詳細のパラメータ
     【戻り値】prob: 閾値通過率"""
     prob = 0.
-    for i in range(0, NUM_OF_GAUSS):
+    for i in range(NUM_OF_GAUSS):
         pp_c = prm['rho'][i]*prm['sigma1'][i]*prm['sigma2'][i]/prm['sigma1'][i]/prm['sigma2'][i]
         pp_g = prm['mu2'][i] + pp_c*prm['sigma2'][i]*(xi - prm['mu1'][i])/prm['sigma1'][i]
-        pp_sigma    = prm['sigma2'][i]*math.sqrt(1. - pp_c**2)
+        pp_sigma    = prm['sigma2'][i]*np.sqrt(1. - pp_c**2)
         # 閾値通過率
-        prob += prm['a'][i]*math.exp(-1.*(pp_xi - prm['mu1'][i])**2/2./prm['sigma1'][i]**2)/2./math.pi/prm['sigma1'][i]/prm['sigma2'][i]/math.sqrt(1. - pp_c**2)* (pp_sigma**2*math.exp(-pp_g**2/2./pp_sigma**2)
-                        + math.sqrt(math.pi/2.)*pp_g*pp_sigma*(1. + math.erf(pp_g/math.sqrt(2.)/pp_sigma)));
+        prob += prm['a'][i]*np.exp(-1.*(pp_xi - prm['mu1'][i])**2/2./prm['sigma1'][i]**2)/2./np.pi/prm['sigma1'][i]/prm['sigma2'][i]/np.sqrt(1. - pp_c**2)* (pp_sigma**2*np.exp(-pp_g**2/2./pp_sigma**2)
+                        + np.sqrt(np.pi/2.)*pp_g*pp_sigma*(1. + np.erf(pp_g/np.sqrt(2.)/pp_sigma)));
     return prob;
 
 def getConstValue(name):
@@ -75,7 +69,7 @@ def createDispPdf(x, prm):
     【戻り値】pdf: 変位応答分布の値リスト"""
     pdf = 0.
     for i in range(0, NUM_OF_GAUSS):
-        pdf += prm['a'][i]*(1./math.sqrt(2.*math.pi)/prm['sigma1'][i])*math.exp(-1.*(x-prm['mu1'][i])**2/2./prm['sigma1'][i]**2)
+        pdf += prm['a'][i]*(1./np.sqrt(2.*np.pi)/prm['sigma1'][i])*np.exp(-1.*(x-prm['mu1'][i])**2/2./prm['sigma1'][i]**2)
     return pdf
 
 def createVelPdf(x, prm):
@@ -84,7 +78,7 @@ def createVelPdf(x, prm):
     【戻り値】pdf: 速度応答分布の値リスト"""
     pdf = 0.
     for i in range(0, NUM_OF_GAUSS):
-        pdf += prm['a'][i]*(1./math.sqrt(2.*math.pi)/prm['sigma2'][i])*math.exp(-1.*(x-prm['mu2'][i])**2/2./prm['sigma2'][i]**2)
+        pdf += prm['a'][i]*(1./np.sqrt(2.*np.pi)/prm['sigma2'][i])*np.exp(-1.*(x-prm['mu2'][i])**2/2./prm['sigma2'][i]**2)
     return pdf
 
 def create3DPdf(x, y, prm):
@@ -93,7 +87,8 @@ def create3DPdf(x, y, prm):
     【戻り値】pdf: 応答分布の値リスト"""
     pdf = 0
     for i in range(0, NUM_OF_GAUSS):
-        pdf += prm['a'][i]*(1./(2.*math.pi*prm['sigma1'][i]*prm['sigma2'][i]*math.sqrt(1.-prm['rho'][i]**2))) * math.exp(-1.*((x-prm['mu1'][i])**2/prm['sigma1'][i]**2 - 2.*prm['rho'][i]*(x-prm['mu1'][i])*(y-prm['mu2'][i])/prm['sigma1'][i]/prm['sigma2'][i] + (y-prm['mu2'][i])**2/prm['sigma2'][i]**2)/(2.*(1.-prm['rho'][i]**2)))
+#        pdf += prm['a'][i]*(1./(2.*np.pi*prm['sigma1'][i]*prm['sigma2'][i]*np.sqrt(1.-prm['rho'][i]**2))) * np.exp(-1.*((x-prm['mu1'][i])**2/prm['sigma1'][i]**2 - 2.*prm['rho'][i]*(x-prm['mu1'][i])*(y-prm['mu2'][i])/prm['sigma1'][i]/prm['sigma2'][i] + (y-prm['mu2'][i])**2/prm['sigma2'][i]**2)/(2.*(1.-prm['rho'][i]**2)))
+        pdf += prm['a'][i]*(1./(2.*np.pi*prm['sigma1'][i]*prm['sigma2'][i])) * np.exp(-1.*((x-prm['mu1'][i])**2/prm['sigma1'][i]**2 + (y-prm['mu2'][i])**2/prm['sigma2'][i]**2)/2.)
     return pdf
 
 def klDivergence(comp, true):
@@ -101,6 +96,7 @@ def klDivergence(comp, true):
     【引数】comp: 比較対象の確率分布の値リスト，true: 真値の確率分布の値リスト
     【戻り値】ret: KLダイバージェンスの値"""
     if len(comp) != len(true):
+        print("comp size: " + str(len(comp)) + "true size: " + str(len(true)))
         print("KLダイバージェンス計算時のlistのサイズが異なります．")
         sys.exit()
     ret = 0.
@@ -108,7 +104,7 @@ def klDivergence(comp, true):
         if (comp[i] == 0) or (true[i] == 0):
             continue
         else:
-            ret += comp[i]*math.log(comp[i]/true[i])
+            ret += comp[i]*np.log(comp[i]/true[i])
     return ret
 
 def getSimulationFromFile(arg_l, arg_a):
@@ -168,8 +164,8 @@ def getGWhiteNoiseFromFile():
 def getPopFromFile(arg_l, arg_a):
     # プロット用解析解X軸
     # for文の中で１回づつ読み込むのは無駄だから上で宣言しておく
-    anaDispX = [i for i in drange(-6, 6, dx)]
-    anaVelX   = [i for i in drange(-12, 12, dx)]
+    anaDispX = np.arange(-6., 6., dx)
+    anaVelX   = np.arange(-12., 12., dx)
 
     # 解析ファイル読み込み
     fileNum = _getFileNum('/usr/local/src/master/results/l='+str(arg_l)+'/dat_a='+str(arg_a)+'/')
@@ -191,25 +187,15 @@ def getPopFromFile(arg_l, arg_a):
             #--- 速度 ---
             ind.vel = anaVelX
             #--- 変位応答分布 ---
-            tmp_dPdf = []
-            for ii in range(len(anaDispX)):
-                tmp_dPdf.append(createDispPdf(anaDispX[ii], ind.detailPrm))
-            ind.dPdf = tmp_dPdf
-#            ind.dPdf = [createDispPdf(anaDispX[ii], ind.detailPrm) for ii in range(len(anaDispX))]
+            ind.dPdf = createDispPdf(anaDispX, ind.detailPrm)
             #--- 速度応答分布 ---
-            tmp_vPdf = []
-            for ii in range(len(anaVelX)):
-                tmp_vPdf.append(createVelPdf(anaVelX[ii], ind.detailPrm))
-            ind.vPdf = tmp_vPdf
-#            ind.vPdf = [createVelPdf(anaVelX[ii], ind.detailPrm) for ii in range(len(anaVelX))]
-            
-            # PDFの積分がおかしいものを除去
-            sumDispPdf = culcIntegralPdf(ind.dPdf)
-            if sumDispPdf > 1.05 or sumDispPdf < 0.95:
-                continue
-            sumVelPdf = culcIntegralPdf(ind.vPdf)
-            if sumVelPdf > 1.05 or sumVelPdf < 0.95:
-                continue
+            ind.vPdf = createVelPdf(anaVelX, ind.detailPrm)
+
+            # PDFの積分がおかしいものを除去（引っかかる個体はなさそうなのでカット）
+#            sumJointPdf = culcIntegralJointPdf(ind.detailPrm)
+#            print(sumJointPdf)
+#            if sumJointPdf > 1.005 or sumJointPdf < 0.995:
+#                continue
 
             pop.append(ind)
             del ind
@@ -235,7 +221,7 @@ def getStandardDeviationList(pop):
         if sumSquareObj == 0:
             meanSdList[1][i] = 1.
         else:
-            meanSdList[1][i] = math.sqrt(sumSquareObj / (len(pop)))
+            meanSdList[1][i] = np.sqrt(sumSquareObj / (len(pop)))
 
     return meanSdList
 
@@ -307,9 +293,9 @@ def _getDetailParameterFromSimpleNotation(simple):
     detail['sigma2'][1] = simple[6]
     detail['sigma2'][2] = simple[4]
     # 共分散係数
-    detail['rho'] = [0]*NUM_OF_GAUSS
-    detail['rho'][0]  = simple[7]
-    detail['rho'][1]  = simple[8]
-    detail['rho'][2]  = simple[9]
+#    detail['rho'] = [0]*NUM_OF_GAUSS
+#    detail['rho'][0]  = simple[7]
+#    detail['rho'][1]  = simple[8]
+#    detail['rho'][2]  = simple[9]
     return detail
 

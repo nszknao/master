@@ -36,8 +36,8 @@ if __name__ == "__main__":
         low_duffing.append(rf)
     # プロット
     outputPath  = "/usr/local/src/master/fig"
-    plt.xlabel("displacement", fontsize=18)
-    plt.ylabel("Restoring Force", fontsize=18)
+    plt.xlabel("displacement", fontsize=30)
+    plt.ylabel("Restoring Force", fontsize=30)
     plt.plot(x, x, lw=3)
     plt.plot(x, high_duffing,  lw=3)
     plt.plot(x, low_duffing,  lw=3)
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     plt.xlim([-10, 10])
     plt.ylim([-60, 60])
     plt.grid(which='major',color='black',linestyle='--')
-    plt.tick_params(labelsize=18)
+    plt.tick_params(labelsize=24)
     plt.tight_layout()
     filename    = "rf.eps"
     plt.savefig(outputPath+"/"+filename, format='eps', dpi=300) # 解像度高めに

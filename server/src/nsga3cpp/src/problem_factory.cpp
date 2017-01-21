@@ -1,4 +1,3 @@
-
 #include "problem_factory.h"
 #include "problem_DTLZ.h"
 #include "problem_ZDT.h"
@@ -8,5 +7,5 @@ using namespace std;
 
 BProblem *GenerateProblem(MomentEq *meq)
 {
-	return new CProblemSelf(meq);
+    return new CProblemSelf(meq);
 }

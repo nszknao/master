@@ -31,15 +31,15 @@ ${SRC_PATH}/exe/analysis.exe ${lambda} ${beta2} ${alpha} ${initValue}
 
 ##### Make directory. #############
 if [ ! -e ${RESULT_PATH}/${params} ]; then
-	mkdir ${RESULT_PATH}/${params}
-	mkdir ${RESULT_PATH}/${params}/${dat}
-	mkdir ${RESULT_PATH}/${params}/${fig}
+    mkdir ${RESULT_PATH}/${params}
+    mkdir ${RESULT_PATH}/${params}/${dat}
+    mkdir ${RESULT_PATH}/${params}/${fig}
 elif [ ! -e ${RESULT_PATH}/${params}/${dat} ]; then
-	mkdir ${RESULT_PATH}/${params}/${dat}
-	mkdir ${RESULT_PATH}/${params}/${fig}
+    mkdir ${RESULT_PATH}/${params}/${dat}
+    mkdir ${RESULT_PATH}/${params}/${fig}
 else
-	rm -rf ${RESULT_PATH}/${params}/${dat}/*
-	rm -rf ${RESULT_PATH}/${params}/${fig}/*
+    rm -rf ${RESULT_PATH}/${params}/${dat}/*
+    rm -rf ${RESULT_PATH}/${params}/${fig}/*
 fi
 
 ############ Move directory ##############################

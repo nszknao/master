@@ -1,9 +1,9 @@
-#include "../include/analysis.h"
-#include "../include/expfit.h"
-#include "../include/nsga2.h"
-#include "../include/nsga3.h"
-#include "../include/common.h"
-#include "../include/ga_individual.h"
+#include <analysis.h>
+#include <expfit.h>
+#include <nsga2.h>
+#include <nsga3.h>
+#include <common.h>
+#include <ga_individual.h>
 
 const double Analysis::GGD_KAPPA = 2.;  // 1.:ラプラス分布，2.:ガウス分布，∞:一様分布
 
@@ -53,17 +53,17 @@ std::vector<GAIndividual> Analysis::GeneticAlgorithm(std::size_t pop, std::size_
     meq2.setPrmdG(dF);
     meq2.setObjList(selectedObj);
 //    meq2.setObjWeight(objWeight);
-    // NSGA2
-    NSGA2 *n2 = new NSGA2(pop, gen);
-    n2->run(&meq2);
-    std::vector<GAIndividual> pops = n2->getFinalPops();
-    if (n2 != NULL) {delete n2; n2 = NULL;}
 
-    // nsga3
-//    NSGA3 *n3 = new NSGA3();
-//    n3->run(&meq2);
-//    std::vector<GAIndividual> pops = n3->getFinalPops();
-//    if (n3 != NULL) {delete n3; n3 = NULL;}
+    // NSGA2 or NSGA3
+//    NSGA2 *nsga = new NSGA2(pop, gen);
+//    NSGA3 *nsga = new NSGA3();
+//    jMetalCpp_ssNSGAII *nsga = new jMetalCpp_ssNSGAII(pop, gen);
+//    jMetalCpp_NSGAII *nsga = new jMetalCpp_NSGAII(pop, gen);
+    jMetalCpp_GDE3 *nsga = new jMetalCpp_GDE3(pop, gen);
+
+    nsga->run(&meq2);
+    std::vector<GAIndividual> pops = nsga->getFinalPops();
+    if (nsga != NULL) {delete nsga; nsga = NULL;}
 
     return pops;
 }
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     std::size_t i;
     std::size_t roop = 5;  // 実験回数
     for (i = 0; i < roop; ++i) {
-        std::cout << "--------------------\n" << std::endl;
+        std::cout << "--------------------" << std::endl;
         std::cout << "analysis.cpp started.\n" << std::endl;
         
         try {
@@ -155,19 +155,24 @@ int main(int argc, char *argv[])
             /* GAで解く */
             std::vector<GAIndividual> pops;
             if (i == 0) {
-                pops = ana->GeneticAlgorithm(120, 1000);
+                //pops = ana->GeneticAlgorithm(100, 25000);
+                pops = ana->GeneticAlgorithm(100, 230);
             }
             else if (i == 1) {
-                pops = ana->GeneticAlgorithm(150, 1500);
+                //pops = ana->GeneticAlgorithm(200, 25000);
+                pops = ana->GeneticAlgorithm(100, 240);
             }
             else if (i == 2) {
-                pops = ana->GeneticAlgorithm(150, 2000);
+                //pops = ana->GeneticAlgorithm(300, 25000);
+                pops = ana->GeneticAlgorithm(100, 250);
             }
             else if (i == 3) {
-                pops = ana->GeneticAlgorithm(200, 2000);
+                //pops = ana->GeneticAlgorithm(400, 25000);
+                pops = ana->GeneticAlgorithm(100, 260);
             }
             else if (i == 4) {
-                pops = ana->GeneticAlgorithm(200, 2500);
+                //pops = ana->GeneticAlgorithm(500, 25000);
+                pops = ana->GeneticAlgorithm(100, 270);
             }
             filename    = "ana_gsay1pdf_" + std::to_string(i) + ".dat";
             ana->outputAllPopsIntoFile(filename, pops);

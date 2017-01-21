@@ -3,7 +3,6 @@ u"""個体群に関するいろいろな図を作成します．"""
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 import common as cmn
-import math
 import numpy as np
 import pandas as pd
 from matplotlib.font_manager import FontProperties
@@ -17,10 +16,6 @@ MOMENT_ARRAY = ["$E[y_1^2]$", "$E[y_1y_2]$", "$E[y_2^2]$", "$E[y_1^4]$", "$E[y_1
 def plotDispPdf_Ana_Sim_Gauss(ind, sim, gwn, savePath):
     u"""個体の変位応答分布をプロット（シミュレーション解，ホワイトノイズ解と合わせて）
     【引数】ind: 個体，sim: シミュレーション解，gwn: ホワイトノイズ解，savePath: 保存先のパス"""
-    int_dPdf    = cmn.culcIntegralPdf(ind.dPdf)
-    if (0.95 > int_dPdf) or (int_dPdf > 1.05):
-        print("PDF integral violation: " + str(int_dPdf))
-        return
     plt.xlim([-6, 6])
     plt.ylim([0.00001, 1])
     plt.xlabel("displacement", fontsize=18)
@@ -37,10 +32,6 @@ def plotDispPdf_Ana_Sim_Gauss(ind, sim, gwn, savePath):
 def plotVelPdf_Ana_Sim(ind, sim, savePath):
     u"""個体の速度応答分布をプロット（シミュレーション解，ホワイトノイズ解と合わせて）
     【引数】ind: 個体，sim: シミュレーション解，gwn: ホワイトノイズ解，savePath: 保存先のパス"""
-    int_vPdf    = cmn.culcIntegralPdf(ind.vPdf)
-    if (0.95 > int_vPdf) or (int_vPdf > 1.05):
-        print("PDF integral violation: " + str(int_vPdf))
-        return
     plt.xlim([-12, 12])
     plt.ylim([0.00001, 1])
     plt.xlabel("velocity", fontsize=18)
@@ -56,34 +47,56 @@ def plotVelPdf_Ana_Sim(ind, sim, savePath):
     plt.clf()
 
 def plot3DDispPdf_Ana(ind, sim, savePath):
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    x = sim.dispx[::1]
-    y = sim.dispy[::1]
+    u"""解析解の3次元応答分布をプロット
+    【引数】ind: 個体，sim: シミュレーション解，savepath: 保存先のパス"""
+    x = sim.disp3d[::1]
+    y = sim.vel3d[::1]
     X, Y = np.meshgrid(x, y)
-    Z = [cmn.create3DPdf(x[i], y[i], ind.detailPrm) for i in range(len(x))]
-    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm)
+    Z = cmn.create3DPdf(X, Y, ind.detailPrm)
 
-    ax.set_xlabel(r'$y_1$', fontsize=20)
-    ax.set_ylabel(r'$y_2$', fontsize=20)
-    ax.set_zlabel(r'$p_y (y_1, y_2)$', fontsize=20)
-#    plt.ticklabel_format(style='sci', axis='z', scilimits=(0, 0))  # 指数表記
+    #3Dプロット
+#    fig = plt.figure()
+#    ax = Axes3D(fig)
+#    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+#    ax.set_xlabel(r'$y_1$', fontsize=20)
+#    ax.set_ylabel(r'$y_2$', fontsize=20)
+#    ax.set_zlabel(r'$p_y (y_1, y_2)$', fontsize=20)
+ 
+    # コンター図
+    CS = plt.contourf(X, Y, Z)
+    plt.xlim(-6, 6)
+    plt.ylim(-15, 15)
+    cbar = plt.colorbar(CS)
+
+    plt.ticklabel_format(style='sci', axis='z', scilimits=(0, 0))  # 指数表記
     plt.savefig(savePath, format="eps", dpi=300)
+    plt.clf()
 
 def plot3DDispPdf_Sim(sim, savePath):
-    fig = plt.figure()
-    ax = Axes3D(fig)
+    u"""シミュレーション解の3次元応答分布をプロット
+    【引数】sim: シミュレーション解，savepath: 保存先のパス"""
     x = sim.disp3d[::1]
     y = sim.vel3d[::1]
     Z = sim.pdf3d[0::1, 0::1]
     X, Y = np.meshgrid(x, y)
-    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
 
-    ax.set_xlabel(r'$y_1$', fontsize=20)
-    ax.set_ylabel(r'$y_2$', fontsize=20)
-    ax.set_zlabel(r'$p_y (y_1, y_2)$', fontsize=20)
+    # 3Dプロット
+#    fig = plt.figure()
+#    ax = Axes3D(fig)
+#    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+#    ax.set_xlabel(r'$y_1$', fontsize=20)
+#    ax.set_ylabel(r'$y_2$', fontsize=20)
+#    ax.set_zlabel(r'$p_y (y_1, y_2)$', fontsize=20)
+
+    # コンター図
+    CS = plt.contourf(X,Y,Z)
+    plt.xlim(-6, 6)
+    plt.ylim(-15, 15)
+    cbar = plt.colorbar(CS)
+
     plt.ticklabel_format(style='sci', axis='z', scilimits=(0, 0))  # 指数表記
     plt.savefig(savePath, format="eps", dpi=300)
+    plt.clf()
 
 def plotRelation_KLDivergence_Objective(pop, sim, savePath):
     u"""KLダイバージェンスと目的関数値の二乗誤差を散布図にプロット
@@ -94,17 +107,18 @@ def plotRelation_KLDivergence_Objective(pop, sim, savePath):
     for i in range(len(pop)):
         squareValue = 0.
         for ii in range(cmn.getConstValue("NUM_OF_MOMENTEQ")):
-#            squareValue += (pop[i].o[ii]/meanSdList[1][ii])**2
             squareValue += abs(pop[i].o[ii]/meanSdList[1][ii])
         squareObjList.append(squareValue)
-        tmp_dPdf = [cmn.createDispPdf(sim.dispx[ii], pop[i].detailPrm) for ii in range(len(sim.dispx))]
-        dKLList.append(cmn.klDivergence(tmp_dPdf, sim.dispy))
+#        tmp_dPdf = [cmn.createDispPdf(sim.dispx[ii], pop[i].detailPrm) for ii in range(len(sim.dispx))]
+#        dKLList.append(cmn.klDivergence(tmp_dPdf, sim.dispy))
+        tmp_jPdf = cmn.create3DPdf(np.meshgrid(sim.disp3d, sim.vel3d)[0], np.meshgrid(sim.disp3d, sim.vel3d)[1], pop[i].detailPrm)
+        dKLList.append(cmn.klDivergence(np.reshape(tmp_jPdf, len(sim.disp3d)*len(sim.vel3d)), np.reshape(sim.pdf3d, len(sim.disp3d)*len(sim.vel3d))))
     
     plt.scatter(squareObjList, dKLList)
-#    plt.xlim([0, 5])
+    plt.xlim([0, 40])
 #    plt.ylim([0.0001, 50])
     plt.yscale('log')
-    plt.gca().xaxis.set_major_locator(tick.MultipleLocator(1))
+    plt.gca().xaxis.set_major_locator(tick.MultipleLocator(10))
     plt.title(u'KLダイバージェンスと目的関数値の二乗誤差の関係', fontproperties=fp)
     plt.xlabel('Square Objective Value')
     plt.ylabel('KL-Divergence')

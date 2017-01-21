@@ -31,11 +31,13 @@ if __name__ == "__main__":
         forceData[1].append(float(col[1]))
     # プロット
     plt.figure(figsize=(16, 5))
-    plt.xlabel("Time", fontsize=18)
-    plt.ylabel("Input", fontsize=18)
+    plt.xlabel("Time", fontsize=30)
+    plt.ylabel("Input", fontsize=30)
     plt.plot(forceData[0], forceData[1], lw=1, color='r')
     plt.xlim([0, 100])
     plt.ylim([-500, 500])
+    plt.subplots_adjust(left=0.1, bottom=0.2)
+    plt.tick_params(labelsize=24)
     plt.gca().yaxis.set_major_locator(tick.MultipleLocator(250))
     plt.grid(which='major',color='black',linestyle='--')
     filename    = "force.eps"
@@ -50,11 +52,13 @@ if __name__ == "__main__":
         forceGaussData[1].append(float(col[1]))
     # プロット
     plt.figure(figsize=(16, 5))
-    plt.xlabel("Time", fontsize=18)
-    plt.ylabel("Input_Gauusian", fontsize=18)
+    plt.xlabel("Time", fontsize=30)
+    plt.ylabel("Input_Gauusian", fontsize=30)
     plt.plot(forceGaussData[0], forceGaussData[1], lw=1, color='r')
     plt.xlim([0, 50])
     plt.ylim([-100, 100])
+    plt.subplots_adjust(left=0.1, bottom=0.2)
+    plt.tick_params(labelsize=24)
     plt.grid(which='major',color='black',linestyle='--')
     filename    = "force_gaussian.eps"
     plt.savefig(OUTPUT_PATH+"/"+filename, format="eps", dpi=300)
@@ -68,12 +72,14 @@ if __name__ == "__main__":
         forcePulseData[1].append(float(col[1]))
     # プロット
     plt.figure(figsize=(16, 5))
-    plt.xlabel("Time", fontsize=18)
-    plt.ylabel("Input_Pulse", fontsize=18)
+    plt.xlabel("Time", fontsize=30)
+    plt.ylabel("Input_Pulse", fontsize=30)
     plt.plot(forcePulseData[0], forcePulseData[1], lw=1, color='r')
     plt.xlim([0, 100])
     plt.ylim([-300, 300])
+    plt.subplots_adjust(left=0.1, bottom=0.2)
     plt.grid(which='major',color='black',linestyle='--')
     filename    = "force_pulse.eps"
     plt.savefig(OUTPUT_PATH+"/"+filename, format="eps", dpi=300)
     plt.clf()
+    plt.tick_params(labelsize=24)

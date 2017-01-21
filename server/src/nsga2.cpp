@@ -23,9 +23,9 @@ int NSGA2::run(MomentEq *meq)
     std::size_t i, t;
 
     // 突然変異と交叉のパラメータ
-    double crossProb = 0.9;             // crossover probability
-    double flipProb = 1. / Common::NUM_OF_MOMENTEQ;   // mutation probability
-//    double flipProb = 0.01;   // mutation probability
+    double crossProb = 0.95;             // crossover probability
+//    double flipProb = 1. / Common::NUM_OF_MOMENTEQ;   // mutation probability
+    double flipProb = 0.01;   // mutation probability
 
     std::vector<double> lower = meq->getLowerObj();
     std::vector<double> upper = meq->getUpperObj();

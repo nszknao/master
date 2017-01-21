@@ -123,7 +123,8 @@ void Simulation::createDispPdf(const std::vector< std::vector<double> > &y1, std
     std::vector< std::vector<double> > pdf_buffer(NUM_OF_SAMPLES, std::vector<double>(NUM_OF_SAMPLES, PDF_NUM_OF_PARTITIONS+1));
 
     for (i = 0; i < NUM_OF_SAMPLES; ++i) {
-        for (ii = 0; (_y1min + ii*dx) <= _y1max; ++ii) {
+//        for (ii = 0; (_y1min + ii*dx) <= _y1max; ++ii) {
+        for (ii = 0; ii < PDF_NUM_OF_PARTITIONS+1; ++ii) {
             // 幅dxに含まれる回数
             // TODO:バッファに追加した値を除外することで速度向上
             n_dx = 0;
@@ -137,7 +138,8 @@ void Simulation::createDispPdf(const std::vector< std::vector<double> > &y1, std
     double pdf_y1, integral_y1 = 0.;
     x.resize(PDF_NUM_OF_PARTITIONS+1);
     y.resize(PDF_NUM_OF_PARTITIONS+1);
-    for (i = 0; (_y1min + i*dx) <= _y1max; ++i) {
+//    for (i = 0; (_y1min + i*dx) <= _y1max; ++i) {
+    for (i = 0; i < PDF_NUM_OF_PARTITIONS+1; ++i) {
         pdf_y1 = 0.;
         for (ii = 0; ii < NUM_OF_SAMPLES; ++ii) {
             pdf_y1 += pdf_buffer[ii][i];
@@ -166,11 +168,12 @@ void Simulation::createVelPdf(const std::vector< std::vector<double> > &y2, std:
     std::size_t i, ii, iii;
 
     std::size_t n_dx;
-    double dx = (_y2max - _y2min)/(PDF_NUM_OF_PARTITIONS+100);
-    std::vector< std::vector<double> > pdf_buffer(NUM_OF_SAMPLES, std::vector<double>(NUM_OF_SAMPLES, PDF_NUM_OF_PARTITIONS+101));
+    double dx = (_y2max - _y2min)/PDF_NUM_OF_PARTITIONS;
+    std::vector< std::vector<double> > pdf_buffer(NUM_OF_SAMPLES, std::vector<double>(NUM_OF_SAMPLES, PDF_NUM_OF_PARTITIONS+1));
 
     for (i = 0; i < NUM_OF_SAMPLES; ++i) {
-        for (ii = 0; (_y2min + ii*dx) <= _y2max; ++ii) {
+//        for (ii = 0; (_y2min + ii*dx) <= _y2max; ++ii) {
+        for (ii = 0; ii < PDF_NUM_OF_PARTITIONS+1; ++ii) {
             // 幅dxに含まれる回数
             n_dx = 0;
             for (iii = 0; iii < SAMPLE_LENGTH; ++iii) {
@@ -181,9 +184,10 @@ void Simulation::createVelPdf(const std::vector< std::vector<double> > &y2, std:
     }
 
     double pdf_y2, integral_y2 = 0.;
-    x.resize(PDF_NUM_OF_PARTITIONS+101);
-    y.resize(PDF_NUM_OF_PARTITIONS+101);
-    for (i = 0; (_y2min + i*dx) <= _y2max; ++i) {
+    x.resize(PDF_NUM_OF_PARTITIONS+1);
+    y.resize(PDF_NUM_OF_PARTITIONS+1);
+//    for (i = 0; (_y2min + i*dx) <= _y2max; ++i) {
+    for (i = 0; i < PDF_NUM_OF_PARTITIONS+1; ++i) {
         pdf_y2 = 0.;
         for (ii = 0; ii < NUM_OF_SAMPLES; ++ii) {
             pdf_y2 += pdf_buffer[ii][i];
@@ -225,8 +229,10 @@ void Simulation::createJointPdf(const std::vector< std::vector<double> > &y1, co
 
     for (i = 0; i<NUM_OF_SAMPLES; ++i) {
         std::cout << "sample: " << i << std::endl;
-        for (ii = 0; (_y1min + ii*dx_y1) <= _y1max; ++ii) {
-            for (iii = 0; (_y2min + iii*dx_y2) <= _y2max; ++iii) {
+//        for (ii = 0; (_y1min + ii*dx_y1) <= _y1max; ++ii) {
+        for (ii = 0; ii < PDF_NUM_OF_PARTITIONS+1; ++ii) {
+//            for (iii = 0; (_y2min + iii*dx_y2) <= _y2max; ++iii) {
+            for (iii = 0; iii < PDF_NUM_OF_PARTITIONS+1; ++iii) {
                 // 幅dxに含まれる回数
                 n_dx = 0;
                 for (iiii = 0; iiii<SAMPLE_LENGTH; ++iiii) {
@@ -242,8 +248,10 @@ void Simulation::createJointPdf(const std::vector< std::vector<double> > &y1, co
     y.resize(PDF_NUM_OF_PARTITIONS+1);
     z.resize((PDF_NUM_OF_PARTITIONS+1)*(PDF_NUM_OF_PARTITIONS+1));
     double pdf_joint, integral_joint = 0.;
-    for (i = 0; (_y1min + i*dx_y1) <= _y1max; ++i) {
-        for (ii = 0; (_y2min + ii*dx_y2) <= _y2max; ++ii) {
+//    for (i = 0; (_y1min + i*dx_y1) <= _y1max; ++i) {
+    for (i = 0; i < PDF_NUM_OF_PARTITIONS+1; ++i) {
+//        for (ii = 0; (_y2min + ii*dx_y2) <= _y2max; ++ii) {
+        for (ii = 0; ii < PDF_NUM_OF_PARTITIONS+1; ++ii) {
             pdf_joint = 0.;
             for (iii = 0; iii<NUM_OF_SAMPLES; ++iii) {
                 pdf_joint += pdf_buffer[i][ii][iii];
